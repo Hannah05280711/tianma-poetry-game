@@ -156,17 +156,48 @@ export const gameRouter = router({
 
   // Get questions for a session - public so guests can play without login
   getQuestions: publicProcedure
-    .input(z.object({ difficulty: z.number().min(1).max(5).default(1), count: z.number().min(1).max(10).default(5) }))
+    .input(z.object({
+      difficulty: z.number().min(1).max(5).default(1),
+      count: z.number().min(1).max(10).default(5),
+      // seed 用于破坏 tRPC 缓存，每次开始新游戏时传入不同的 seed。后端不使用它，仅用于让请求看起来不同
+      seed: z.string().optional(),
+    }))
     .query(async ({ input }) => {
+      // 拉取足够多的题目以便同诗去重后仍有足够数量
+      const fetchCount = input.count * 5;
       const qs = await getQuestionsByDifficulty(
         Math.max(1, input.difficulty - 1),
         Math.min(5, input.difficulty + 1),
-        input.count
+        fetchCount
       );
-      // Shuffle options for each question
-      return qs.map((q) => ({
+
+      // 同诗去重：每首诗只保留一题，避免同一首诗反复出现
+      const seenPoems = new Set<string>();
+      const deduplicated: typeof qs = [];
+      for (const q of qs) {
+        const poemKey = (q.sourcePoemTitle ?? "").trim();
+        const dedupeKey = poemKey || `__q_${q.id}`; // 无诗名的题目用 id 区分
+        if (!seenPoems.has(dedupeKey)) {
+          seenPoems.add(dedupeKey);
+          deduplicated.push(q);
+        }
+        if (deduplicated.length >= input.count) break;
+      }
+
+      // 如果去重后数量不够，用剩余题目补充（允许重复诗名）
+      if (deduplicated.length < input.count) {
+        const extra = qs.filter(q => !deduplicated.find(d => d.id === q.id));
+        deduplicated.push(...extra.slice(0, input.count - deduplicated.length));
+      }
+
+      const finalQs = deduplicated.slice(0, input.count);
+
+      // 随机洗牌选项
+      return finalQs.map((q) => ({
         ...q,
-        options: q.options ? [...(Array.isArray(q.options) ? q.options as string[] : JSON.parse(q.options as string) as string[])].sort(() => Math.random() - 0.5) : [],
+        options: q.options
+          ? [...(Array.isArray(q.options) ? q.options as string[] : JSON.parse(q.options as string) as string[])].sort(() => Math.random() - 0.5)
+          : [],
       }));
     }),
 

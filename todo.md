@@ -69,3 +69,7 @@
 - [x] 分享语中加入游戏链接 (tianmapoet-4lhgiefm.manus.space)✅
 - [x] 微信分享：navigator.share API + 复制降级方案✅
 - [x] Open Graph meta 标签优化微信分享卡片展示✅
+
+## 题目随机性修复（第五批）
+- [x] 每次进入游戏随机抄取不同题目（seed 破坏 tRPC 缓存 + ORDER BY RAND()）✅
+- [x] 同一关卡内不重复出现同一首诗的题目（同诗去重逻辑）✅

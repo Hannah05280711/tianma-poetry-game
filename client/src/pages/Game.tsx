@@ -28,6 +28,7 @@ export default function Game() {
   const [phase, setPhase] = useState<GamePhase>("select");
   const [difficulty, setDifficulty] = useState(1);
   const [sessionId] = useState(() => nanoid());
+  const [querySeed, setQuerySeed] = useState(() => nanoid());
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
@@ -45,8 +46,13 @@ export default function Game() {
   const maxTime = diffInfo?.time ?? 20;
 
   const { data: questions, isLoading: loadingQ, refetch: refetchQ } = trpc.game.getQuestions.useQuery(
-    { difficulty, count: 7 },
-    { enabled: false }
+    { difficulty, count: 7, seed: querySeed },
+    {
+      enabled: false,
+      // 禁用缓存，确保每次都从服务器获取新题目
+      staleTime: 0,
+      gcTime: 0,
+    }
   );
 
   const { data: gameState, refetch: refetchState } = trpc.game.getState.useQuery(undefined, {
@@ -158,7 +164,18 @@ export default function Game() {
     } catch { toast.error("使用失败"); }
   };
 
-  const startGame = async () => {
+  // 监听 seed 变化，当 seed 更新时自动重新拉取题目
+  const [pendingStart, setPendingStart] = useState(false);
+  useEffect(() => {
+    if (pendingStart) {
+      refetchQ().then(() => {
+        setPhase("playing");
+        setPendingStart(false);
+      });
+    }
+  }, [querySeed, pendingStart, refetchQ]);
+
+  const startGame = () => {
     setCurrentIdx(0);
     setSessionScore(0);
     setSessionCorrect(0);
@@ -167,8 +184,9 @@ export default function Game() {
     setSelectedAnswer(null);
     setEliminatedOptions([]);
     setLastScoreDelta(0);
-    await refetchQ();
-    setPhase("playing");
+    // 生成新 seed 会触发 useEffect 中的 refetch，确保缓存已破坏
+    setQuerySeed(nanoid());
+    setPendingStart(true);
   };
 
   // ─── Phase: Select Difficulty ─────────────────────────────────────────────
