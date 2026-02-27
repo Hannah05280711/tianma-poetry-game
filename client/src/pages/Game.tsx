@@ -345,7 +345,7 @@ export default function Game() {
                   <span className="text-xs text-muted-foreground">《{currentQ.sourcePoemTitle}》</span>
                 )}
               </div>
-              <p className="leading-relaxed font-display text-foreground" style={{ fontSize: "18px", lineHeight: "1.8" }}>
+              <p className="leading-relaxed text-foreground" style={{ fontSize: "17px", lineHeight: "1.85", fontFamily: "'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', sans-serif", fontWeight: 500 }}>
                 {currentQ.content}
               </p>
             </div>
