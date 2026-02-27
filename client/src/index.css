@@ -3,11 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ─── 动漫国风配色系统 ─────────────────────────────────────────────────────── */
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 2rem;
+  --radius: 0.75rem;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -42,136 +45,192 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ─── Dark theme (default - 动漫国风深色) ─────────────────────────────────── */
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --background: oklch(0.10 0.025 270);
+  --foreground: oklch(0.95 0.01 80);
+  --card: oklch(0.15 0.03 270);
+  --card-foreground: oklch(0.95 0.01 80);
+  --popover: oklch(0.13 0.03 270);
+  --popover-foreground: oklch(0.95 0.01 80);
+  --primary: oklch(0.72 0.18 35);
+  --primary-foreground: oklch(0.10 0.02 270);
+  --secondary: oklch(0.55 0.15 290);
+  --secondary-foreground: oklch(0.95 0.01 80);
+  --muted: oklch(0.20 0.03 270);
+  --muted-foreground: oklch(0.60 0.05 80);
+  --accent: oklch(0.62 0.18 190);
+  --accent-foreground: oklch(0.10 0.02 270);
+  --destructive: oklch(0.62 0.22 25);
+  --destructive-foreground: oklch(0.95 0.01 80);
+  --border: oklch(0.26 0.05 270);
+  --input: oklch(0.20 0.04 270);
+  --ring: oklch(0.72 0.18 35);
+  --radius: 0.75rem;
+
+  --chart-1: oklch(0.72 0.18 35);
+  --chart-2: oklch(0.62 0.18 190);
+  --chart-3: oklch(0.55 0.15 290);
+  --chart-4: oklch(0.78 0.18 85);
+  --chart-5: oklch(0.58 0.22 20);
+
+  --sidebar: oklch(0.13 0.03 270);
+  --sidebar-foreground: oklch(0.95 0.01 80);
+  --sidebar-primary: oklch(0.72 0.18 35);
+  --sidebar-primary-foreground: oklch(0.10 0.02 270);
+  --sidebar-accent: oklch(0.20 0.03 270);
+  --sidebar-accent-foreground: oklch(0.95 0.01 80);
+  --sidebar-border: oklch(0.26 0.05 270);
+  --sidebar-ring: oklch(0.72 0.18 35);
 }
 
-.dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
-}
-
+/* ─── Base Styles ────────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    overflow-x: hidden;
+    min-height: 100dvh;
   }
+
+  /* Mobile-first max width */
+  #root {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    position: relative;
+    overflow-x: hidden;
+    background: var(--background);
+  }
+
   button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [type="button"]:not(:disabled),
-  [type="submit"]:not(:disabled),
-  [type="reset"]:not(:disabled),
-  a[href],
-  select:not(:disabled),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled) {
+  [role="button"]:not([aria-disabled="true"]) {
     @apply cursor-pointer;
   }
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
+    max-width: 480px;
   }
 
   .flex {
     min-height: 0;
     min-width: 0;
   }
-
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
-  }
 }
+
+/* ─── Game Utilities ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display {
+    font-family: "ZCOOL XiaoWei", "Ma Shan Zheng", "Noto Serif SC", serif;
+  }
+
+  /* Ink paper texture */
+  .ink-paper {
+    background-image:
+      radial-gradient(ellipse at 20% 50%, oklch(0.55 0.15 290 / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, oklch(0.72 0.18 35 / 0.06) 0%, transparent 40%);
+  }
+
+  /* Glow effects */
+  .glow-gold { box-shadow: 0 0 12px oklch(0.78 0.18 85 / 0.5), 0 0 24px oklch(0.78 0.18 85 / 0.2); }
+  .glow-jade { box-shadow: 0 0 12px oklch(0.62 0.18 190 / 0.5), 0 0 24px oklch(0.62 0.18 190 / 0.2); }
+  .glow-crimson { box-shadow: 0 0 12px oklch(0.62 0.22 25 / 0.5), 0 0 24px oklch(0.62 0.22 25 / 0.2); }
+  .glow-primary { box-shadow: 0 0 12px oklch(0.72 0.18 35 / 0.5), 0 0 24px oklch(0.72 0.18 35 / 0.2); }
+
+  /* Rank colors */
+  .rank-bronze { color: #CD7F32; }
+  .rank-silver { color: #C0C0C0; }
+  .rank-gold { color: #FFD700; }
+  .rank-platinum { color: #E5E4E2; }
+  .rank-diamond { color: #B9F2FF; }
+  .rank-star { color: #FFB347; }
+  .rank-king { color: #FF6B35; }
+
+  /* Animated gradient text */
+  .gradient-text-gold {
+    background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .gradient-text-jade {
+    background: linear-gradient(90deg, #00CED1, #20B2AA, #00CED1);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .float-anim { animation: float 3s ease-in-out infinite; }
+  .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top)); }
+
+  .page-content { min-height: 100dvh; padding-bottom: 80px; }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@keyframes slideInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-slide-up { animation: slideInUp 0.4s ease-out; }
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-wrong { animation: wrongShake 0.4s ease-out; }
