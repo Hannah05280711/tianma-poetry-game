@@ -346,17 +346,49 @@ export const gameRouter = router({
   // Get all poets
   getPoets: publicProcedure.query(() => getAllPoets()),
 
-  // Get destiny poet
-  getDestinyPoet: protectedProcedure.query(async ({ ctx }) => {
-    const destiny = await getDestinyPoet(ctx.user.id);
+  // Get destiny poet (supports guest mode - returns null for guests)
+  getDestinyPoet: publicProcedure.query(async ({ ctx }) => {
+    const user = (ctx as { user?: { id: number } }).user;
+    if (!user) return null;
+    const destiny = await getDestinyPoet(user.id);
     if (!destiny) return null;
     const poet = await getPoetById(destiny.poetId);
     return { ...destiny, poet };
   }),
 
-  // Generate destiny poet (trigger matching)
-  generateDestinyPoet: protectedProcedure.mutation(async ({ ctx }) => {
-    const stats = await getUserAnswerStats(ctx.user.id);
+  // Generate destiny poet - supports guest mode with inline stats
+  generateDestinyPoet: publicProcedure
+    .input(z.object({
+      // Guest mode: pass stats directly; logged-in users can omit (loaded from DB)
+      guestStats: z.object({
+        totalAnswered: z.number(),
+        totalCorrect: z.number(),
+        poetCorrectMap: z.record(z.string(), z.number()),
+        typePreferMap: z.record(z.string(), z.number()),
+        avgResponseTime: z.number(),
+      }).optional(),
+    }).optional())
+    .mutation(async ({ ctx, input }) => {
+    const user = (ctx as { user?: { id: number; name?: string; openId?: string } }).user;
+    let stats: {
+      totalAnswered: number;
+      totalCorrect: number;
+      poetCorrectMap: Record<string, number>;
+      typePreferMap: Record<string, number>;
+      avgResponseTime: number;
+    } | null = null;
+
+    if (user) {
+      // Logged-in user: load stats from DB
+      stats = await getUserAnswerStats(user.id);
+      if (!stats) throw new TRPCError({ code: "NOT_FOUND" });
+    } else if (input?.guestStats) {
+      // Guest mode: use provided stats
+      stats = input.guestStats;
+    } else {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "请提供答题数据" });
+    }
+
     if (!stats) throw new TRPCError({ code: "NOT_FOUND" });
 
     if (stats.totalAnswered < 10) {
@@ -389,21 +421,30 @@ export const gameRouter = router({
       callLLM(acrosticPrompt),
     ]);
 
-    await saveDestinyPoet(
-      ctx.user.id,
-      poetId,
-      matchScore,
-      analysisReport || `你与${poet.name}的灵魂契合度高达${matchScore}%！你们都有着对诗词的热爱和独特的人生感悟。`,
-      acrosticPoem || `${poet.name.split("").map((c) => `${c}字开头的诗句`).join("\n")}`
-    );
+    const finalAnalysis = analysisReport || `你与${poet.name}的灵魂契合度高达${matchScore}%！你们都有着对诗词的热爱和独特的人生感悟。`;
+    const finalAcrostic = acrosticPoem || `${poet.name.split("").map((c) => `${c}字开头的诗句`).join("\n")}`;
 
-    await notifyOwner({
-      title: "✨ 本命诗人解锁通知",
-      content: `用户 ${ctx.user.name ?? ctx.user.openId} 解锁了本命诗人：${poet.name}（${poet.mbtiType}），契合度 ${matchScore}%`,
-    });
-
-    const result = await getDestinyPoet(ctx.user.id);
-    return { ...result, poet };
+    if (user) {
+      // Logged-in: save to DB
+      await saveDestinyPoet(user.id, poetId, matchScore, finalAnalysis, finalAcrostic);
+      await notifyOwner({
+        title: "✨ 本命诗人解锁通知",
+        content: `用户 ${user.name ?? user.openId} 解锁了本命诗人：${poet.name}（${poet.mbtiType}），契合度 ${matchScore}%`,
+      });
+      const result = await getDestinyPoet(user.id);
+      return { ...result, poet };
+    } else {
+      // Guest: return result without saving
+      return {
+        id: 0, userId: 0, poetId, matchScore,
+        analysisReport: finalAnalysis,
+        acrosticPoem: finalAcrostic,
+        shareCount: 0,
+        generatedAt: new Date(),
+        updatedAt: new Date(),
+        poet,
+      };
+    }
   }),
 
   // Share destiny poet

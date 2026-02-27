@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -21,7 +21,7 @@ const POET_EMOJIS: Record<string, string> = {
   "白朴": "🎪", "郑光祖": "🎨", "王实甫": "💕", "乔吉": "🌸",
   "刘基": "🔮", "归有光": "🏠", "汤显祖": "🎭", "袁宏道": "🌿",
   "徐渭": "🖊️", "王世贞": "📜", "纳兰性德": "❄️", "蒲松龄": "👻",
-  "龚自珍": "🌋", "梁启超": "🔥",
+  "龚自珍": "🌋", "梁启超": "🔥", "曹操": "⚔️", "屈原": "🌊", "李璟": "🌙",
 };
 
 const MATCH_COLORS = [
@@ -44,15 +44,62 @@ function safeParseArray(val: unknown): string[] {
   return [];
 }
 
+// 游客答题统计存储键
+const GUEST_STATS_KEY = "tianma_guest_stats";
+
+interface GuestStats {
+  totalAnswered: number;
+  totalCorrect: number;
+  poetCorrectMap: Record<string, number>;
+  typePreferMap: Record<string, number>;
+  avgResponseTime: number;
+}
+
+function loadGuestStats(): GuestStats {
+  try {
+    const raw = localStorage.getItem(GUEST_STATS_KEY);
+    if (raw) return JSON.parse(raw) as GuestStats;
+  } catch { /* ignore */ }
+  return { totalAnswered: 0, totalCorrect: 0, poetCorrectMap: {}, typePreferMap: {}, avgResponseTime: 5.0 };
+}
+
 const GAME_URL = "https://tianmapoet-4lhgiefm.manus.space";
+
+// 本命诗人结果类型（游客模式下本地存储）
+interface DestinyResult {
+  id: number;
+  userId: number;
+  poetId: number;
+  matchScore: number;
+  analysisReport: string | null;
+  acrosticPoem: string | null;
+  shareCount: number;
+  generatedAt: Date | string;
+  updatedAt: Date | string;
+  poet: {
+    name: string; dynasty: string; mbtiType: string;
+    mbtiDescription: string; personalityTags: unknown; signaturePoems: unknown;
+  } | null;
+}
 
 export default function Destiny() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [generating, setGenerating] = useState(false);
   const [showShareGuide, setShowShareGuide] = useState(false);
+  // 游客模式下的本地结果
+  const [guestDestiny, setGuestDestiny] = useState<DestinyResult | null>(null);
+  const [guestStats, setGuestStats] = useState<GuestStats>(() => loadGuestStats());
 
-  const { data: destiny, refetch } = trpc.game.getDestinyPoet.useQuery(undefined, {
+  // 刷新游客统计
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setGuestStats(loadGuestStats());
+    }
+  }, [isAuthenticated]);
+
+  // 已登录用户：从服务器获取本命诗人
+  const { data: serverDestiny, refetch } = trpc.game.getDestinyPoet.useQuery(undefined, {
     enabled: isAuthenticated,
   });
   const { data: gameState } = trpc.game.getState.useQuery(undefined, {
@@ -60,9 +107,14 @@ export default function Destiny() {
   });
 
   const generateMutation = trpc.game.generateDestinyPoet.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("✨ 本命诗人已觉醒！");
-      refetch();
+      if (isAuthenticated) {
+        refetch();
+      } else {
+        // 游客模式：保存到本地状态
+        setGuestDestiny(data as DestinyResult);
+      }
       setGenerating(false);
     },
     onError: (e) => {
@@ -73,13 +125,24 @@ export default function Destiny() {
 
   const handleGenerate = () => {
     setGenerating(true);
-    generateMutation.mutate();
+    if (isAuthenticated) {
+      // 已登录：不传 guestStats，后端从 DB 加载
+      generateMutation.mutate({});
+    } else {
+      // 游客模式：传入本地统计数据
+      generateMutation.mutate({ guestStats });
+    }
   };
+
+  // 当前展示的本命诗人数据（登录用服务器数据，游客用本地数据）
+  const destiny = isAuthenticated ? serverDestiny : guestDestiny;
+  const totalAnswered = isAuthenticated ? (gameState?.totalAnswered ?? 0) : guestStats.totalAnswered;
+  const canGenerate = totalAnswered >= 10;
 
   // 微信分享：直接复制链接+文案，并显示操作指引
   const handleShare = () => {
     const poetName = destiny?.poet ? (destiny.poet as { name: string }).name : "诗词达人";
-    const rankName = gameState?.rank?.rankName ?? "青铜剑";
+    const rankName = gameState?.rank?.rankName ?? "诗词达人";
     const emoji = POET_EMOJIS[poetName] ?? "📜";
     const matchScore = destiny?.matchScore ?? 0;
 
@@ -92,7 +155,6 @@ export default function Destiny() {
       GAME_URL,
     ].join("\n");
 
-    // 复制到剪贴板
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText).then(() => {
         setShowShareGuide(true);
@@ -112,32 +174,18 @@ export default function Destiny() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4 bg-background">
-        <div className="text-5xl float-anim">✨</div>
-        <p className="text-muted-foreground text-center" style={{ fontSize: "16px" }}>请先登录，发现你的本命诗人</p>
-        <a href={getLoginUrl()}
-          className="px-6 py-3 rounded-xl font-semibold"
-          style={{ background: "var(--vermilion)", color: "white", fontSize: "16px", minHeight: "48px", display: "flex", alignItems: "center" }}>
-          立即登录
-        </a>
-        <button onClick={() => navigate("/")} className="text-muted-foreground underline" style={{ fontSize: "15px" }}>
-          返回首页
-        </button>
-      </div>
-    );
-  }
-
-  const totalAnswered = gameState?.totalAnswered ?? 0;
-  const canGenerate = totalAnswered >= 10;
-
   return (
     <div className="min-h-screen page-content px-4 pt-2 bg-background">
       {/* Header */}
       <div className="flex items-center gap-3 py-3 mb-2">
         <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
         <h1 className="font-semibold font-display" style={{ fontSize: "17px" }}>✨ 本命诗人觉醒</h1>
+        {!isAuthenticated && (
+          <a href={getLoginUrl()} className="ml-auto text-xs px-3 py-1 rounded-full font-medium"
+            style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
+            登录保存结果
+          </a>
+        )}
       </div>
 
       {/* 微信分享指引弹窗 */}
@@ -220,6 +268,13 @@ export default function Destiny() {
               ⚔️ 去答题
             </button>
           )}
+
+          {/* 游客提示：登录可保存进度 */}
+          {!isAuthenticated && totalAnswered > 0 && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              游客模式下结果仅保存在本设备，<a href={getLoginUrl()} className="underline" style={{ color: "var(--vermilion)" }}>登录</a>可永久保存
+            </p>
+          )}
         </div>
       )}
 
@@ -231,7 +286,6 @@ export default function Destiny() {
         };
         const matchInfo = getMatchInfo(destiny.matchScore);
         const poetEmoji = POET_EMOJIS[poet.name] ?? "✨";
-        // 安全解析 JSON 字段（字段可能已是数组）
         const poems = safeParseArray(poet.signaturePoems);
         const tags  = safeParseArray(poet.personalityTags);
 
@@ -240,26 +294,20 @@ export default function Destiny() {
             {/* Main card */}
             <div className="rounded-2xl p-5 mb-4 text-center border"
               style={{ background: matchInfo.bg, borderColor: matchInfo.color + "40" }}>
-              {/* Poet avatar */}
               <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 float-anim"
                 style={{ background: matchInfo.color + "15", border: `2px solid ${matchInfo.color}50` }}>
                 {poetEmoji}
               </div>
-
-              {/* Match badge */}
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold mb-2"
                 style={{ background: matchInfo.color + "15", color: matchInfo.color, fontSize: "13px" }}>
                 ✨ {matchInfo.label}
               </div>
-
               <h2 className="font-bold font-display mb-0.5" style={{ color: matchInfo.color, fontSize: "24px" }}>
                 {poet.name}
               </h2>
               <p className="text-muted-foreground mb-3" style={{ fontSize: "14px" }}>
                 {poet.dynasty}代 · {poet.mbtiType}
               </p>
-
-              {/* Match score circle */}
               <div className="relative mx-auto mb-3" style={{ width: 72, height: 72 }}>
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 72 72">
                   <circle cx="36" cy="36" r="28" fill="none" stroke={matchInfo.color + "20"} strokeWidth="5" />
@@ -273,8 +321,6 @@ export default function Destiny() {
                   <span className="text-muted-foreground" style={{ fontSize: "10px" }}>契合度</span>
                 </div>
               </div>
-
-              {/* Personality tags */}
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 justify-center mb-3">
                   {tags.map((tag) => (
@@ -285,7 +331,6 @@ export default function Destiny() {
                   ))}
                 </div>
               )}
-
               <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "15px" }}>
                 {poet.mbtiDescription}
               </p>
@@ -337,9 +382,21 @@ export default function Destiny() {
               </div>
             )}
 
+            {/* 游客提示 */}
+            {!isAuthenticated && (
+              <div className="rounded-xl p-3 mb-4 text-center bg-card border"
+                style={{ borderColor: "oklch(0.55 0.20 25 / 0.25)" }}>
+                <p className="text-xs text-muted-foreground mb-2">游客结果仅保存在本设备，登录后可永久保存并解锁更多功能</p>
+                <a href={getLoginUrl()}
+                  className="inline-block px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
+                  style={{ background: "var(--vermilion)" }}>
+                  立即登录保存
+                </a>
+              </div>
+            )}
+
             {/* Action buttons */}
             <div className="space-y-3 mb-6">
-              {/* 微信分享 */}
               <button
                 onClick={handleShare}
                 className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 text-white"
@@ -347,8 +404,6 @@ export default function Destiny() {
               >
                 📱 分享到微信
               </button>
-
-              {/* 重新匹配 - 随时可用，不限制次数 */}
               <button
                 onClick={handleGenerate}
                 disabled={generating}
@@ -357,8 +412,6 @@ export default function Destiny() {
               >
                 {generating ? "✨ 重新觉醒中..." : "🔄 重新匹配本命诗人"}
               </button>
-
-              {/* 继续答题 */}
               <button
                 onClick={() => navigate("/game")}
                 className="w-full py-3 rounded-xl transition-all active:scale-95 text-muted-foreground"

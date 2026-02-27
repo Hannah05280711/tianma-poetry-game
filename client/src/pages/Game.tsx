@@ -5,6 +5,53 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 
+// 游客答题统计存储键
+const GUEST_STATS_KEY = "tianma_guest_stats";
+
+function loadGuestStats() {
+  try {
+    const raw = localStorage.getItem(GUEST_STATS_KEY);
+    if (raw) return JSON.parse(raw) as {
+      totalAnswered: number; totalCorrect: number;
+      poetCorrectMap: Record<string, number>; typePreferMap: Record<string, number>;
+      avgResponseTime: number;
+    };
+  } catch { /* ignore */ }
+  return { totalAnswered: 0, totalCorrect: 0, poetCorrectMap: {}, typePreferMap: {}, avgResponseTime: 5.0 };
+}
+
+function saveGuestStats(stats: ReturnType<typeof loadGuestStats>) {
+  try { localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(stats)); } catch { /* ignore */ }
+}
+
+// 将题目内容中的 __ 替换为2字符宽度的横线
+function renderQuestionContent(content: string): React.ReactNode {
+  const parts = content.split("__");
+  if (parts.length <= 1) return content;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span
+              style={{
+                display: "inline-block",
+                width: "2em",
+                borderBottom: "2px solid currentColor",
+                verticalAlign: "bottom",
+                marginBottom: "2px",
+                marginLeft: "1px",
+                marginRight: "1px",
+              }}
+            />
+          )}
+        </span>
+      ))}
+    </>
+  );
+}
+
 type GamePhase = "select" | "playing" | "result";
 type AnswerState = "idle" | "correct" | "wrong";
 
@@ -142,7 +189,29 @@ export default function Game() {
       if (result.rankChanged && result.newRank) {
         setTimeout(() => toast.success(`🎉 段位晋升！${result.newRank!.rankName}`, { duration: 3000 }), 500);
       }
-      if (isAuthenticated) refetchState();
+      if (isAuthenticated) {
+        refetchState();
+      } else {
+        // 游客模式：将答题统计保存到 localStorage
+        const prevStats = loadGuestStats();
+        const newTotal = prevStats.totalAnswered + 1;
+        const newCorrect = prevStats.totalCorrect + (isCorrect ? 1 : 0);
+        const poetId = String(currentQ.poetId ?? 0);
+        const qType = currentQ.questionType ?? "fill";
+        const poetMap = { ...prevStats.poetCorrectMap };
+        if (isCorrect && poetId !== "0") poetMap[poetId] = (poetMap[poetId] ?? 0) + 1;
+        const typeMap = { ...prevStats.typePreferMap };
+        typeMap[qType] = (typeMap[qType] ?? 0) + 1;
+        // 加权平均响应时间
+        const newAvg = (prevStats.avgResponseTime * prevStats.totalAnswered + responseTime) / newTotal;
+        saveGuestStats({
+          totalAnswered: newTotal,
+          totalCorrect: newCorrect,
+          poetCorrectMap: poetMap,
+          typePreferMap: typeMap,
+          avgResponseTime: newAvg,
+        });
+      }
     } catch { /* silently continue */ }
     autoAdvanceRef.current = setTimeout(advanceToNext, AUTO_ADVANCE_DELAY);
   }, [currentQ, answerState, sessionId, submitMutation, refetchState, isAuthenticated, advanceToNext]);
@@ -346,7 +415,7 @@ export default function Game() {
                 )}
               </div>
               <p className="leading-relaxed text-foreground" style={{ fontSize: "17px", lineHeight: "1.85", fontFamily: "'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', sans-serif", fontWeight: 500 }}>
-                {currentQ.content}
+                {renderQuestionContent(currentQ.content)}
               </p>
             </div>
 
@@ -492,15 +561,13 @@ export default function Game() {
           >
             ⚔️ 再来一局
           </button>
-          {isAuthenticated && (
-            <button
-              onClick={() => navigate("/destiny")}
-              className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98] bg-card border border-border text-foreground"
-              style={{ fontSize: "16px" }}
-            >
-              ✨ 查看本命诗人
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/destiny")}
+            className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98] bg-card border border-border text-foreground"
+            style={{ fontSize: "16px" }}
+          >
+            ✨ 查看本命诗人
+          </button>
           <button
             onClick={() => {
               const shareText = `我在「天马行空·你的本命诗人是谁」答题得了${sessionScore}分！正确率${Math.round((sessionCorrect / (questions?.length ?? 7)) * 100)}%，快来挑战我吧！📜
