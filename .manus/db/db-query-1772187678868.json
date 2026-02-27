@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_questions, SUM(CASE WHEN poetId = 1 THEN 1 ELSE 0 END) as poet1_count FROM questions;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT COUNT(*) as total_questions, SUM(CASE WHEN poetId = 1 THEN 1 ELSE 0 END) as poet1_count FROM questions;",
+  "rows": [
+    {
+      "total_questions": "617",
+      "poet1_count": "214"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_questions\tpoet1_count\n617\t214\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

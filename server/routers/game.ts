@@ -97,8 +97,12 @@ function matchPoet(
   }
 
   // 5. 随机化因子：增加多样性，防止每次都匹配同一人
+  // 随机扰动范围为当前最高分的±20%，确保每次结果有明显差异
+  const maxScore = Math.max(1, ...Object.values(scores));
+  const perturbRange = Math.max(15, maxScore * 0.20);
   for (const p of allPoets) {
-    scores[p.id] = (scores[p.id] ?? 0) + Math.random() * 5;
+    const perturb = (Math.random() * 2 - 1) * perturbRange;
+    scores[p.id] = Math.max(0, (scores[p.id] ?? 0) + perturb);
   }
 
   const bestId = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0];

@@ -1,0 +1,160 @@
+{
+  "query": "SELECT p.id, p.name, COUNT(q.id) as question_count FROM poets p LEFT JOIN questions q ON p.id = q.poetId GROUP BY p.id, p.name ORDER BY question_count DESC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT p.id, p.name, COUNT(q.id) as question_count FROM poets p LEFT JOIN questions q ON p.id = q.poetId GROUP BY p.id, p.name ORDER BY question_count DESC LIMIT 30;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "李白",
+      "question_count": "214"
+    },
+    {
+      "id": "30008",
+      "name": "温庭筠",
+      "question_count": "132"
+    },
+    {
+      "id": "30038",
+      "name": "纳兰性德",
+      "question_count": "101"
+    },
+    {
+      "id": "30016",
+      "name": "李煜",
+      "question_count": "56"
+    },
+    {
+      "id": "30024",
+      "name": "关汉卿",
+      "question_count": "24"
+    },
+    {
+      "id": "4",
+      "name": "苏轼",
+      "question_count": "17"
+    },
+    {
+      "id": "2",
+      "name": "杜甫",
+      "question_count": "16"
+    },
+    {
+      "id": "5",
+      "name": "李清照",
+      "question_count": "13"
+    },
+    {
+      "id": "3",
+      "name": "王维",
+      "question_count": "12"
+    },
+    {
+      "id": "6",
+      "name": "辛弃疾",
+      "question_count": "11"
+    },
+    {
+      "id": "7",
+      "name": "白居易",
+      "question_count": "7"
+    },
+    {
+      "id": "30025",
+      "name": "马致远",
+      "question_count": "5"
+    },
+    {
+      "id": "30031",
+      "name": "张可久",
+      "question_count": "5"
+    },
+    {
+      "id": "8",
+      "name": "陶渊明",
+      "question_count": "4"
+    },
+    {
+      "id": "30034",
+      "name": "汤显祖",
+      "question_count": "0"
+    },
+    {
+      "id": "30021",
+      "name": "孙光宪",
+      "question_count": "0"
+    },
+    {
+      "id": "30015",
+      "name": "秦观",
+      "question_count": "0"
+    },
+    {
+      "id": "30027",
+      "name": "萨都剌",
+      "question_count": "0"
+    },
+    {
+      "id": "30039",
+      "name": "蒲松龄",
+      "question_count": "0"
+    },
+    {
+      "id": "30019",
+      "name": "韦庄",
+      "question_count": "0"
+    },
+    {
+      "id": "30029",
+      "name": "郑光祖",
+      "question_count": "0"
+    },
+    {
+      "id": "30033",
+      "name": "归有光",
+      "question_count": "0"
+    },
+    {
+      "id": "30042",
+      "name": "黄遵宪",
+      "question_count": "0"
+    },
+    {
+      "id": "30002",
+      "name": "王昌龄",
+      "question_count": "0"
+    },
+    {
+      "id": "30012",
+      "name": "柳永",
+      "question_count": "0"
+    },
+    {
+      "id": "30014",
+      "name": "范仲淹",
+      "question_count": "0"
+    },
+    {
+      "id": "30017",
+      "name": "冯延巳",
+      "question_count": "0"
+    },
+    {
+      "id": "30005",
+      "name": "刘禹锡",
+      "question_count": "0"
+    },
+    {
+      "id": "30041",
+      "name": "梁启超",
+      "question_count": "0"
+    },
+    {
+      "id": "30022",
+      "name": "李珣",
+      "question_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tquestion_count\n1\t李白\t214\n30008\t温庭筠\t132\n30038\t纳兰性德\t101\n30016\t李煜\t56\n30024\t关汉卿\t24\n4\t苏轼\t17\n2\t杜甫\t16\n5\t李清照\t13\n3\t王维\t12\n6\t辛弃疾\t11\n7\t白居易\t7\n30025\t马致远\t5\n30031\t张可久\t5\n8\t陶渊明\t4\n30034\t汤显祖\t0\n30021\t孙光宪\t0\n30015\t秦观\t0\n30027\t萨都剌\t0\n30039\t蒲松龄\t0\n30019\t韦庄\t0\n30029\t郑光祖\t0\n30033\t归有光\t0\n30042\t黄遵宪\t0\n30002\t王昌龄\t0\n30012\t柳永\t0\n30014\t范仲淹\t0\n30017\t冯延巳\t0\n30005\t刘禹锡\t0\n30041\t梁启超\t0\n30022\t李珣\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

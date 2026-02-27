@@ -1,0 +1,66 @@
+{
+  "query": "SELECT poetId, COUNT(*) as count FROM questions GROUP BY poetId ORDER BY count DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT poetId, COUNT(*) as count FROM questions GROUP BY poetId ORDER BY count DESC LIMIT 20;",
+  "rows": [
+    {
+      "poetId": "1",
+      "count": "214"
+    },
+    {
+      "poetId": "30008",
+      "count": "132"
+    },
+    {
+      "poetId": "30038",
+      "count": "101"
+    },
+    {
+      "poetId": "30016",
+      "count": "56"
+    },
+    {
+      "poetId": "30024",
+      "count": "24"
+    },
+    {
+      "poetId": "4",
+      "count": "17"
+    },
+    {
+      "poetId": "2",
+      "count": "16"
+    },
+    {
+      "poetId": "5",
+      "count": "13"
+    },
+    {
+      "poetId": "3",
+      "count": "12"
+    },
+    {
+      "poetId": "6",
+      "count": "11"
+    },
+    {
+      "poetId": "7",
+      "count": "7"
+    },
+    {
+      "poetId": "30025",
+      "count": "5"
+    },
+    {
+      "poetId": "30031",
+      "count": "5"
+    },
+    {
+      "poetId": "8",
+      "count": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "poetId\tcount\n1\t214\n30008\t132\n30038\t101\n30016\t56\n30024\t24\n4\t17\n2\t16\n5\t13\n3\t12\n6\t11\n7\t7\n30025\t5\n30031\t5\n8\t4\n",
+  "stderr": "",
+  "execution_time_ms": 341
+}
