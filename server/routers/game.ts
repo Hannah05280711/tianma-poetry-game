@@ -154,8 +154,8 @@ export const gameRouter = router({
     };
   }),
 
-  // Get questions for a session
-  getQuestions: protectedProcedure
+  // Get questions for a session - public so guests can play without login
+  getQuestions: publicProcedure
     .input(z.object({ difficulty: z.number().min(1).max(5).default(1), count: z.number().min(1).max(10).default(5) }))
     .query(async ({ input }) => {
       const qs = await getQuestionsByDifficulty(
@@ -170,8 +170,9 @@ export const gameRouter = router({
       }));
     }),
 
-  // Submit an answer
-  submitAnswer: protectedProcedure
+  // Submit an answer - public so guests can play without login
+  // Guests get immediate feedback but scores are not persisted
+  submitAnswer: publicProcedure
     .input(
       z.object({
         questionId: z.number(),
@@ -186,6 +187,26 @@ export const gameRouter = router({
       if (!question) throw new TRPCError({ code: "NOT_FOUND" });
 
       const isCorrect = question.correctAnswer === input.answer;
+
+      // Guest mode: return result immediately without persisting
+      if (!ctx.user) {
+        const scoreDelta = isCorrect ? 10 : -10;
+        return {
+          isCorrect,
+          scoreDelta,
+          newScore: 0,
+          newConsecutive: 0,
+          shieldUsed: false,
+          reward: null,
+          rankChanged: false,
+          newRank: null,
+          shouldUnlockDestiny: false,
+          explanation: null, // no explanation in guest mode
+          correctAnswer: question.correctAnswer,
+        };
+      }
+
+      // Logged-in user: full persistence
       const user = await getUserGameState(ctx.user.id);
       if (!user) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -195,10 +216,9 @@ export const gameRouter = router({
       if (isCorrect) {
         scoreDelta = 10;
         const newConsec = (user.consecutiveWins ?? 0) + 1;
-        if (newConsec === 3) scoreDelta += 5; // 3-win bonus
-        if (newConsec === 5) scoreDelta += 5; // 5-win bonus
+        if (newConsec === 3) scoreDelta += 5;
+        if (newConsec === 5) scoreDelta += 5;
       } else {
-        // Check shield
         if (input.useShield && (user.shieldsCount ?? 0) > 0) {
           await consumeShield(ctx.user.id);
           shieldUsed = true;
@@ -210,58 +230,40 @@ export const gameRouter = router({
       }
 
       const result = await updateUserScore(ctx.user.id, scoreDelta, isCorrect);
-      await updateUserPoetPreference(
-        ctx.user.id,
-        question.poetId,
-        question.questionType,
-        isCorrect,
-        input.responseTime
-      );
+      await updateUserPoetPreference(ctx.user.id, question.poetId, question.questionType, isCorrect, input.responseTime);
       await saveQuestionRecord(ctx.user.id, input.questionId, isCorrect, input.responseTime, input.sessionId);
 
-      // Update weekly leaderboard
       const rank = await getRankByScore(result?.newScore ?? 0);
       await updateWeeklyScore(ctx.user.id, Math.max(0, scoreDelta), isCorrect, rank?.tierName ?? "青铜剑");
 
-      // Update daily tasks
       const today = new Date().toISOString().slice(0, 10);
       await upsertDailyTaskProgress(ctx.user.id, "answer_3", today, 1);
-      if (isCorrect) {
-        await upsertDailyTaskProgress(ctx.user.id, "win_streak_2", today, 1);
-      }
+      if (isCorrect) await upsertDailyTaskProgress(ctx.user.id, "win_streak_2", today, 1);
 
-      // Consecutive win rewards
       let reward: { type: string; message: string } | null = null;
       const newConsec = result?.newConsecutive ?? 0;
       if (isCorrect && newConsec === 5) {
-        // Give hint
-        const db = await import("../game-db").then((m) => m.getUserGameState(ctx.user.id));
+        const db = await import("../game-db").then((m) => m.getUserGameState(ctx.user!.id));
         if (db) {
           const { getDb } = await import("../db");
           const { users } = await import("../../drizzle/schema");
           const { eq } = await import("drizzle-orm");
           const dbConn = await getDb();
-          if (dbConn) {
-            await dbConn.update(users).set({ hintsCount: (db.hintsCount ?? 0) + 1 }).where(eq(users.id, ctx.user.id));
-          }
+          if (dbConn) await dbConn.update(users).set({ hintsCount: (db.hintsCount ?? 0) + 1 }).where(eq(users.id, ctx.user!.id));
         }
         reward = { type: "hint", message: "🎉 5连胜！获得提示卡×1" };
       } else if (isCorrect && newConsec === 10) {
-        // Give shield
-        const db = await import("../game-db").then((m) => m.getUserGameState(ctx.user.id));
+        const db = await import("../game-db").then((m) => m.getUserGameState(ctx.user!.id));
         if (db) {
           const { getDb } = await import("../db");
           const { users } = await import("../../drizzle/schema");
           const { eq } = await import("drizzle-orm");
           const dbConn = await getDb();
-          if (dbConn) {
-            await dbConn.update(users).set({ shieldsCount: (db.shieldsCount ?? 0) + 1 }).where(eq(users.id, ctx.user.id));
-          }
+          if (dbConn) await dbConn.update(users).set({ shieldsCount: (db.shieldsCount ?? 0) + 1 }).where(eq(users.id, ctx.user!.id));
         }
         reward = { type: "shield", message: "🛡️ 10连胜！获得护身符×1" };
       }
 
-      // Check rank up
       const rankChanged = result && result.newRankId !== result.oldRankId;
       if (rankChanged) {
         const newRank = await getRankByScore(result.newScore);
@@ -271,10 +273,8 @@ export const gameRouter = router({
         });
       }
 
-      // Check destiny poet unlock (100 answers)
       const updatedUser = await getUserGameState(ctx.user.id);
-      const shouldUnlock =
-        (updatedUser?.totalAnswered ?? 0) >= 100 && !(await getDestinyPoet(ctx.user.id));
+      const shouldUnlock = (updatedUser?.totalAnswered ?? 0) >= 100 && !(await getDestinyPoet(ctx.user.id));
 
       return {
         isCorrect,
@@ -286,7 +286,7 @@ export const gameRouter = router({
         rankChanged,
         newRank: rankChanged ? await getRankByScore(result?.newScore ?? 0) : null,
         shouldUnlockDestiny: shouldUnlock,
-        explanation: question.explanation,
+        explanation: null, // explanation removed per UX requirement
         correctAnswer: question.correctAnswer,
       };
     }),

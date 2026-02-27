@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -21,6 +20,9 @@ const TYPE_LABELS: Record<string, string> = {
   fill: "填空题", reorder: "重组题", error: "勘误题", chain: "接龙题", judge: "判断题",
 };
 
+// Auto-advance delay in ms after showing score
+const AUTO_ADVANCE_DELAY = 1200;
+
 export default function Game() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -35,10 +37,10 @@ export default function Game() {
   const [sessionScore, setSessionScore] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [consecutiveWins, setConsecutiveWins] = useState(0);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [lastResult, setLastResult] = useState<{ isCorrect: boolean; scoreDelta: number; explanation?: string | null } | null>(null);
+  const [lastScoreDelta, setLastScoreDelta] = useState<number>(0);
   const startTimeRef = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const diffInfo = DIFFICULTY_INFO[difficulty - 1];
   const maxTime = diffInfo?.time ?? 20;
@@ -56,6 +58,14 @@ export default function Game() {
   const hintMutation = trpc.game.useHint.useMutation();
 
   const currentQ = questions?.[currentIdx];
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+    };
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -77,14 +87,36 @@ export default function Game() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [currentIdx, phase, currentQ?.id]);
 
+  const advanceToNext = useCallback(() => {
+    setAnswerState("idle");
+    setSelectedAnswer(null);
+    setEliminatedOptions([]);
+    setLastScoreDelta(0);
+
+    if (currentIdx + 1 >= (questions?.length ?? 0)) {
+      setPhase("result");
+    } else {
+      setCurrentIdx((i) => i + 1);
+    }
+  }, [currentIdx, questions?.length]);
+
   const handleTimeout = useCallback(() => {
     if (!currentQ) return;
     setAnswerState("wrong");
     setSelectedAnswer("__timeout__");
-    handleSubmit("__timeout__", true);
-  }, [currentQ]);
+    setLastScoreDelta(-10);
+    submitMutation.mutate({
+      questionId: currentQ.id,
+      answer: "__timeout__",
+      responseTime: maxTime,
+      sessionId,
+      useShield: false,
+    });
+    // Auto-advance after delay
+    autoAdvanceRef.current = setTimeout(advanceToNext, AUTO_ADVANCE_DELAY);
+  }, [currentQ, maxTime, sessionId, submitMutation, advanceToNext]);
 
-  const handleSubmit = useCallback(async (answer: string, isTimeout = false) => {
+  const handleSubmit = useCallback(async (answer: string) => {
     if (!currentQ || answerState !== "idle") return;
     if (timerRef.current) clearInterval(timerRef.current);
 
@@ -92,7 +124,7 @@ export default function Game() {
     const isCorrect = answer === currentQ.correctAnswer;
 
     setAnswerState(isCorrect ? "correct" : "wrong");
-    setShowExplanation(true);
+    setSelectedAnswer(answer);
 
     try {
       const result = await submitMutation.mutateAsync({
@@ -103,56 +135,41 @@ export default function Game() {
         useShield: false,
       });
 
-      setLastResult({
-        isCorrect: result.isCorrect,
-        scoreDelta: result.scoreDelta,
-        explanation: result.explanation,
-      });
+      setLastScoreDelta(result.scoreDelta);
 
       if (result.isCorrect) {
         setSessionCorrect((c) => c + 1);
         setConsecutiveWins(result.newConsecutive);
-        toast.success(`+${result.scoreDelta}分`, { duration: 1500 });
-      } else if (!isTimeout) {
-        toast.error(`-${Math.abs(result.scoreDelta)}分`, { duration: 1500 });
+        setSessionScore((s) => s + result.scoreDelta);
       }
 
       if (result.reward) {
-        setTimeout(() => toast.success(result.reward!.message), 500);
+        setTimeout(() => toast.success(result.reward!.message), 300);
       }
       if (result.rankChanged && result.newRank) {
-        setTimeout(() => toast.success(`🎉 段位晋升！${result.newRank!.rankName}`, { duration: 3000 }), 800);
+        setTimeout(() => toast.success(`🎉 段位晋升！${result.newRank!.rankName}`, { duration: 3000 }), 500);
       }
-      if (result.scoreDelta > 0) setSessionScore((s) => s + result.scoreDelta);
 
-      refetchState();
+      if (isAuthenticated) refetchState();
     } catch {
-      toast.error("提交失败，请重试");
+      // Silently handle errors - still advance
     }
-  }, [currentQ, answerState, sessionId, submitMutation, refetchState]);
+
+    // Auto-advance after showing score
+    autoAdvanceRef.current = setTimeout(advanceToNext, AUTO_ADVANCE_DELAY);
+  }, [currentQ, answerState, sessionId, submitMutation, refetchState, isAuthenticated, advanceToNext]);
 
   const handleOptionClick = (option: string) => {
     if (answerState !== "idle" || eliminatedOptions.includes(option)) return;
-    setSelectedAnswer(option);
     handleSubmit(option);
-  };
-
-  const handleNext = () => {
-    setAnswerState("idle");
-    setSelectedAnswer(null);
-    setEliminatedOptions([]);
-    setShowExplanation(false);
-    setLastResult(null);
-
-    if (currentIdx + 1 >= (questions?.length ?? 0)) {
-      setPhase("result");
-    } else {
-      setCurrentIdx((i) => i + 1);
-    }
   };
 
   const handleUseHint = async () => {
     if (!currentQ || answerState !== "idle") return;
+    if (!isAuthenticated) {
+      toast.info("登录后可使用提示卡");
+      return;
+    }
     if ((gameState?.hintsCount ?? 0) <= 0) {
       toast.error("没有提示卡了");
       return;
@@ -175,25 +192,10 @@ export default function Game() {
     setAnswerState("idle");
     setSelectedAnswer(null);
     setEliminatedOptions([]);
-    setShowExplanation(false);
+    setLastScoreDelta(0);
     await refetchQ();
     setPhase("playing");
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4"
-        style={{ background: "oklch(0.10 0.025 270)" }}>
-        <div className="text-5xl float-anim">🔒</div>
-        <p className="text-muted-foreground text-sm">请先登录开始答题</p>
-        <a href={getLoginUrl()}
-          className="px-6 py-2.5 rounded-xl font-bold text-sm"
-          style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}>
-          立即登录
-        </a>
-      </div>
-    );
-  }
 
   // ─── Phase: Select Difficulty ─────────────────────────────────────────────
   if (phase === "select") {
@@ -202,10 +204,16 @@ export default function Game() {
         <div className="flex items-center gap-3 py-4 mb-2">
           <button onClick={() => navigate("/")} className="text-muted-foreground text-xl">‹</button>
           <h1 className="font-bold text-lg font-display">选择关卡</h1>
+          {!isAuthenticated && (
+            <span className="ml-auto text-xs px-2 py-1 rounded-full"
+              style={{ background: "oklch(0.72 0.18 35 / 0.15)", color: "oklch(0.72 0.18 35)" }}>
+              游客模式
+            </span>
+          )}
         </div>
 
-        {/* Current state */}
-        {gameState && (
+        {/* Current state (logged-in only) */}
+        {isAuthenticated && gameState && (
           <div className="rounded-xl p-3 mb-4 flex items-center justify-between"
             style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
             <div className="flex items-center gap-2">
@@ -223,6 +231,15 @@ export default function Game() {
               <div className="text-xs text-muted-foreground">提示卡</div>
               <div className="text-sm font-bold" style={{ color: "oklch(0.72 0.18 35)" }}>×{gameState.hintsCount}</div>
             </div>
+          </div>
+        )}
+
+        {/* Guest tip */}
+        {!isAuthenticated && (
+          <div className="rounded-xl p-3 mb-4 flex items-center gap-2"
+            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
+            <span className="text-lg">💡</span>
+            <p className="text-xs text-muted-foreground flex-1">游客模式可直接答题，登录后积分和段位将被保存</p>
           </div>
         )}
 
@@ -266,16 +283,20 @@ export default function Game() {
 
   // ─── Phase: Playing ───────────────────────────────────────────────────────
   if (phase === "playing") {
-    const progress = ((currentIdx) / (questions?.length ?? 7)) * 100;
+    const progress = (currentIdx / (questions?.length ?? 7)) * 100;
     const timeProgress = (timeLeft / maxTime) * 100;
     const isWarning = timeLeft <= 5;
 
     return (
       <div className="min-h-screen flex flex-col px-4 pt-safe" style={{ background: "oklch(0.10 0.025 270)" }}>
-        {/* Header */}
         <div className="py-3">
           <div className="flex items-center justify-between mb-2">
-            <button onClick={() => { setPhase("select"); setCurrentIdx(0); }} className="text-muted-foreground">✕</button>
+            <button onClick={() => {
+              if (timerRef.current) clearInterval(timerRef.current);
+              if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+              setPhase("select");
+              setCurrentIdx(0);
+            }} className="text-muted-foreground">✕</button>
             <div className="flex items-center gap-3 text-sm">
               <span className="text-muted-foreground">{currentIdx + 1}/{questions?.length ?? 7}</span>
               <span style={{ color: "oklch(0.78 0.18 85)" }}>+{sessionScore}分</span>
@@ -285,14 +306,18 @@ export default function Game() {
                 </span>
               )}
             </div>
-            <button
-              onClick={handleUseHint}
-              disabled={answerState !== "idle" || (gameState?.hintsCount ?? 0) <= 0}
-              className="text-sm px-2 py-1 rounded-lg transition-all disabled:opacity-40"
-              style={{ background: "oklch(0.72 0.18 35 / 0.15)", color: "oklch(0.72 0.18 35)" }}
-            >
-              💡×{gameState?.hintsCount ?? 0}
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={handleUseHint}
+                disabled={answerState !== "idle" || (gameState?.hintsCount ?? 0) <= 0}
+                className="text-sm px-2 py-1 rounded-lg transition-all disabled:opacity-40"
+                style={{ background: "oklch(0.72 0.18 35 / 0.15)", color: "oklch(0.72 0.18 35)" }}
+              >
+                💡×{gameState?.hintsCount ?? 0}
+              </button>
+            ) : (
+              <div className="text-xs text-muted-foreground">游客</div>
+            )}
           </div>
 
           {/* Progress bar */}
@@ -375,34 +400,26 @@ export default function Game() {
               })}
             </div>
 
-            {/* Explanation */}
-            {showExplanation && lastResult && (
-              <div className="rounded-xl p-3 mb-4 animate-slide-up"
+            {/* Score feedback - shown immediately after answering, no explanation */}
+            {answerState !== "idle" && (
+              <div className="rounded-xl p-3 mb-4 animate-slide-up text-center"
                 style={{
-                  background: lastResult.isCorrect ? "oklch(0.62 0.18 190 / 0.1)" : "oklch(0.62 0.22 25 / 0.1)",
-                  border: `1px solid ${lastResult.isCorrect ? "oklch(0.62 0.18 190 / 0.3)" : "oklch(0.62 0.22 25 / 0.3)"}`,
+                  background: answerState === "correct" ? "oklch(0.62 0.18 190 / 0.1)" : "oklch(0.62 0.22 25 / 0.1)",
+                  border: `1px solid ${answerState === "correct" ? "oklch(0.62 0.18 190 / 0.3)" : "oklch(0.62 0.22 25 / 0.3)"}`,
                 }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span>{lastResult.isCorrect ? "✅" : "❌"}</span>
-                  <span className="text-sm font-bold" style={{ color: lastResult.isCorrect ? "oklch(0.72 0.15 160)" : "oklch(0.72 0.18 25)" }}>
-                    {lastResult.isCorrect ? `答对了！+${lastResult.scoreDelta}分` : `答错了 ${lastResult.scoreDelta}分`}
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-xl">{answerState === "correct" ? "✅" : "❌"}</span>
+                  <span className="text-base font-bold"
+                    style={{ color: answerState === "correct" ? "oklch(0.72 0.15 160)" : "oklch(0.72 0.18 25)" }}>
+                    {answerState === "correct"
+                      ? `+${lastScoreDelta}分`
+                      : lastScoreDelta < 0 ? `${lastScoreDelta}分` : "答错了"}
                   </span>
                 </div>
-                {lastResult.explanation && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">{lastResult.explanation}</p>
-                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {currentIdx + 1 >= (questions?.length ?? 7) ? "即将查看结果..." : "即将进入下一题..."}
+                </p>
               </div>
-            )}
-
-            {/* Next button */}
-            {answerState !== "idle" && (
-              <button
-                onClick={handleNext}
-                className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-98 animate-slide-up"
-                style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}
-              >
-                {currentIdx + 1 >= (questions?.length ?? 7) ? "查看结果 →" : "下一题 →"}
-              </button>
             )}
           </div>
         ) : (
@@ -454,7 +471,7 @@ export default function Game() {
           </div>
         </div>
 
-        {gameState && (
+        {isAuthenticated && gameState && (
           <div className="rounded-xl p-3 mb-5 flex items-center gap-3"
             style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
             <span className="text-2xl">{gameState.rank?.iconEmoji ?? "🗡️"}</span>
@@ -469,6 +486,19 @@ export default function Game() {
           </div>
         )}
 
+        {/* Guest prompt to login */}
+        {!isAuthenticated && (
+          <div className="rounded-xl p-3 mb-5 text-center"
+            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.72 0.18 35 / 0.3)" }}>
+            <p className="text-xs text-muted-foreground mb-2">登录后积分将被保存，还可解锁本命诗人！</p>
+            <a href="/api/oauth/login"
+              className="inline-block px-4 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}>
+              立即登录
+            </a>
+          </div>
+        )}
+
         <div className="space-y-3">
           <button
             onClick={() => { setPhase("select"); setCurrentIdx(0); setSessionScore(0); setSessionCorrect(0); }}
@@ -477,13 +507,15 @@ export default function Game() {
           >
             ⚔️ 再来一局
           </button>
-          <button
-            onClick={() => navigate("/destiny")}
-            className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-98"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
-          >
-            ✨ 查看本命诗人
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={() => navigate("/destiny")}
+              className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-98"
+              style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
+            >
+              ✨ 查看本命诗人
+            </button>
+          )}
           <button
             onClick={() => navigate("/")}
             className="w-full py-3 rounded-xl text-sm text-muted-foreground"
