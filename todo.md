@@ -61,3 +61,11 @@
 - [x] 排查并修复本命诗人召唤 error（JSON.parse 重复解析 bug）✅
 - [x] UI 全面改为白色底色（所有页面 bg-background + white card）✅
 - [x] 字号统一为 14px 苹方黑体（index.css font-family + font-size）✅
+
+## UI 可读性 + 分享功能增强（第四批）
+- [x] 调研 H5 游戏 UI 可读性最佳实践（WCAG 2.1 + Apple HIG）✅
+- [x] 调整字号：正文 16px、题目 18px、选项 16px、标题 20-22px✅
+- [x] 行距 1.75、字间距 0.02em、触控区域最小 44-52px✅
+- [x] 分享语中加入游戏链接 (tianmapoet-4lhgiefm.manus.space)✅
+- [x] 微信分享：navigator.share API + 复制降级方案✅
+- [x] Open Graph meta 标签优化微信分享卡片展示✅

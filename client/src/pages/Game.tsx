@@ -327,7 +327,7 @@ export default function Game() {
                   <span className="text-xs text-muted-foreground">《{currentQ.sourcePoemTitle}》</span>
                 )}
               </div>
-              <p className="text-base leading-relaxed font-display text-foreground">
+              <p className="leading-relaxed font-display text-foreground" style={{ fontSize: "18px", lineHeight: "1.8" }}>
                 {currentQ.content}
               </p>
             </div>
@@ -357,15 +357,15 @@ export default function Game() {
                     key={i}
                     onClick={() => handleOptionClick(opt)}
                     disabled={answerState !== "idle" || isEliminated}
-                    className="w-full text-left px-4 py-3 rounded-xl transition-all duration-150 text-sm"
-                    style={btnStyle}
+                    className="w-full text-left px-4 rounded-xl transition-all duration-150"
+                    style={{ ...btnStyle, fontSize: "16px", lineHeight: "1.6", minHeight: "52px", display: "flex", alignItems: "center" }}
                   >
-                    <span className="mr-2 font-semibold text-muted-foreground">
+                    <span className="mr-2 font-bold" style={{ color: "var(--vermilion)", minWidth: "20px", display: "inline-block" }}>
                       {["A", "B", "C", "D"][i]}
                     </span>
-                    {opt}
-                    {answerState !== "idle" && isCorrectOpt && <span className="float-right text-green-600">✓</span>}
-                    {answerState !== "idle" && isSelected && !isCorrectOpt && <span className="float-right text-red-500">✗</span>}
+                    <span className="flex-1">{opt}</span>
+                    {answerState !== "idle" && isCorrectOpt && <span className="ml-2 text-green-600 font-bold">✓</span>}
+                    {answerState !== "idle" && isSelected && !isCorrectOpt && <span className="ml-2 text-red-500 font-bold">✗</span>}
                   </button>
                 );
               })}
@@ -469,22 +469,39 @@ export default function Game() {
         <div className="space-y-3">
           <button
             onClick={() => { setPhase("select"); setCurrentIdx(0); setSessionScore(0); setSessionCorrect(0); }}
-            className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.98] text-white"
-            style={{ background: "var(--vermilion)" }}
+            className="w-full py-3.5 rounded-xl font-bold transition-all active:scale-[0.98] text-white"
+            style={{ background: "var(--vermilion)", fontSize: "16px" }}
           >
             ⚔️ 再来一局
           </button>
           {isAuthenticated && (
             <button
               onClick={() => navigate("/destiny")}
-              className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] bg-card border border-border text-foreground"
+              className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98] bg-card border border-border text-foreground"
+              style={{ fontSize: "16px" }}
             >
               ✨ 查看本命诗人
             </button>
           )}
           <button
+            onClick={() => {
+              const shareText = `我在「天马行空·你的本命诗人是谁」答题得了${sessionScore}分！正确率${Math.round((sessionCorrect / (questions?.length ?? 7)) * 100)}%，快来挑战我吧！📜
+https://tianmapoet-4lhgiefm.manus.space`;
+              if (navigator.share) {
+                navigator.share({ title: "天马行空·本命诗人", text: shareText, url: "https://tianmapoet-4lhgiefm.manus.space" });
+              } else {
+                navigator.clipboard.writeText(shareText).then(() => toast.success("分享文案已复制，可粘贴到微信发送给好友！"));
+              }
+            }}
+            className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-[0.98] border"
+            style={{ fontSize: "16px", background: "#07C160", color: "white", borderColor: "#07C160" }}
+          >
+            📱 分享到微信
+          </button>
+          <button
             onClick={() => navigate("/")}
-            className="w-full py-3 rounded-xl text-sm text-muted-foreground"
+            className="w-full py-3 rounded-xl text-muted-foreground"
+            style={{ fontSize: "15px" }}
           >
             返回主页
           </button>

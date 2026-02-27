@@ -73,13 +73,34 @@ export default function Destiny() {
     generateMutation.mutate();
   };
 
+  const GAME_URL = "https://tianmapoet-4lhgiefm.manus.space";
+
   const handleShare = () => {
     if (!destiny?.poet) return;
-    const text = `我在天马行空诗词游戏中，发现我的本命诗人是${(destiny.poet as { name: string }).name}！契合度${destiny.matchScore}%，段位${gameState?.rank?.rankName ?? "青铜剑"}。快来测测你的本命诗人！`;
+    const poetName = (destiny.poet as { name: string }).name;
+    const rankName = gameState?.rank?.rankName ?? "青铜剑";
+    const emoji = POET_EMOJIS[poetName] ?? "📜";
+    const shareText = [
+      `${emoji} 我的本命诗人是「${poetName}」！`,
+      `灵魂契合度 ${destiny.matchScore}%，当前段位「${rankName}」`,
+      ``,
+      `🎮 天马行空·你的本命诗人是谁？`,
+      `答题闯关·诗词测试·天命匹配`,
+      GAME_URL,
+    ].join("\n");
     if (navigator.share) {
-      navigator.share({ title: "天马行空·本命诗人", text });
+      navigator.share({
+        title: "天马行空·你的本命诗人是谁",
+        text: shareText,
+        url: GAME_URL,
+      }).catch(() => {
+        // 用户取消分享时降级到复制
+        navigator.clipboard.writeText(shareText).then(() => toast.success("分享文案已复制！可粘贴到微信发送给好友"));
+      });
     } else {
-      navigator.clipboard.writeText(text).then(() => toast.success("已复制分享文案"));
+      navigator.clipboard.writeText(shareText).then(() =>
+        toast.success("分享文案已复制！可粘贴到微信发送给好友", { duration: 4000 })
+      );
     }
   };
 
@@ -274,17 +295,18 @@ export default function Destiny() {
             <div className="space-y-3 mb-4">
               <button
                 onClick={handleShare}
-                className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
-                style={{ background: matchInfo.color + "10", borderColor: matchInfo.color + "40", color: matchInfo.color }}
+                className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95"
+                style={{ background: "#07C160", color: "white", fontSize: "16px", minHeight: "52px" }}
               >
-                📤 分享本命诗人
+                📱 分享到微信
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={generating}
-                className="w-full py-3 rounded-xl text-sm text-muted-foreground transition-all disabled:opacity-50 bg-card border border-border"
+                className="w-full py-3.5 rounded-xl text-muted-foreground transition-all disabled:opacity-50 bg-card border border-border"
+                style={{ fontSize: "15px", minHeight: "48px" }}
               >
-                {generating ? "重新觉醒中..." : "🔄 重新觉醒（需再答10题）"}
+                {generating ? "重新觉醒中..." : "🔄 重新觉醒（需再等10题）"}
               </button>
             </div>
           </div>
