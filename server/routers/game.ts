@@ -30,6 +30,24 @@ import { notifyOwner } from "../_core/notification";
 import { ENV } from "../_core/env";
 
 // ─── Poet Matching Algorithm ──────────────────────────────────────────────────
+// 题型偏好 -> MBTI 类型列表（支持多个匹配）
+const TYPE_MBTI_MAP: Record<string, string[]> = {
+  reorder: ["ENFP", "ENTP", "ENFJ"],   // 排序题 -> 创意型
+  error:   ["INFJ", "INTJ", "ISTJ"],   // 纠错题 -> 分析型
+  fill:    ["ISTJ", "ISFJ", "INFJ"],   // 填空题 -> 谨慎型
+  chain:   ["ENFJ", "ESFJ", "ENTJ"],   // 接龙题 -> 社交型
+  judge:   ["INTP", "INTJ", "INFP"],   // 判断题 -> 思考型
+};
+const ACCURACY_MBTI_MAP: Record<string, string[]> = {
+  high:  ["ISTJ", "INTJ", "INFJ"],   // 高精准 -> 完美主义
+  mid:   ["ENFJ", "ESFJ", "ISFJ"],   // 中精准 -> 平衡型
+  low:   ["ENFP", "ENTP", "ISFP"],   // 低精准 -> 自由型
+};
+const SPEED_MBTI_MAP: Record<string, string[]> = {
+  fast:  ["ENFJ", "ENTJ", "ESTJ", "ENFP"],   // 决断快
+  slow:  ["INFP", "INTP", "ISFP", "INFJ"],   // 思考慢
+};
+
 function matchPoet(
   stats: {
     poetCorrectMap: Record<string, number>;
@@ -38,34 +56,50 @@ function matchPoet(
     totalCorrect: number;
     totalAnswered: number;
   },
-  allPoets: Array<{ id: number; name: string; mbtiType: string }>
+  allPoets: Array<{ id: number; name: string; mbtiType: string; dynastyWeight?: number | null }>
 ) {
   const scores: Record<number, number> = {};
   for (const p of allPoets) scores[p.id] = 0;
 
-  // 1. Correct answers per poet (weight 0.5)
+  // 1. 直接答题记录：诗人相关题目的正确数 (weight 0.5)
   for (const [poetId, correct] of Object.entries(stats.poetCorrectMap)) {
     const id = Number(poetId);
     if (scores[id] !== undefined) scores[id] += correct * 0.5;
   }
 
-  // 2. Question type preference (weight 0.2)
+  // 2. 题型偏好 -> MBTI 匹配 (weight 0.2)
   const prefType = Object.entries(stats.typePreferMap).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const poetByMbti = (mbti: string) => allPoets.find((p) => p.mbtiType === mbti)?.id;
-  if (prefType === "reorder") { const id = poetByMbti("ENFP"); if (id) scores[id] = (scores[id] ?? 0) + 20; }
-  if (prefType === "error")   { const id = poetByMbti("INFJ"); if (id) scores[id] = (scores[id] ?? 0) + 20; }
-  if (prefType === "fill")    { const id = poetByMbti("ISTJ"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
-  if (prefType === "chain")   { const id = poetByMbti("ENFJ"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
-  if (prefType === "judge")   { const id = poetByMbti("INTP"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
+  if (prefType && TYPE_MBTI_MAP[prefType]) {
+    for (const p of allPoets) {
+      if (TYPE_MBTI_MAP[prefType].includes(p.mbtiType)) {
+        scores[p.id] = (scores[p.id] ?? 0) + 20 * (p.dynastyWeight ?? 1.0);
+      }
+    }
+  }
 
-  // 3. Response speed (weight 0.15)
-  if (stats.avgResponseTime < 3) { const id = poetByMbti("ENFJ"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
-  if (stats.avgResponseTime > 7) { const id = poetByMbti("INFP"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
-
-  // 4. Accuracy (weight 0.15)
+  // 3. 精准度 -> MBTI 匹配 (weight 0.15)
   const accuracy = stats.totalAnswered > 0 ? stats.totalCorrect / stats.totalAnswered : 0;
-  if (accuracy > 0.8) { const id = poetByMbti("ISTJ"); if (id) scores[id] = (scores[id] ?? 0) + 15; }
-  if (accuracy < 0.4) { const id = poetByMbti("ENFP"); if (id) scores[id] = (scores[id] ?? 0) + 10; }
+  const accKey = accuracy > 0.8 ? "high" : accuracy < 0.4 ? "low" : "mid";
+  for (const p of allPoets) {
+    if (ACCURACY_MBTI_MAP[accKey].includes(p.mbtiType)) {
+      scores[p.id] = (scores[p.id] ?? 0) + 15 * (p.dynastyWeight ?? 1.0);
+    }
+  }
+
+  // 4. 答题速度 -> MBTI 匹配 (weight 0.15)
+  const speedKey = stats.avgResponseTime < 3 ? "fast" : stats.avgResponseTime > 7 ? "slow" : null;
+  if (speedKey) {
+    for (const p of allPoets) {
+      if (SPEED_MBTI_MAP[speedKey].includes(p.mbtiType)) {
+        scores[p.id] = (scores[p.id] ?? 0) + 15 * (p.dynastyWeight ?? 1.0);
+      }
+    }
+  }
+
+  // 5. 随机化因子：增加多样性，防止每次都匹配同一人
+  for (const p of allPoets) {
+    scores[p.id] = (scores[p.id] ?? 0) + Math.random() * 5;
+  }
 
   const bestId = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0];
   const bestScore = scores[Number(bestId)] ?? 0;

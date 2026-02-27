@@ -13,7 +13,66 @@ const RANK_COLORS: Record<string, string> = {
 const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
   "李清照": "🌸", "辛弃疾": "⚔️", "白居易": "🎵", "陶渊明": "🌿",
+  "孟浩然": "🍃", "王昌龄": "🛡️", "高适": "🦅", "岑参": "❄️",
+  "刘禹锡": "☀️", "李商隐": "🌒", "杜牧": "🍂", "温庭筠": "🌺",
+  "欧阳修": "🎭", "王安石": "⚡", "柳永": "🎶", "晏殊": "🍵",
+  "范仲淹": "🌊", "秦观": "🦋", "李煜": "😢", "冯延巳": "🌫️",
+  "花蕊夫人": "💐", "韦庄": "🕊️", "欧阳炯": "🎪", "孙光宪": "📖",
+  "李珣": "🌴", "和凝": "🎀", "关汉卿": "⚖️", "马致远": "🍁",
+  "张养浩": "🏛️", "萨都剌": "🌏", "白朴": "🌧️", "郑光祖": "💝",
+  "乔吉": "😄", "张可久": "🏞️", "刘基": "🔮", "归有光": "🏠",
+  "汤显祖": "🎭", "袁宏道": "🌈", "于谦": "🪨", "徐渭": "🎨",
+  "纳兰性德": "💧", "蒲松龄": "👻", "龚自珍": "⚡", "梁启超": "📚",
+  "黄遵宪": "🌐", "秋瑾": "🗡️",
 };
+
+// 诗人展示组件 - 从 API 动态加载
+function PoetShowcase() {
+  const { data: poets, isLoading } = trpc.game.getPoets.useQuery(undefined, { retry: false });
+
+  if (isLoading) {
+    return (
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">✨ 等待你发现的诗人</h3>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-24 h-28 rounded-xl animate-pulse"
+              style={{ background: "oklch(0.16 0.03 270)" }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const dynastyOrder = ["唐", "宋", "五代", "元", "明", "清"];
+  // Sort poets by dynasty order, then show all
+  const sorted = [...(poets ?? [])].sort((a, b) => {
+    const ai = dynastyOrder.indexOf(a.dynasty);
+    const bi = dynastyOrder.indexOf(b.dynasty);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  return (
+    <div className="mb-4">
+      <h3 className="text-sm font-semibold text-muted-foreground mb-3">✨ 等待你发现的诗人（{sorted.length}位）</h3>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+        {sorted.map((p) => (
+          <div key={p.id}
+            className="flex-shrink-0 w-24 rounded-xl p-3 text-center transition-all active:scale-95"
+            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
+            <div className="text-2xl mb-1">{POET_EMOJIS[p.name] ?? "✨"}</div>
+            <div className="font-bold text-sm font-display">{p.name}</div>
+            <div className="text-[10px] text-muted-foreground">{p.dynasty}代</div>
+            <div className="text-[10px] mt-1 px-1 py-0.5 rounded-full"
+              style={{ background: "oklch(0.72 0.18 35 / 0.15)", color: "oklch(0.72 0.18 35)" }}>
+              {p.mbtiType}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -256,32 +315,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Poet showcase */}
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">✨ 等待你发现的诗人</h3>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-            {[
-              { name: "李白", dynasty: "唐", emoji: "🌙", mbti: "ENFP", desc: "浪漫主义巅峰" },
-              { name: "杜甫", dynasty: "唐", emoji: "📜", mbti: "INFJ", desc: "忧国忧民诗圣" },
-              { name: "苏轼", dynasty: "宋", emoji: "🌊", mbti: "ENFJ", desc: "旷达乐观词宗" },
-              { name: "李清照", dynasty: "宋", emoji: "🌸", mbti: "ISTJ", desc: "婉约千古才女" },
-              { name: "辛弃疾", dynasty: "宋", emoji: "⚔️", mbti: "ESTJ", desc: "铁血战士词人" },
-              { name: "王维", dynasty: "唐", emoji: "🏔️", mbti: "INFP", desc: "禅意山水诗佛" },
-            ].map((p) => (
-              <div key={p.name}
-                className="flex-shrink-0 w-24 rounded-xl p-3 text-center"
-                style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-                <div className="text-2xl mb-1">{p.emoji}</div>
-                <div className="font-bold text-sm font-display">{p.name}</div>
-                <div className="text-[10px] text-muted-foreground">{p.dynasty}代</div>
-                <div className="text-[10px] mt-1 px-1 py-0.5 rounded-full"
-                  style={{ background: "oklch(0.72 0.18 35 / 0.15)", color: "oklch(0.72 0.18 35)" }}>
-                  {p.mbti}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Poet showcase - dynamic from API */}
+        <PoetShowcase />
       </div>
 
       <BottomNav />
