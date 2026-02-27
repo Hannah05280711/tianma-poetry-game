@@ -56,3 +56,8 @@
 - [x] 首页移除诗人及其 MBTI 展示✅
 - [x] 答题后立刻显示得分，不展示诗歌含义解析✅
 - [x] 得分显示后自动进入下一题（1200ms 自动跳题）✅
+
+## Bug 修复 + UI 改版（第三批）
+- [x] 排查并修复本命诗人召唤 error（JSON.parse 重复解析 bug）✅
+- [x] UI 全面改为白色底色（所有页面 bg-background + white card）✅
+- [x] 字号统一为 14px 苹方黑体（index.css font-family + font-size）✅

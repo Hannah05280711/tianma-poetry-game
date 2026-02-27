@@ -10,17 +10,38 @@ const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
   "李清照": "🌸", "辛弃疾": "⚔️", "白居易": "🎵", "陶渊明": "🌿",
   "王昌龄": "🌅", "孟浩然": "🍃", "杜牧": "🍂", "李商隐": "🌹",
+  "贺知章": "🍶", "张若虚": "🌕", "王之涣": "🦅", "岑参": "❄️",
+  "高适": "🏹", "韦应物": "🍵", "刘禹锡": "🪷", "柳宗元": "🐟",
+  "元稹": "💌", "韩愈": "📚", "温庭筠": "🎶", "李煜": "😢",
+  "冯延巳": "🌫️", "花蕊夫人": "🌺", "韦庄": "🍁", "欧阳修": "🎯",
+  "晏殊": "🎴", "柳永": "🌧️", "晏几道": "🌷", "秦观": "🌙",
+  "黄庭坚": "🖌️", "周邦彦": "🎻", "陆游": "🗡️", "范成大": "🌾",
+  "杨万里": "☀️", "朱熹": "📖", "姜夔": "🎵", "吴文英": "🌀",
+  "关汉卿": "🎭", "马致远": "🍂", "张养浩": "⚖️", "萨都剌": "🌊",
+  "白朴": "🎪", "郑光祖": "🎨", "王实甫": "💕", "乔吉": "🌸",
+  "刘基": "🔮", "归有光": "🏠", "汤显祖": "🎭", "袁宏道": "🌿",
+  "徐渭": "🖊️", "王世贞": "📜", "纳兰性德": "❄️", "蒲松龄": "👻",
+  "龚自珍": "🌋", "梁启超": "🔥",
 };
 
 const MATCH_COLORS = [
-  { min: 90, color: "#FF6B35", label: "天命契合" },
-  { min: 75, color: "#FFD700", label: "高度共鸣" },
-  { min: 60, color: "#62D2A2", label: "灵魂相近" },
-  { min: 0, color: "#C0C0C0", label: "初识缘分" },
+  { min: 90, color: "#C0392B", bg: "#FEF2F2", label: "天命契合" },
+  { min: 75, color: "#C8960C", bg: "#FFFBEB", label: "高度共鸣" },
+  { min: 60, color: "#16A34A", bg: "#F0FDF4", label: "灵魂相近" },
+  { min: 0,  color: "#6B7280", bg: "#F9FAFB", label: "初识缘分" },
 ];
 
 function getMatchInfo(score: number) {
   return MATCH_COLORS.find(c => score >= c.min) ?? MATCH_COLORS[MATCH_COLORS.length - 1]!;
+}
+
+// 安全解析 JSON 字段（可能已是数组，也可能是字符串）
+function safeParseArray(val: unknown): string[] {
+  if (Array.isArray(val)) return val as string[];
+  if (typeof val === "string") {
+    try { return JSON.parse(val); } catch { return []; }
+  }
+  return [];
 }
 
 export default function Destiny() {
@@ -42,19 +63,19 @@ export default function Destiny() {
       setGenerating(false);
     },
     onError: (e) => {
-      toast.error(e.message);
+      toast.error("召唤失败：" + e.message);
       setGenerating(false);
     },
   });
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     setGenerating(true);
     generateMutation.mutate();
   };
 
   const handleShare = () => {
     if (!destiny?.poet) return;
-    const text = `我在天马行空诗词游戏中，发现我的本命诗人是${destiny.poet.name}！契合度${destiny.matchScore}%，段位${gameState?.rank?.rankName ?? "青铜剑"}。快来测测你的本命诗人！`;
+    const text = `我在天马行空诗词游戏中，发现我的本命诗人是${(destiny.poet as { name: string }).name}！契合度${destiny.matchScore}%，段位${gameState?.rank?.rankName ?? "青铜剑"}。快来测测你的本命诗人！`;
     if (navigator.share) {
       navigator.share({ title: "天马行空·本命诗人", text });
     } else {
@@ -64,15 +85,17 @@ export default function Destiny() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4"
-        style={{ background: "oklch(0.10 0.025 270)" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4 bg-background">
         <div className="text-5xl float-anim">✨</div>
-        <p className="text-muted-foreground text-sm">请先登录发现你的本命诗人</p>
+        <p className="text-sm text-muted-foreground text-center">请先登录，发现你的本命诗人</p>
         <a href={getLoginUrl()}
-          className="px-6 py-2.5 rounded-xl font-bold text-sm"
-          style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}>
+          className="px-6 py-2.5 rounded-xl font-semibold text-sm"
+          style={{ background: "var(--vermilion)", color: "white" }}>
           立即登录
         </a>
+        <button onClick={() => navigate("/")} className="text-sm text-muted-foreground underline">
+          返回首页
+        </button>
       </div>
     );
   }
@@ -81,18 +104,18 @@ export default function Destiny() {
   const canGenerate = totalAnswered >= 10;
 
   return (
-    <div className="min-h-screen page-content px-4 pt-safe" style={{ background: "oklch(0.10 0.025 270)" }}>
+    <div className="min-h-screen page-content px-4 pt-2 bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 py-4 mb-2">
-        <button onClick={() => navigate("/")} className="text-muted-foreground text-xl">‹</button>
-        <h1 className="font-bold text-lg font-display">✨ 本命诗人觉醒</h1>
+      <div className="flex items-center gap-3 py-3 mb-2">
+        <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
+        <h1 className="font-semibold text-base font-display">✨ 本命诗人觉醒</h1>
       </div>
 
       {/* No destiny yet */}
       {!destiny && (
-        <div className="text-center py-8">
+        <div className="text-center py-10">
           <div className="text-6xl mb-4 float-anim">🌙</div>
-          <h2 className="text-xl font-bold font-display mb-2">等待觉醒</h2>
+          <h2 className="text-lg font-semibold font-display mb-2 text-foreground">等待觉醒</h2>
           <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
             {canGenerate
               ? "你已答够10题，可以解锁本命诗人了！"
@@ -104,11 +127,11 @@ export default function Destiny() {
 
           {/* Progress */}
           <div className="max-w-xs mx-auto mb-6">
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: "oklch(0.22 0.04 270)" }}>
+            <div className="h-2 rounded-full overflow-hidden bg-muted">
               <div className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${Math.min(100, (totalAnswered / 10) * 100)}%`,
-                  background: "linear-gradient(90deg, oklch(0.72 0.18 35), oklch(0.78 0.18 85))",
+                  background: "linear-gradient(90deg, var(--vermilion), #E74C3C)",
                 }} />
             </div>
           </div>
@@ -117,16 +140,15 @@ export default function Destiny() {
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="px-8 py-3 rounded-xl font-bold text-sm transition-all active:scale-98 disabled:opacity-50"
-              style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)", boxShadow: "0 4px 20px oklch(0.72 0.18 35 / 0.4)" }}
+              className="px-8 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 text-white"
+              style={{ background: "var(--vermilion)", boxShadow: "0 4px 16px oklch(0.55 0.20 25 / 0.30)" }}
             >
               {generating ? "✨ 觉醒中..." : "✨ 召唤本命诗人"}
             </button>
           ) : (
             <button
               onClick={() => navigate("/game")}
-              className="px-8 py-3 rounded-xl font-bold text-sm transition-all active:scale-98"
-              style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
+              className="px-8 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 border border-border text-foreground bg-card"
             >
               ⚔️ 去答题
             </button>
@@ -136,49 +158,51 @@ export default function Destiny() {
 
       {/* Destiny revealed */}
       {destiny?.poet && (() => {
+        const poet = destiny.poet as {
+          name: string; dynasty: string; mbtiType: string;
+          mbtiDescription: string; personalityTags: unknown; signaturePoems: unknown;
+        };
         const matchInfo = getMatchInfo(destiny.matchScore);
-        const poetEmoji = POET_EMOJIS[destiny.poet.name] ?? "✨";
-        const poems: string[] = destiny.poet.signaturePoems ? JSON.parse(destiny.poet.signaturePoems as string) : [];
-        const tags: string[] = destiny.poet.personalityTags ? JSON.parse(destiny.poet.personalityTags as string) : [];
+        const poetEmoji = POET_EMOJIS[poet.name] ?? "✨";
+        // 安全解析 JSON 字段（修复 bug：字段可能已是数组）
+        const poems = safeParseArray(poet.signaturePoems);
+        const tags  = safeParseArray(poet.personalityTags);
 
         return (
           <div className="animate-fade-in">
             {/* Main card */}
-            <div className="rounded-2xl p-5 mb-4 text-center"
-              style={{
-                background: `linear-gradient(135deg, ${matchInfo.color}15, oklch(0.16 0.03 270))`,
-                border: `1px solid ${matchInfo.color}50`,
-              }}>
+            <div className="rounded-2xl p-5 mb-4 text-center border"
+              style={{ background: matchInfo.bg, borderColor: matchInfo.color + "40" }}>
               {/* Poet avatar */}
-              <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto mb-3 float-anim"
-                style={{ background: `${matchInfo.color}20`, border: `3px solid ${matchInfo.color}60` }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 float-anim"
+                style={{ background: matchInfo.color + "15", border: `2px solid ${matchInfo.color}50` }}>
                 {poetEmoji}
               </div>
 
               {/* Match badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-2"
-                style={{ background: `${matchInfo.color}20`, color: matchInfo.color }}>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-2"
+                style={{ background: matchInfo.color + "15", color: matchInfo.color }}>
                 ✨ {matchInfo.label}
               </div>
 
-              <h2 className="text-3xl font-bold font-display mb-1" style={{ color: matchInfo.color }}>
-                {destiny.poet.name}
+              <h2 className="text-2xl font-bold font-display mb-0.5" style={{ color: matchInfo.color }}>
+                {poet.name}
               </h2>
-              <p className="text-sm text-muted-foreground mb-3">
-                {destiny.poet.dynasty}代 · {destiny.poet.mbtiType}
+              <p className="text-xs text-muted-foreground mb-3">
+                {poet.dynasty}代 · {poet.mbtiType}
               </p>
 
               {/* Match score circle */}
-              <div className="relative w-20 h-20 mx-auto mb-3">
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                  <circle cx="40" cy="40" r="32" fill="none" stroke="oklch(0.22 0.04 270)" strokeWidth="6" />
-                  <circle cx="40" cy="40" r="32" fill="none" stroke={matchInfo.color} strokeWidth="6"
-                    strokeDasharray={`${2 * Math.PI * 32}`}
-                    strokeDashoffset={`${2 * Math.PI * 32 * (1 - destiny.matchScore / 100)}`}
+              <div className="relative w-18 h-18 mx-auto mb-3" style={{ width: 72, height: 72 }}>
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="28" fill="none" stroke={matchInfo.color + "20"} strokeWidth="5" />
+                  <circle cx="36" cy="36" r="28" fill="none" stroke={matchInfo.color} strokeWidth="5"
+                    strokeDasharray={`${2 * Math.PI * 28}`}
+                    strokeDashoffset={`${2 * Math.PI * 28 * (1 - destiny.matchScore / 100)}`}
                     strokeLinecap="round" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold" style={{ color: matchInfo.color }}>{destiny.matchScore}%</span>
+                  <span className="text-base font-bold" style={{ color: matchInfo.color }}>{destiny.matchScore}%</span>
                   <span className="text-[9px] text-muted-foreground">契合度</span>
                 </div>
               </div>
@@ -188,7 +212,7 @@ export default function Destiny() {
                 <div className="flex flex-wrap gap-1.5 justify-center mb-3">
                   {tags.map((tag) => (
                     <span key={tag} className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ background: `${matchInfo.color}15`, color: matchInfo.color }}>
+                      style={{ background: matchInfo.color + "12", color: matchInfo.color }}>
                       {tag}
                     </span>
                   ))}
@@ -196,15 +220,14 @@ export default function Destiny() {
               )}
 
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {destiny.poet.mbtiDescription}
+                {poet.mbtiDescription}
               </p>
             </div>
 
             {/* Analysis report */}
             {destiny.analysisReport && (
-              <div className="rounded-2xl p-4 mb-4"
-                style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-                <h3 className="font-bold text-sm mb-2 flex items-center gap-2">
+              <div className="rounded-xl p-4 mb-4 bg-card border border-border">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2 text-foreground">
                   <span>📜</span> 灵魂分析报告
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -215,14 +238,14 @@ export default function Destiny() {
 
             {/* Acrostic poem */}
             {destiny.acrosticPoem && (
-              <div className="rounded-2xl p-4 mb-4"
-                style={{ background: "oklch(0.16 0.03 270)", border: `1px solid ${matchInfo.color}30` }}>
-                <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+              <div className="rounded-xl p-4 mb-4 bg-card border"
+                style={{ borderColor: matchInfo.color + "30" }}>
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2 text-foreground">
                   <span>🖌️</span> 专属藏头诗
                 </h3>
                 <div className="space-y-1">
                   {destiny.acrosticPoem.split("\n").filter(Boolean).map((line, i) => (
-                    <div key={i} className="text-sm font-display leading-relaxed" style={{ color: "oklch(0.88 0.01 80)" }}>
+                    <div key={i} className="text-sm font-display leading-relaxed text-foreground">
                       {line}
                     </div>
                   ))}
@@ -232,15 +255,14 @@ export default function Destiny() {
 
             {/* Signature poems */}
             {poems.length > 0 && (
-              <div className="rounded-2xl p-4 mb-4"
-                style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-                <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+              <div className="rounded-xl p-4 mb-4 bg-card border border-border">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2 text-foreground">
                   <span>📖</span> 代表作品
                 </h3>
                 <div className="space-y-2">
                   {poems.slice(0, 3).map((poem, i) => (
                     <div key={i} className="text-sm text-muted-foreground italic font-display leading-relaxed border-l-2 pl-3"
-                      style={{ borderColor: `${matchInfo.color}50` }}>
+                      style={{ borderColor: matchInfo.color + "50" }}>
                       {poem}
                     </div>
                   ))}
@@ -252,16 +274,15 @@ export default function Destiny() {
             <div className="space-y-3 mb-4">
               <button
                 onClick={handleShare}
-                className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-98"
-                style={{ background: `${matchInfo.color}20`, border: `1px solid ${matchInfo.color}50`, color: matchInfo.color }}
+                className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
+                style={{ background: matchInfo.color + "10", borderColor: matchInfo.color + "40", color: matchInfo.color }}
               >
                 📤 分享本命诗人
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={generating}
-                className="w-full py-3 rounded-xl text-sm text-muted-foreground transition-all disabled:opacity-50"
-                style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
+                className="w-full py-3 rounded-xl text-sm text-muted-foreground transition-all disabled:opacity-50 bg-card border border-border"
               >
                 {generating ? "重新觉醒中..." : "🔄 重新觉醒（需再答10题）"}
               </button>

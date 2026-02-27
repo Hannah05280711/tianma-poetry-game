@@ -6,25 +6,13 @@ import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 
 const RANK_COLORS: Record<string, string> = {
-  bronze: "#CD7F32", silver: "#C0C0C0", gold: "#FFD700",
-  platinum: "#E5E4E2", diamond: "#B9F2FF", star: "#FFB347", king: "#FF6B35",
+  bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
+  platinum: "#6B7280", diamond: "#2563EB", star: "#D97706", king: "#DC2626",
 };
 
-// POET_EMOJIS kept for destiny poet card
 const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
   "李清照": "🌸", "辛弃疾": "⚔️", "白居易": "🎵", "陶渊明": "🌿",
-  "孟浩然": "🍃", "王昌龄": "🛡️", "高适": "🦅", "岑参": "❄️",
-  "刘禹锡": "☀️", "李商隐": "🌒", "杜牧": "🍂", "温庭筠": "🌺",
-  "欧阳修": "🎭", "王安石": "⚡", "柳永": "🎶", "晏殊": "🍵",
-  "范仲淹": "🌊", "秦观": "🦋", "李煜": "😢", "冯延巳": "🌫️",
-  "花蕊夫人": "💐", "韦庄": "🕊️", "欧阳炯": "🎪", "孙光宪": "📖",
-  "李珣": "🌴", "和凝": "🎀", "关汉卿": "⚖️", "马致远": "🍁",
-  "张养浩": "🏛️", "萨都剌": "🌏", "白朴": "🌧️", "郑光祖": "💝",
-  "乔吉": "😄", "张可久": "🏞️", "刘基": "🔮", "归有光": "🏠",
-  "汤显祖": "🎭", "袁宏道": "🌈", "于谦": "🪨", "徐渭": "🎨",
-  "纳兰性德": "💧", "蒲松龄": "👻", "龚自珍": "⚡", "梁启超": "📚",
-  "黄遵宪": "🌐", "秋瑾": "🗡️",
 };
 
 export default function Home() {
@@ -41,35 +29,27 @@ export default function Home() {
   });
 
   const rankColor = gameState?.rank
-    ? RANK_COLORS[gameState.rank.rankTier] ?? "#CD7F32"
-    : "#CD7F32";
+    ? RANK_COLORS[gameState.rank.rankTier] ?? "#B87333"
+    : "#B87333";
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.10 0.025 270)" }}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center animate-fade-in">
           <div className="text-5xl mb-4 float-anim">🎋</div>
-          <p className="text-muted-foreground text-sm">墨香飘来...</p>
+          <p className="text-sm text-muted-foreground">墨香飘来...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen page-content" style={{ background: "oklch(0.10 0.025 270)" }}>
-      {/* Background decoration */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ maxWidth: "480px", left: "50%", transform: "translateX(-50%)" }}>
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, oklch(0.72 0.18 35) 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
-        <div className="absolute bottom-20 left-0 w-48 h-48 rounded-full opacity-8"
-          style={{ background: "radial-gradient(circle, oklch(0.62 0.18 190) 0%, transparent 70%)", transform: "translate(-30%, 30%)" }} />
-      </div>
-
-      <div className="relative z-10 px-4 pt-safe">
+    <div className="min-h-screen page-content bg-background">
+      <div className="px-4 pt-safe">
         {/* Header */}
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-4 border-b border-border mb-4">
           <div>
-            <h1 className="text-xl font-bold font-display" style={{ color: "oklch(0.72 0.18 35)" }}>
+            <h1 className="text-xl font-bold font-display text-foreground">
               天马行空
             </h1>
             <p className="text-xs text-muted-foreground">你的本命诗人是谁？</p>
@@ -77,17 +57,16 @@ export default function Home() {
           {isAuthenticated ? (
             <button
               onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all"
-              style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border border-border bg-card transition-all"
             >
               <span>👤</span>
-              <span className="text-xs max-w-[80px] truncate">{user?.name ?? "诗词人"}</span>
+              <span className="text-xs max-w-[80px] truncate text-foreground">{user?.name ?? "诗词人"}</span>
             </button>
           ) : (
             <a
               href={getLoginUrl()}
-              className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
-              style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}
+              className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-white"
+              style={{ background: "var(--vermilion)" }}
             >
               登录
             </a>
@@ -95,14 +74,19 @@ export default function Home() {
         </div>
 
         {/* Hero Banner */}
-        <div className="relative rounded-2xl overflow-hidden mb-4 p-5"
-          style={{ background: "linear-gradient(135deg, oklch(0.18 0.06 290), oklch(0.14 0.04 270))", border: "1px solid oklch(0.30 0.08 290 / 0.5)" }}>
-          <div className="absolute top-0 right-0 text-8xl opacity-10 select-none" style={{ transform: "translate(10%, -10%)" }}>
+        <div
+          className="relative rounded-2xl overflow-hidden mb-4 p-5 border"
+          style={{
+            background: "linear-gradient(135deg, #FFF5F5 0%, #FFF9F0 100%)",
+            borderColor: "oklch(0.55 0.20 25 / 0.20)",
+          }}
+        >
+          <div className="absolute top-2 right-3 text-7xl opacity-10 select-none pointer-events-none">
             📜
           </div>
           <div className="relative z-10">
             <div className="text-4xl mb-2 float-anim">🎋</div>
-            <h2 className="text-2xl font-bold font-display mb-1" style={{ color: "oklch(0.95 0.01 80)" }}>
+            <h2 className="text-xl font-bold font-display mb-1 text-foreground">
               诗词闯关
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -110,8 +94,8 @@ export default function Home() {
             </p>
             <button
               onClick={() => navigate("/game")}
-              className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
-              style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)", boxShadow: "0 4px 16px oklch(0.72 0.18 35 / 0.4)" }}
+              className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
+              style={{ background: "var(--vermilion)", boxShadow: "0 4px 14px oklch(0.55 0.20 25 / 0.30)" }}
             >
               ⚔️ 开始答题
             </button>
@@ -121,25 +105,23 @@ export default function Home() {
         {/* Stats Row (if logged in) */}
         {isAuthenticated && gameState && (
           <div className="grid grid-cols-3 gap-3 mb-4 animate-slide-up">
-            <div className="rounded-xl p-3 text-center"
-              style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-              <div className="text-xl font-bold" style={{ color: "oklch(0.78 0.18 85)" }}>
+            <div className="rounded-xl p-3 text-center bg-card border border-border">
+              <div className="text-lg font-bold" style={{ color: "var(--gold)" }}>
                 {gameState.totalScore}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5">总积分</div>
             </div>
-            <div className="rounded-xl p-3 text-center"
-              style={{ background: "oklch(0.16 0.03 270)", border: `1px solid ${rankColor}40` }}>
-              <div className="text-xl font-bold" style={{ color: rankColor }}>
+            <div className="rounded-xl p-3 text-center bg-card border"
+              style={{ borderColor: rankColor + "40" }}>
+              <div className="text-lg font-bold" style={{ color: rankColor }}>
                 {gameState.rank?.iconEmoji ?? "🗡️"}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
                 {gameState.rank?.tierName ?? "青铜剑"}
               </div>
             </div>
-            <div className="rounded-xl p-3 text-center"
-              style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-              <div className="text-xl font-bold" style={{ color: "oklch(0.62 0.18 190)" }}>
+            <div className="rounded-xl p-3 text-center bg-card border border-border">
+              <div className="text-lg font-bold" style={{ color: "var(--celadon)" }}>
                 {gameState.consecutiveWins}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5">连胜</div>
@@ -150,116 +132,96 @@ export default function Home() {
         {/* Destiny Poet Card */}
         {isAuthenticated && destinyPoet?.poet && (
           <div
-            className="rounded-2xl p-4 mb-4 cursor-pointer transition-all active:scale-98 animate-slide-up"
-            style={{ background: "linear-gradient(135deg, oklch(0.18 0.06 35 / 0.3), oklch(0.16 0.03 270))", border: "1px solid oklch(0.72 0.18 35 / 0.4)" }}
+            className="rounded-2xl p-4 mb-4 cursor-pointer transition-all active:scale-[0.98] animate-slide-up border bg-card"
+            style={{ borderColor: "oklch(0.55 0.20 25 / 0.25)" }}
             onClick={() => navigate("/destiny")}
           >
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl flex-shrink-0"
-                style={{ background: "oklch(0.72 0.18 35 / 0.2)", border: "2px solid oklch(0.72 0.18 35 / 0.5)" }}>
-                {POET_EMOJIS[destinyPoet.poet.name] ?? "✨"}
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+                style={{ background: "var(--vermilion-pale)", border: "1.5px solid oklch(0.55 0.20 25 / 0.30)" }}>
+                {POET_EMOJIS[(destinyPoet.poet as { name: string }).name] ?? "✨"}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={{ background: "oklch(0.72 0.18 35 / 0.2)", color: "oklch(0.72 0.18 35)" }}>
+                    style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
                     本命诗人
                   </span>
                   <span className="text-xs text-muted-foreground">{destinyPoet.matchScore}% 契合</span>
                 </div>
-                <div className="font-bold text-lg font-display mt-0.5">{destinyPoet.poet.name}</div>
-                <div className="text-xs text-muted-foreground truncate">{destinyPoet.poet.dynasty}代 · {destinyPoet.poet.mbtiType}</div>
+                <div className="font-bold text-base font-display text-foreground">
+                  {(destinyPoet.poet as { name: string }).name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {(destinyPoet.poet as { dynasty: string; mbtiType: string }).dynasty}代 · {(destinyPoet.poet as { mbtiType: string }).mbtiType}
+                </div>
               </div>
-              <span className="text-muted-foreground text-lg">›</span>
+              <span className="text-muted-foreground">›</span>
             </div>
           </div>
         )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <button
-            onClick={() => navigate("/rank")}
-            className="rounded-2xl p-4 text-left transition-all active:scale-95"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
-          >
-            <div className="text-2xl mb-2">⚔️</div>
-            <div className="font-semibold text-sm">兵器谱</div>
-            <div className="text-xs text-muted-foreground mt-0.5">查看段位系统</div>
-          </button>
-          <button
-            onClick={() => navigate("/daily")}
-            className="rounded-2xl p-4 text-left transition-all active:scale-95"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
-          >
-            <div className="text-2xl mb-2">📅</div>
-            <div className="font-semibold text-sm">每日任务</div>
-            <div className="text-xs text-muted-foreground mt-0.5">完成任务得奖励</div>
-          </button>
-          <button
-            onClick={() => navigate("/leaderboard")}
-            className="rounded-2xl p-4 text-left transition-all active:scale-95"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
-          >
-            <div className="text-2xl mb-2">🏆</div>
-            <div className="font-semibold text-sm">周赛排名</div>
-            <div className="text-xs text-muted-foreground mt-0.5">本周答题王</div>
-          </button>
-          <button
-            onClick={() => {
-              if (!isAuthenticated) {
-                toast.info("请先登录");
-                window.location.href = getLoginUrl();
-                return;
-              }
-              navigate("/destiny");
-            }}
-            className="rounded-2xl p-4 text-left transition-all active:scale-95"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}
-          >
-            <div className="text-2xl mb-2">✨</div>
-            <div className="font-semibold text-sm">本命觉醒</div>
-            <div className="text-xs text-muted-foreground mt-0.5">发现你的诗人</div>
-          </button>
+          {[
+            { path: "/rank", icon: "⚔️", title: "兵器谱", desc: "查看段位系统" },
+            { path: "/daily", icon: "📅", title: "每日任务", desc: "完成任务得奖励" },
+            { path: "/leaderboard", icon: "🏆", title: "周赛排名", desc: "本周答题王" },
+            { path: "/destiny", icon: "✨", title: "本命觉醒", desc: "发现你的诗人", requireAuth: true },
+          ].map((item) => (
+            <button
+              key={item.path}
+              onClick={() => {
+                if (item.requireAuth && !isAuthenticated) {
+                  toast.info("请先登录");
+                  window.location.href = getLoginUrl();
+                  return;
+                }
+                navigate(item.path);
+              }}
+              className="rounded-2xl p-4 text-left transition-all active:scale-95 bg-card border border-border hover:border-[oklch(0.55_0.20_25_/_0.30)]"
+            >
+              <div className="text-2xl mb-2">{item.icon}</div>
+              <div className="font-semibold text-sm text-foreground">{item.title}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{item.desc}</div>
+            </button>
+          ))}
         </div>
 
-        {/* Ink drops display */}
+        {/* Ink drops */}
         {isAuthenticated && gameState && (
-          <div className="rounded-xl p-3 mb-4 flex items-center gap-3"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-            <span className="text-sm text-muted-foreground">墨滴（生命值）</span>
-            <div className="flex gap-1 flex-1">
+          <div className="rounded-xl p-3 mb-4 flex items-center gap-3 bg-card border border-border">
+            <span className="text-sm text-muted-foreground shrink-0">墨滴</span>
+            <div className="flex gap-1 flex-1 flex-wrap">
               {Array.from({ length: 20 }).map((_, i) => (
                 <div key={i}
                   className="w-2 h-2 rounded-full transition-all"
                   style={{
                     background: i < (gameState.inkDrops ?? 0)
-                      ? "oklch(0.62 0.18 190)"
-                      : "oklch(0.22 0.04 270)",
+                      ? "var(--celadon)"
+                      : "oklch(0.90 0.01 80)",
                   }}
                 />
               ))}
             </div>
-            <span className="text-sm font-bold" style={{ color: "oklch(0.62 0.18 190)" }}>
+            <span className="text-sm font-bold shrink-0" style={{ color: "var(--celadon)" }}>
               {gameState.inkDrops}/20
             </span>
           </div>
         )}
 
-        {/* Login tip - soft prompt, game is playable without login */}
+        {/* Login tip */}
         {!isAuthenticated && (
-          <div className="rounded-xl p-3 mb-4 flex items-center gap-3"
-            style={{ background: "oklch(0.16 0.03 270)", border: "1px solid oklch(0.26 0.05 270)" }}>
-            <span className="text-xl">🌙</span>
+          <div className="rounded-xl p-3 mb-4 flex items-center gap-3 bg-card border border-border">
+            <span className="text-lg">💡</span>
             <p className="text-xs text-muted-foreground flex-1">登录后可保存积分、解锁本命诗人</p>
             <a href={getLoginUrl()}
-              className="text-xs px-3 py-1.5 rounded-lg font-bold flex-shrink-0"
-              style={{ background: "oklch(0.72 0.18 35)", color: "oklch(0.10 0.02 270)" }}>
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0 text-white"
+              style={{ background: "var(--vermilion)" }}>
               登录
             </a>
           </div>
         )}
-
-        {/* Poet showcase removed per UX requirement */}
       </div>
 
       <BottomNav />
