@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
@@ -28,11 +29,16 @@ export default function Profile() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4 bg-background">
         <div className="text-5xl float-anim">👤</div>
         <p className="text-muted-foreground text-sm">请先登录查看个人档案</p>
-        <a href={getLoginUrl()}
-          className="px-6 py-2.5 rounded-xl font-semibold text-sm text-white"
-          style={{ background: "var(--vermilion)" }}>
-          立即登录
-        </a>
+        {!isInMiniProgram() && (
+          <a href={getLoginUrl()}
+            className="px-6 py-2.5 rounded-xl font-semibold text-sm text-white"
+            style={{ background: "var(--vermilion)" }}>
+            立即登录
+          </a>
+        )}
+        {isInMiniProgram() && (
+          <p className="text-xs text-muted-foreground">请在小程序首页登录后重新进入</p>
+        )}
       </div>
     );
   }

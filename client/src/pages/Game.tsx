@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fbOptionTap, fbCorrect, fbWrong, fbCombo, fbLevelComplete, fbGameStart, fbStreakBroken, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -665,7 +666,7 @@ export default function Game() {
           </div>
         )}
 
-        {!isAuthenticated && (
+        {!isAuthenticated && !isInMiniProgram() && (
           <div className="rounded-xl p-3 mb-5 text-center bg-card border"
             style={{ borderColor: "oklch(0.55 0.20 25 / 0.25)" }}>
             <p className="text-xs text-muted-foreground mb-2">登录后积分将被保存，还可解锁本命诗人！</p>

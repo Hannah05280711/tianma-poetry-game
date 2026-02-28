@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { fbDestinyMatch, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -184,7 +185,7 @@ export default function Destiny() {
       <div className="flex items-center gap-3 py-3 mb-2">
         <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
         <h1 className="font-semibold font-display" style={{ fontSize: "17px" }}>✨ 本命诗人觉醒</h1>
-        {!isAuthenticated && (
+        {!isAuthenticated && !isInMiniProgram() && (
           <a href={getLoginUrl()} className="ml-auto text-xs px-3 py-1 rounded-full font-medium"
             style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
             登录保存结果
@@ -274,7 +275,7 @@ export default function Destiny() {
           )}
 
           {/* 游客提示：登录可保存进度 */}
-          {!isAuthenticated && totalAnswered > 0 && (
+          {!isAuthenticated && totalAnswered > 0 && !isInMiniProgram() && (
             <p className="mt-4 text-xs text-muted-foreground">
               游客模式下结果仅保存在本设备，<a href={getLoginUrl()} className="underline" style={{ color: "var(--vermilion)" }}>登录</a>可永久保存
             </p>
@@ -530,7 +531,7 @@ export default function Destiny() {
             )}
 
             {/* 游客提示 */}
-            {!isAuthenticated && (
+            {!isAuthenticated && !isInMiniProgram() && (
               <div className="rounded-xl p-3 mb-4 text-center border"
                 style={{ background: "var(--card)", borderColor: "oklch(0.50 0.19 22 / 0.22)" }}>
                 <p className="text-xs text-muted-foreground mb-2 font-serif-poem">游客结果仅保存在本设备，登录后可永久保存并解锁更多功能</p>

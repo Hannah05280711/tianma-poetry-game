@@ -5,9 +5,16 @@
  *
  * 功能：
  * 1. 检测是否在微信小程序 WebView 中运行
- * 2. 从 URL 参数读取微信 session token，通过后端接口写入 cookie
+ * 2. 从 URL 参数读取微信 session token，存入 localStorage
+ *    （main.tsx 中的 tRPC 客户端会自动读取并附加 Authorization 头）
  * 3. 提供向小程序发送消息的方法（分享、登出等）
+ *
+ * 注意：由于前端（tcloudbaseapp.com）和后端（tcloudbase.com）跨域，
+ * 不能依赖 cookie，改用 Authorization: Bearer <token> 头。
+ * token 存储在 localStorage 中，由 main.tsx 的 tRPC 客户端读取。
  */
+
+export const WECHAT_TOKEN_KEY = "wechat_session_token";
 
 /**
  * 检测是否在微信小程序 WebView 中运行
@@ -19,38 +26,34 @@ export function isInMiniProgram(): boolean {
 }
 
 /**
- * 从 URL 参数中读取微信 token 并通过后端接口建立 session
- * 调用时机：应用启动时（main.tsx 或 App.tsx）
+ * 从 localStorage 获取微信 token
  */
-export async function initWechatSession(): Promise<boolean> {
-  if (!isInMiniProgram()) return false;
+export function getWechatToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(WECHAT_TOKEN_KEY);
+}
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const wechatToken = urlParams.get("wechat_token");
+/**
+ * 保存微信 token 到 localStorage
+ */
+export function saveWechatToken(token: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(WECHAT_TOKEN_KEY, token);
+}
 
-  if (!wechatToken) return false;
+/**
+ * 清除微信 token（登出时调用）
+ */
+export function clearWechatToken(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(WECHAT_TOKEN_KEY);
+}
 
-  try {
-    // 调用后端接口，用 token 建立 session cookie
-    const res = await fetch("/api/auth/wechat/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: wechatToken }),
-      credentials: "include",
-    });
-
-    if (res.ok) {
-      // 清除 URL 中的 token 参数（避免刷新时重复处理）
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete("wechat_token");
-      window.history.replaceState({}, "", newUrl.toString());
-      return true;
-    }
-  } catch (err) {
-    console.error("[WechatBridge] Failed to init session:", err);
-  }
-
-  return false;
+/**
+ * 检查是否已有有效的微信 token
+ */
+export function hasWechatToken(): boolean {
+  return !!getWechatToken();
 }
 
 /**

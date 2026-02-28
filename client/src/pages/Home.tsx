@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
@@ -110,7 +111,7 @@ export default function Home() {
                 <span style={{ fontSize: "14px" }}>👤</span>
                 <span className="text-xs max-w-[80px] truncate text-foreground">{user?.name ?? "诗词人"}</span>
               </button>
-            ) : (
+            ) : !isInMiniProgram() ? (
               <a
                 href={getLoginUrl()}
                 className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-white"
@@ -118,7 +119,7 @@ export default function Home() {
               >
                 登录
               </a>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -296,7 +297,7 @@ export default function Home() {
         )}
 
         {/* Login tip */}
-        {!isAuthenticated && (
+        {!isAuthenticated && !isInMiniProgram() && (
           <div className="rounded-xl p-3 mb-4 flex items-center gap-3 border"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             <span className="text-lg">💡</span>
