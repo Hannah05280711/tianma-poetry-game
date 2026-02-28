@@ -8,6 +8,7 @@ const RANK_TIERS = [
     tier: "bronze",
     name: "青铜剑",
     weapon: "剑",
+    emoji: "🗡️",
     color: "#B87333",
     colorLight: "#D4A574",
     gradientFrom: "#B87333",
@@ -20,6 +21,7 @@ const RANK_TIERS = [
     tier: "silver",
     name: "白银枪",
     weapon: "枪",
+    emoji: "🔱",
     color: "#7A8A9A",
     colorLight: "#A8B8C8",
     gradientFrom: "#8A9BAB",
@@ -32,6 +34,7 @@ const RANK_TIERS = [
     tier: "gold",
     name: "黄金刀",
     weapon: "刀",
+    emoji: "⚔️",
     color: "#C8960C",
     colorLight: "#E8B84B",
     gradientFrom: "#D4A017",
@@ -44,6 +47,7 @@ const RANK_TIERS = [
     tier: "platinum",
     name: "铂金戟",
     weapon: "戟",
+    emoji: "🏆",
     color: "#5B8FA8",
     colorLight: "#8BBDD4",
     gradientFrom: "#6BA0BB",
@@ -56,6 +60,7 @@ const RANK_TIERS = [
     tier: "diamond",
     name: "钻石弓",
     weapon: "弓",
+    emoji: "💎",
     color: "#2563EB",
     colorLight: "#60A5FA",
     gradientFrom: "#3B82F6",
@@ -68,6 +73,7 @@ const RANK_TIERS = [
     tier: "star",
     name: "星耀扇",
     weapon: "扇",
+    emoji: "✨",
     color: "#D97706",
     colorLight: "#FCD34D",
     gradientFrom: "#F59E0B",
@@ -80,6 +86,7 @@ const RANK_TIERS = [
     tier: "king",
     name: "王者笔",
     weapon: "笔",
+    emoji: "👑",
     color: "#9B2335",
     colorLight: "#E05C6E",
     gradientFrom: "#C0392B",
@@ -235,16 +242,17 @@ function RingBadge({
         />
       )}
 
-      {/* 中心兵器图标 */}
-      <g
-        transform={`translate(${iconOffset}, ${iconOffset})`}
-        color={iconColor}
-        style={{ opacity: effectiveUnlocked ? 1 : 0.3 }}
+      {/* 中心兵器 Emoji 图标 */}
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={iconSize * 0.85}
+        style={{ opacity: effectiveUnlocked ? 1 : 0.25, userSelect: "none" }}
       >
-        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {WEAPON_ICONS[rank.weapon]}
-        </svg>
-      </g>
+        {rank.emoji}
+      </text>
     </svg>
   );
 }
