@@ -325,8 +325,8 @@ export default function Destiny() {
                   style={{
                     background: matchInfo.color + "12",
                     color: matchInfo.color,
-                    fontSize: "12px",
-                    fontFamily: "'Noto Serif SC', serif",
+                    fontSize: "14px",
+                    fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', STSong, serif",
                     letterSpacing: "0.1em",
                     borderRadius: "2px",
                     border: `1px solid ${matchInfo.color}30`,
@@ -336,11 +336,11 @@ export default function Destiny() {
 
                 {/* 诗人名 - 大字宋体 */}
                 <h2 className="font-display mb-1"
-                  style={{ color: matchInfo.color, fontSize: "28px", letterSpacing: "0.12em" }}>
+                  style={{ color: matchInfo.color, fontSize: "32px", letterSpacing: "0.12em" }}>
                   {poet.name}
                 </h2>
                 <p className="font-serif-poem text-muted-foreground mb-4"
-                  style={{ fontSize: "14px", letterSpacing: "0.06em" }}>
+                  style={{ fontSize: "16px", letterSpacing: "0.06em" }}>
                   {poet.dynasty}代 · {poet.mbtiType}
                 </p>
 
@@ -355,11 +355,11 @@ export default function Destiny() {
                         style={{
                           background: matchInfo.color + "10",
                           color: matchInfo.color,
-                          fontSize: "12px",
-                          padding: "3px 10px",
+                          fontSize: "14px",
+                          padding: "4px 12px",
                           borderRadius: "2px",
                           border: `1px solid ${matchInfo.color}25`,
-                          fontFamily: "'Noto Serif SC', serif",
+                          fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', STSong, serif",
                           letterSpacing: "0.06em",
                         }}>
                         {tag}
@@ -370,7 +370,7 @@ export default function Destiny() {
 
                 {/* MBTI 描述 */}
                 <p className="text-muted-foreground leading-relaxed font-serif-poem"
-                  style={{ fontSize: "14px", lineHeight: "1.9" }}>
+                  style={{ fontSize: "16px", lineHeight: "1.9" }}>
                   {poet.mbtiDescription}
                 </p>
               </div>
@@ -381,11 +381,11 @@ export default function Destiny() {
               <div className="rounded-2xl p-4 mb-4 border"
                 style={{ background: "var(--card)", borderColor: "var(--border)", boxShadow: "0 1px 6px oklch(0.14 0.025 55 / 0.04)" }}>
                 <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
-                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  style={{ fontSize: "17px", letterSpacing: "0.06em" }}>
                   <span style={{ color: "var(--gold)" }}>★</span> 灵魂分析报告
                 </h3>
                 <p className="font-serif-poem text-muted-foreground leading-relaxed"
-                  style={{ fontSize: "14px", lineHeight: "2.0" }}>
+                  style={{ fontSize: "16px", lineHeight: "2.0" }}>
                   {destiny.analysisReport}
                 </p>
               </div>
@@ -399,14 +399,14 @@ export default function Destiny() {
                   borderColor: matchInfo.color + "25",
                 }}>
                 <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
-                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  style={{ fontSize: "17px", letterSpacing: "0.06em" }}>
                   <span style={{ color: "var(--vermilion)" }}>印</span> 专属藏头诗
                 </h3>
                 <div className="space-y-1.5 pl-2"
                   style={{ borderLeft: `2px solid ${matchInfo.color}40` }}>
                   {destiny.acrosticPoem.split("\n").filter(Boolean).map((line, i) => (
                     <div key={i} className="font-serif-poem text-foreground"
-                      style={{ fontSize: "16px", lineHeight: "2.0", letterSpacing: "0.08em" }}>
+                      style={{ fontSize: "18px", lineHeight: "2.0", letterSpacing: "0.08em" }}>
                       {line}
                     </div>
                   ))}
@@ -419,7 +419,7 @@ export default function Destiny() {
               <div className="rounded-2xl p-4 mb-4 border"
                 style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                 <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
-                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  style={{ fontSize: "17px", letterSpacing: "0.06em" }}>
                   <span style={{ color: "var(--celadon)" }}>卷</span> 代表作品
                 </h3>
                 <div className="space-y-3">
@@ -427,7 +427,7 @@ export default function Destiny() {
                     <div key={i} className="font-serif-poem text-muted-foreground leading-relaxed pl-3"
                       style={{
                         borderLeft: `2px solid ${matchInfo.color}50`,
-                        fontSize: "14px",
+                        fontSize: "16px",
                         lineHeight: "2.0",
                         letterSpacing: "0.06em",
                       }}>

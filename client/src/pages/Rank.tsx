@@ -90,6 +90,63 @@ const RANK_TIERS = [
   },
 ];
 
+// 兵器 SVG 图标路径映射
+const WEAPON_ICONS: Record<string, React.ReactNode> = {
+  "剑": (
+    <>
+      <line x1="12" y1="3" x2="12" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M9 6L12 3L15 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 18L12 21L14 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </>
+  ),
+  "枪": (
+    <>
+      <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M9 5L12 3L15 5L12 8Z" fill="currentColor" opacity="0.8"/>
+      <line x1="10" y1="15" x2="14" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </>
+  ),
+  "刀": (
+    <>
+      <path d="M7 19L17 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M17 5L19 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M7 19L5 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="6.5" cy="18.5" r="1.5" fill="currentColor" opacity="0.6"/>
+    </>
+  ),
+  "戟": (
+    <>
+      <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 7L17 5L15 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 7L7 5L9 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </>
+  ),
+  "弓": (
+    <>
+      <path d="M6 4C6 4 4 8 4 12C4 16 6 20 6 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="6" y1="4" x2="6" y2="20" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 2" opacity="0.5"/>
+      <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" opacity="0.6"/>
+      <path d="M16 10L18 12L16 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </>
+  ),
+  "扇": (
+    <>
+      <path d="M12 20C12 20 5 15 5 9C5 6.24 7.24 4 10 4C11.06 4 12 4.37 12 4.37" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 20C12 20 19 15 19 9C19 6.24 16.76 4 14 4C12.94 4 12 4.37 12 4.37" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="12" y1="4.37" x2="12" y2="21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </>
+  ),
+  "笔": (
+    <>
+      <path d="M6 18L10 14L18 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M14 6H18V10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6 18L4 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M4 20L6 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+    </>
+  ),
+};
+
 // SVG 圆环徽章组件（Apple Fitness 风格）
 function RingBadge({
   rank,
@@ -104,6 +161,8 @@ function RingBadge({
   progress?: number;
   size?: number;
 }) {
+  // 青铜剑是初始兵器，始终彩色显示
+  const effectiveUnlocked = unlocked || rank.minScore === 0;
   const r = size * 0.38;
   const cx = size / 2;
   const cy = size / 2;
@@ -111,12 +170,14 @@ function RingBadge({
   const strokeDash = circumference * Math.min(1, Math.max(0, progress / 100));
   const ringWidth = size * 0.11;
 
-  const ringColor = unlocked ? rank.gradientFrom : "#C8C8C8";
-  const ringColorEnd = unlocked ? rank.gradientTo : "#A0A0A0";
-  const textColor = unlocked ? rank.color : "#A0A0A0";
-  const bgOpacity = unlocked ? 0.12 : 0.05;
+  const ringColor = effectiveUnlocked ? rank.gradientFrom : "#C8C8C8";
+  const ringColorEnd = effectiveUnlocked ? rank.gradientTo : "#A0A0A0";
+  const iconColor = effectiveUnlocked ? rank.color : "#A0A0A0";
+  const bgOpacity = effectiveUnlocked ? 0.12 : 0.05;
   const gradId = `grad-${rank.tier}-${size}`;
   const bgGradId = `bg-${rank.tier}-${size}`;
+  const iconSize = size * 0.32;
+  const iconOffset = (size - iconSize) / 2;
 
   return (
     <svg
@@ -124,7 +185,7 @@ function RingBadge({
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       style={{
-        filter: unlocked && isCurrent
+        filter: effectiveUnlocked && isCurrent
           ? `drop-shadow(0 0 ${size * 0.09}px ${rank.color}70)`
           : "none",
       }}
@@ -135,8 +196,8 @@ function RingBadge({
           <stop offset="100%" stopColor={ringColorEnd} />
         </linearGradient>
         <radialGradient id={bgGradId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={unlocked ? rank.color : "#888"} stopOpacity={bgOpacity * 2} />
-          <stop offset="100%" stopColor={unlocked ? rank.color : "#888"} stopOpacity={0} />
+          <stop offset="0%" stopColor={effectiveUnlocked ? rank.color : "#888"} stopOpacity={bgOpacity * 2} />
+          <stop offset="100%" stopColor={effectiveUnlocked ? rank.color : "#888"} stopOpacity={0} />
         </radialGradient>
       </defs>
 
@@ -147,12 +208,12 @@ function RingBadge({
       <circle
         cx={cx} cy={cy} r={r}
         fill="none"
-        stroke={unlocked ? rank.color + "22" : "#E0E0E0"}
+        stroke={effectiveUnlocked ? rank.color + "22" : "#E0E0E0"}
         strokeWidth={ringWidth}
       />
 
       {/* 进度环 */}
-      {unlocked && (
+      {effectiveUnlocked && (
         <circle
           cx={cx} cy={cy} r={r}
           fill="none"
@@ -165,7 +226,7 @@ function RingBadge({
       )}
 
       {/* 进度端点光点 */}
-      {unlocked && progress > 3 && progress < 100 && (
+      {effectiveUnlocked && progress > 3 && progress < 100 && (
         <circle
           cx={cx + r * Math.cos((strokeDash / circumference) * 2 * Math.PI - Math.PI / 2)}
           cy={cy + r * Math.sin((strokeDash / circumference) * 2 * Math.PI - Math.PI / 2)}
@@ -174,19 +235,16 @@ function RingBadge({
         />
       )}
 
-      {/* 中心兵器汉字 */}
-      <text
-        x={cx}
-        y={cy + size * 0.09}
-        textAnchor="middle"
-        fontSize={size * 0.30}
-        fontFamily="Huiwen-MinchoGBK, Noto Serif SC, STSong, serif"
-        fontWeight="600"
-        fill={textColor}
-        style={{ opacity: unlocked ? 1 : 0.3 }}
+      {/* 中心兵器图标 */}
+      <g
+        transform={`translate(${iconOffset}, ${iconOffset})`}
+        color={iconColor}
+        style={{ opacity: effectiveUnlocked ? 1 : 0.3 }}
       >
-        {rank.weapon}
-      </text>
+        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {WEAPON_ICONS[rank.weapon]}
+        </svg>
+      </g>
     </svg>
   );
 }
@@ -343,28 +401,28 @@ export default function Rank() {
                 }}
               >
                 <div className="p-5">
-                  {/* 上部：圆环 + 三行信息 */}
-                  <div className="flex items-start gap-5">
-                    {/* 大圆环徽章 */}
-                    <div className="flex-shrink-0">
+                  {/* 圆环居中 + 三行信息居中 */}
+                  <div className="flex flex-col items-center text-center gap-3">
+                    {/* 大圆环徽章（居中） */}
+                    <div className="flex justify-center">
                       <RingBadge
                         rank={rank}
                         unlocked={unlocked}
                         isCurrent={isCurrent}
                         progress={prog}
-                        size={100}
+                        size={110}
                       />
                     </div>
 
                     {/* 三行信息 */}
-                    <div className="flex-1 min-w-0 pt-1">
+                    <div className="w-full">
                       {/* 第一行：兵器名称 + 当前标签 */}
-                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <div className="flex items-center justify-center gap-2 mb-1.5 flex-wrap">
                         <span
                           className="font-bold font-display"
                           style={{
                             fontSize: "20px",
-                            color: unlocked ? rank.color : "var(--foreground)",
+                            color: (unlocked || rank.minScore === 0) ? rank.color : "var(--foreground)",
                           }}
                         >
                           {rank.name}
@@ -389,12 +447,12 @@ export default function Rank() {
                       </div>
 
                       {/* 第二行：解锁分数 */}
-                      <div className="flex items-center gap-1.5 mb-2">
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
                         <div
                           className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
-                            background: unlocked ? rank.color + "15" : "var(--muted)",
-                            color: unlocked ? rank.color : "var(--muted-foreground)",
+                            background: (unlocked || rank.minScore === 0) ? rank.color + "15" : "var(--muted)",
+                            color: (unlocked || rank.minScore === 0) ? rank.color : "var(--muted-foreground)",
                           }}
                         >
                           {rank.minScore === 0 ? "初始兵器" : `${rank.minScore} 分解锁`}

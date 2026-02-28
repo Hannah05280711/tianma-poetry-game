@@ -462,10 +462,10 @@ export default function Game() {
                   </span>
                 )}
               </div>
-              {/* 题目内容 - 宋体大字 */}
+              {/* 题目内容 - 宋体大字，题干比选项大一号 */}
               <div className="px-5 py-5">
                 <p className="font-serif-poem text-foreground"
-                  style={{ fontSize: "20px", lineHeight: "2.0", fontWeight: 500, letterSpacing: "0.08em" }}>
+                  style={{ fontSize: "24px", lineHeight: "2.0", fontWeight: 500, letterSpacing: "0.08em" }}>
                   {renderQuestionContent(currentQ.content)}
                 </p>
               </div>
