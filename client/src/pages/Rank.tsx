@@ -1,7 +1,8 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import React, { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const RANK_TIERS = [
   {
@@ -15,6 +16,8 @@ const RANK_TIERS = [
     gradientTo: "#8B5E3C",
     desc: "初入江湖，磨砺剑锋",
     story: "铸于上古，承载着最初的诗意与梦想。每一位诗词学者都从这里起步，磨砺心志，以诗为剑，开启征途。",
+    poem: "十年磨一剑，霜刃未曾试",
+    poemAuthor: "贾岛《剑客》",
     minScore: 0,
   },
   {
@@ -28,6 +31,8 @@ const RANK_TIERS = [
     gradientTo: "#5A6B7B",
     desc: "渐入佳境，枪法精进",
     story: "枪法如诗，刺破云霄。掌握此枪者，已能背诵千首唐诗，出口成章，令人叹服。",
+    poem: "熊掌山中路，青天不知处",
+    poemAuthor: "李白《山中问答》",
     minScore: 500,
   },
   {
@@ -41,6 +46,8 @@ const RANK_TIERS = [
     gradientTo: "#A07010",
     desc: "刀光剑影，名震一方",
     story: "刀光如日，照耀诗坛。持此刀者，宋词元曲信手拈来，一刀斩断万古愁，诗意横溢。",
+    poem: "会当凌绝顶，一览众山小",
+    poemAuthor: "杜甫《望岳》",
     minScore: 1500,
   },
   {
@@ -54,6 +61,8 @@ const RANK_TIERS = [
     gradientTo: "#3B6F88",
     desc: "戟指苍穹，威震四海",
     story: "戟分天地，诗贯古今。执此戟者，已是一方诗词宗师，楚辞汉赋皆在胸中，门下弟子无数。",
+    poem: "路漫漫其修远兮，吾将上下而求索",
+    poemAuthor: "屈原《离骚》",
     minScore: 3500,
   },
   {
@@ -67,6 +76,8 @@ const RANK_TIERS = [
     gradientTo: "#1D4ED8",
     desc: "弓弦一响，百步穿杨",
     story: "弓弦如丝，射穿时空。此弓射出的每一箭，都是一首流传千古的诗篇，字字珠玑，直击人心。",
+    poem: "不知细叶谁裁出，二月春风似剪刀",
+    poemAuthor: "贺知章《咏柳》",
     minScore: 7000,
   },
   {
@@ -80,6 +91,8 @@ const RANK_TIERS = [
     gradientTo: "#B45309",
     desc: "扇动星河，诗意无边",
     story: "扇动星河，诗意无边。持此扇者，已与古代诗人心灵相通，共赏明月，同醉春风，超凡入圣。",
+    poem: "人生如梦，为欢几何",
+    poemAuthor: "李白《春夜宴诸从弟桃李园序》",
     minScore: 12000,
   },
   {
@@ -93,6 +106,8 @@ const RANK_TIERS = [
     gradientTo: "#7B1A28",
     desc: "一笔定乾坤，诗词之王",
     story: "一笔定乾坤，万古留芳名。执此笔者，乃当世诗词之王，上下五千年，纵横诗词海，名垂青史。",
+    poem: "笔落惊风雨，诗成泣鬼神",
+    poemAuthor: "杜甫《寄李十二白二十韵》",
     minScore: 20000,
   },
 ];
@@ -263,6 +278,9 @@ function RingBadge({
 export default function Rank() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  // 记录上次访问时的最高段位，用于检测新解锁
+  const [prevTierIdx, setPrevTierIdx] = useState<number | null>(null);
+  const [newlyUnlockedTier, setNewlyUnlockedTier] = useState<string | null>(null);
 
   const { data: gameState } = trpc.game.getState.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -273,6 +291,23 @@ export default function Rank() {
   const currentTierIdx = RANK_TIERS.findIndex(r => r.tier === currentTier);
   const currentRankData = RANK_TIERS[currentTierIdx];
   const nextTier = RANK_TIERS[currentTierIdx + 1];
+
+  // 检测段位变化，触发新解锁动效
+  useEffect(() => {
+    if (!isAuthenticated || currentTierIdx < 0) return;
+    const storageKey = 'rank_prev_tier_idx';
+    const stored = sessionStorage.getItem(storageKey);
+    const storedIdx = stored !== null ? parseInt(stored, 10) : null;
+    if (storedIdx !== null && currentTierIdx > storedIdx) {
+      // 段位提升，标记新解锁的兵器
+      setNewlyUnlockedTier(currentTier);
+      setPrevTierIdx(storedIdx);
+      // 3秒后清除动效
+      const timer = setTimeout(() => setNewlyUnlockedTier(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    sessionStorage.setItem(storageKey, String(currentTierIdx));
+  }, [currentTierIdx, currentTier, isAuthenticated]);
 
   const tierProgress = (() => {
     if (!currentRankData || !nextTier) return currentRankData ? 100 : 0;
@@ -397,6 +432,7 @@ export default function Rank() {
             const nextR = RANK_TIERS[RANK_TIERS.indexOf(rank) + 1];
             const prog = unlocked ? (isCurrent ? tierProgress : 100) : 0;
 
+            const isNewlyUnlocked = newlyUnlockedTier === rank.tier;
             return (
               <div
                 key={rank.tier}
@@ -407,8 +443,10 @@ export default function Rank() {
                     : unlocked
                     ? rank.color + "06"
                     : "var(--card)",
-                  borderColor: isCurrent ? rank.color + "50" : unlocked ? rank.color + "25" : "var(--border)",
+                  borderColor: isNewlyUnlocked ? rank.color : isCurrent ? rank.color + "50" : unlocked ? rank.color + "25" : "var(--border)",
                   opacity: isAuthenticated && !unlocked ? 0.55 : 1,
+                  boxShadow: isNewlyUnlocked ? `0 0 0 2px ${rank.color}60, 0 0 24px ${rank.color}40` : undefined,
+                  animation: isNewlyUnlocked ? 'rankUnlock 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' : undefined,
                 }}
               >
                 <div className="p-5">
@@ -475,7 +513,7 @@ export default function Rank() {
                         )}
                       </div>
 
-                      {/* 第三行：兵器传说（在第一个句号和第二个逗号处断行，三行居中） */}
+                      {/* 第三行：兵器传说（在第一个句号和第三个逗号处断行，三行居中） */}
                       <div
                         className="text-muted-foreground text-center"
                         style={{ fontSize: "13px", lineHeight: "1.85" }}
@@ -499,6 +537,31 @@ export default function Rank() {
                           );
                         })()}
                       </div>
+
+                      {/* 诗句彩蛋 */}
+                      {'poem' in rank && rank.poem && (
+                        <div
+                          className="mt-3 pt-3 text-center"
+                          style={{ borderTop: `1px solid ${(unlocked || rank.minScore === 0) ? rank.color + '25' : 'var(--border)'}` }}
+                        >
+                          <div
+                            className="font-serif-poem italic"
+                            style={{
+                              fontSize: "13px",
+                              color: (unlocked || rank.minScore === 0) ? rank.color : "var(--muted-foreground)",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            「{rank.poem}」
+                          </div>
+                          <div
+                            className="text-muted-foreground mt-0.5"
+                            style={{ fontSize: "11px" }}
+                          >
+                            —— {(rank as { poemAuthor?: string }).poemAuthor}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

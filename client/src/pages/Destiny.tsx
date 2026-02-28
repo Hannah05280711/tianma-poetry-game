@@ -373,20 +373,24 @@ export default function Destiny() {
                 )}
 
                 {/* MBTI 描述：诗人描述一行，对用户描述重新起行，联系之处重新起行 */}
-                <div className="text-muted-foreground font-serif-poem text-left"
-                  style={{ fontSize: "15px", lineHeight: "2.0" }}>
+                <div className="font-serif-poem text-left">
                   {(() => {
                     const desc = poet.mbtiDescription;
                     // 按句号分割，过滤空行
                     const sentences = desc.split('\u3002').filter(s => s.trim());
                     if (sentences.length <= 1) {
-                      return <p>{desc}</p>;
+                      return <p className="text-muted-foreground" style={{ fontSize: "15px", lineHeight: "2.0" }}>{desc}</p>;
                     }
-                    // 第一句：诗人描述（通常是诗人的性格特点）
-                    // 第二句：对用户的描述（通常以“你”开头）
-                    // 第三句：联系之处（通常以“与”开头）
                     return sentences.map((s, i) => (
-                      <p key={i} style={{ marginBottom: i < sentences.length - 1 ? '0.6em' : 0 }}>
+                      <p
+                        key={i}
+                        className={i === 0 ? "text-foreground font-semibold" : "text-muted-foreground"}
+                        style={{
+                          fontSize: i === 0 ? "16px" : "14px",
+                          lineHeight: "2.0",
+                          marginBottom: i < sentences.length - 1 ? '0.6em' : 0,
+                        }}
+                      >
                         {s + '\u3002'}
                       </p>
                     ));
@@ -561,6 +565,24 @@ export default function Destiny() {
                 style={{ fontSize: "14px", minHeight: "44px", color: "var(--ink-pale)", letterSpacing: "0.04em" }}
               >
                 继续答题提升契合度
+              </button>
+              {/* 重新解锁按鈕：清除本命诗人数据并跳转答题页 */}
+              <button
+                onClick={() => {
+                  if (isAuthenticated) {
+                    // 已登录：重新匹配（即调用 generateMutation）
+                    handleGenerate();
+                  } else {
+                    // 游客模式：清除本地数据并跳转答题
+                    localStorage.removeItem('guest_destiny_result');
+                    setGuestDestiny(null);
+                    navigate("/game");
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl transition-all active:scale-95 font-serif-poem text-muted-foreground"
+                style={{ fontSize: "13px", minHeight: "40px", letterSpacing: "0.04em", textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: "3px" }}
+              >
+                重新解锁本命诗人
               </button>
             </div>
           </div>

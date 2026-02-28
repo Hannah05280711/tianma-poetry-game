@@ -391,3 +391,10 @@
   60%       { transform: translateX(-3px); }
   80%       { transform: translateX(3px); }
 }
+
+@keyframes rankUnlock {
+  0%   { transform: scale(0.88); opacity: 0.6; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  80%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}

@@ -412,7 +412,12 @@ export const gameRouter = router({
 - 平均答题速度：${stats.avgResponseTime.toFixed(1)}秒
 - 诗人MBTI：${poet.mbtiType}（${poet.mbtiDescription.slice(0, 30)}...）
 
-请用第二人称"你"来写，语气亲切活泼，结合诗人特点分析用户性格。`;
+请用第二人称"你"来写，语气亲切活泼，结合诗人特点分析用户性格。
+
+【重要格式要求】请将内容分为三段，段与段之间用空行（\n\n）分隔：
+第一段：一句亲切的问候语（称呼用户为"小诗友"或类似称呼）
+第二段：根据答题数据分析用户性格特点的正文
+第三段：结合诗人的MBTI类型（${poet.mbtiType}）分析两人灵魂契合之处`;
 
     const acrosticPrompt = `请以"${poet.name}"这两个字（或三个字）为藏头，创作一首藏头诗，要求：
 1. 每句开头的字依次是"${poet.name.split("").join("、")}"
