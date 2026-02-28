@@ -9,7 +9,7 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 COPY package.json pnpm-lock.yaml ./
 
 # 安装全部依赖（含 devDependencies，构建需要）
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # 复制源码
 COPY . .
@@ -27,7 +27,7 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
 # 只安装生产依赖
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --no-frozen-lockfile --prod
 
 # 复制构建产物（后端 dist/index.js + 前端 dist/public/）
 COPY --from=builder /app/dist ./dist
