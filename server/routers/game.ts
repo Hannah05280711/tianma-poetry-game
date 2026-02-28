@@ -169,9 +169,13 @@ export const gameRouter = router({
     .query(async ({ input }) => {
       // 拉取足够多的题目以便同诗去重后仍有足够数量
       const fetchCount = input.count * 5;
+      // 王者关（difficulty=5）使用独立题库，只取 difficulty=5 的题目
+      // 其他关卡取相邻难度范围，但严格排除 difficulty=5，确保王者关题目不混入其他关卡
+      const minDiff = input.difficulty === 5 ? 5 : Math.max(1, input.difficulty - 1);
+      const maxDiff = input.difficulty === 5 ? 5 : Math.min(4, input.difficulty + 1);
       const qs = await getQuestionsByDifficulty(
-        Math.max(1, input.difficulty - 1),
-        Math.min(5, input.difficulty + 1),
+        minDiff,
+        maxDiff,
         fetchCount
       );
 
