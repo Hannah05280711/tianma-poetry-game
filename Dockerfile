@@ -2,8 +2,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# 安装 pnpm
-RUN npm install -g pnpm
+# 安装 pnpm（固定版本避免兼容性问题）
+RUN npm install -g pnpm@10.4.1
 
 # 复制依赖文件
 COPY package.json pnpm-lock.yaml ./
@@ -22,7 +22,8 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+# 安装 pnpm（固定版本）
+RUN npm install -g pnpm@10.4.1
 
 # 只安装生产依赖
 COPY package.json pnpm-lock.yaml ./
