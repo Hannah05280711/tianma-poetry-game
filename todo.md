@@ -174,7 +174,14 @@
 
 ## 第二十五批：微信小程序配置
 - [x] WECHAT_APP_ID / WECHAT_APP_SECRET 存入环境变量
-- [ ] server/_core/env.ts 添加 WECHAT_APP_ID / WECHAT_APP_SECRET
-- [ ] 后端添加微信登录接口 /api/auth/wechat（code2Session + 生成 JWT）
-- [ ] 创建微信小程序壳工程（miniprogram/ 目录）
-- [ ] 编写微信登录接口单元测试
+- [x] server/_core/env.ts 添加 WECHAT_APP_ID / WECHAT_APP_SECRET
+- [x] 后端添加微信登录接口 /api/auth/wechat（code2Session + 生成 JWT）
+- [x] 创建微信小程序壳工程（miniprogram/ 目录）
+- [x] 编写微信登录接口单元测试
+
+## 第二十六批：微信小程序 WebView 修复（第二轮）
+- [x] 彻底移除所有 Manus OAuth 跳转（不依赖 isInMiniProgram 检测，直接删除登录按钮）✅
+- [x] 修复答题页"加载中"卡死（添加 CORS 支持，修复跨域请求被拦截的根本原因）✅
+- [x] 有 wechat_token 时使用 credentials: omit（避免跨域认证问题）✅
+- [x] 修复认证跳转逐转（有 wechat_token 或 UA 包含微信时不跳转 OAuth）✅
+- [x] refetchQ 添加错误处理（catch 块，防止 Promise reject 导致卡死）✅

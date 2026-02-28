@@ -55,14 +55,19 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
 
-  // 如果在微信小程序中，不跳转 OAuth 登录页
+  // 如果有微信 token，说明是小程序环境，不跳转 OAuth 登录页
+  if (getWechatToken()) {
+    console.warn("[Auth] Unauthorized with wechat token, token may be invalid");
+    return;
+  }
+
+  // 如果 UA 包含微信特征，也不跳转
   const ua = navigator.userAgent.toLowerCase();
-  const isInMiniProgram = ua.includes("miniprogram") || (window as any).__wxjs_environment === "miniprogram";
-  if (isInMiniProgram) {
-    console.warn("[Auth] Unauthorized in mini program, token may be invalid");
+  const isWechat = ua.includes("micromessenger");
+  if (isWechat) {
+    console.warn("[Auth] Unauthorized in WeChat browser, skip OAuth redirect");
     return;
   }
 
@@ -100,9 +105,12 @@ const trpcClient = trpc.createClient({
         return {};
       },
       fetch(input, init) {
+        // 有微信 token 时使用 omit（跨域不发 cookie，用 Bearer token 认证）
+        // 没有 token 时使用 include（Manus OAuth cookie 认证）
+        const credentialsMode = getWechatToken() ? "omit" : "include";
         return globalThis.fetch(input, {
           ...(init ?? {}),
-          credentials: "include",
+          credentials: credentialsMode,
         });
       },
     }),

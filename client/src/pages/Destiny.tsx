@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { fbDestinyMatch, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
-import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -185,12 +183,7 @@ export default function Destiny() {
       <div className="flex items-center gap-3 py-3 mb-2">
         <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
         <h1 className="font-semibold font-display" style={{ fontSize: "17px" }}>✨ 本命诗人觉醒</h1>
-        {!isAuthenticated && !isInMiniProgram() && (
-          <a href={getLoginUrl()} className="ml-auto text-xs px-3 py-1 rounded-full font-medium"
-            style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
-            登录保存结果
-          </a>
-        )}
+
       </div>
 
       {/* 微信分享指引弹窗 */}
@@ -275,9 +268,9 @@ export default function Destiny() {
           )}
 
           {/* 游客提示：登录可保存进度 */}
-          {!isAuthenticated && totalAnswered > 0 && !isInMiniProgram() && (
+          {!isAuthenticated && totalAnswered > 0 && (
             <p className="mt-4 text-xs text-muted-foreground">
-              游客模式下结果仅保存在本设备，<a href={getLoginUrl()} className="underline" style={{ color: "var(--vermilion)" }}>登录</a>可永久保存
+              游客模式下结果仅保存在本设备，小程序登录后可永久保存
             </p>
           )}
         </div>
@@ -531,15 +524,10 @@ export default function Destiny() {
             )}
 
             {/* 游客提示 */}
-            {!isAuthenticated && !isInMiniProgram() && (
+            {!isAuthenticated && (
               <div className="rounded-xl p-3 mb-4 text-center border"
                 style={{ background: "var(--card)", borderColor: "oklch(0.50 0.19 22 / 0.22)" }}>
-                <p className="text-xs text-muted-foreground mb-2 font-serif-poem">游客结果仅保存在本设备，登录后可永久保存并解锁更多功能</p>
-                <a href={getLoginUrl()}
-                  className="inline-block px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-                  style={{ background: "var(--vermilion)", letterSpacing: "0.04em" }}>
-                  登录保存
-                </a>
+                <p className="text-xs text-muted-foreground font-serif-poem">游客结果仅保存在本设备，小程序登录后可永久保存</p>
               </div>
             )}
 

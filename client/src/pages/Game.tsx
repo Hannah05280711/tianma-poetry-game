@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fbOptionTap, fbCorrect, fbWrong, fbCombo, fbLevelComplete, fbGameStart, fbStreakBroken, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { isInMiniProgram } from "@/lib/wechatBridge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -258,10 +257,20 @@ export default function Game() {
   const [pendingStart, setPendingStart] = useState(false);
   useEffect(() => {
     if (pendingStart) {
-      refetchQ().then(() => {
-        setPhase("playing");
-        setPendingStart(false);
-      });
+      refetchQ()
+        .then((result) => {
+          // 无论成功还是失败，都进入游戏（游客模式下题目可能为空）
+          if (result.data && result.data.length > 0) {
+            setPhase("playing");
+          } else {
+            toast.error("题目加载失败，请重试");
+          }
+          setPendingStart(false);
+        })
+        .catch(() => {
+          toast.error("网络异常，请检查连接后重试");
+          setPendingStart(false);
+        });
     }
   }, [querySeed, pendingStart, refetchQ]);
 
@@ -666,17 +675,7 @@ export default function Game() {
           </div>
         )}
 
-        {!isAuthenticated && !isInMiniProgram() && (
-          <div className="rounded-xl p-3 mb-5 text-center bg-card border"
-            style={{ borderColor: "oklch(0.55 0.20 25 / 0.25)" }}>
-            <p className="text-xs text-muted-foreground mb-2">登录后积分将被保存，还可解锁本命诗人！</p>
-            <a href="/api/oauth/login"
-              className="inline-block px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-              style={{ background: "var(--vermilion)" }}>
-              立即登录
-            </a>
-          </div>
-        )}
+
 
         <div className="space-y-3">
           <button
