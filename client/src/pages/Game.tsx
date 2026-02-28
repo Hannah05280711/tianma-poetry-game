@@ -299,40 +299,78 @@ export default function Game() {
           </div>
         )}
 
-        <div className="space-y-3 mb-6">
-          {DIFFICULTY_INFO.map((d) => (
-            <button
-              key={d.level}
-              onClick={() => setDifficulty(d.level)}
-              className="w-full rounded-2xl p-4 text-left transition-all active:scale-[0.98] bg-card border"
-              style={{
-                borderColor: difficulty === d.level ? d.color + "80" : "oklch(0.90 0.01 80)",
-                background: difficulty === d.level ? d.color + "0D" : "white",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{d.emoji}</div>
-                <div className="flex-1">
-                  <div className="font-semibold text-sm text-foreground"
-                    style={{ color: difficulty === d.level ? d.color : undefined }}>
-                    {d.name}
+        <div className="space-y-2.5 mb-6">
+          {DIFFICULTY_INFO.map((d) => {
+            const isSelected = difficulty === d.level;
+            return (
+              <button
+                key={d.level}
+                onClick={() => setDifficulty(d.level)}
+                className="w-full rounded-2xl text-left transition-all duration-150 active:scale-[0.98] overflow-hidden"
+                style={{
+                  border: `1.5px solid ${isSelected ? d.color + "70" : "var(--border)"}`,
+                  background: isSelected
+                    ? `linear-gradient(135deg, ${d.color}10, var(--card))`
+                    : "var(--card)",
+                  boxShadow: isSelected
+                    ? `0 2px 12px ${d.color}18`
+                    : "0 1px 4px oklch(0.14 0.025 55 / 0.04)",
+                }}
+              >
+                {/* 选中时的左边色条 */}
+                <div className="flex items-stretch">
+                  <div className="w-1 flex-shrink-0 rounded-l-2xl"
+                    style={{ background: isSelected ? d.color : "transparent" }} />
+                  <div className="flex items-center gap-3 p-4 flex-1">
+                    {/* 图标圆形背景 */}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0"
+                      style={{
+                        background: isSelected ? d.color + "18" : "var(--secondary)",
+                        border: `1px solid ${isSelected ? d.color + "40" : "var(--border)"}`,
+                      }}>
+                      {d.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display text-sm mb-0.5"
+                        style={{ color: isSelected ? d.color : "var(--ink)", letterSpacing: "0.04em" }}>
+                        {d.name}
+                      </div>
+                      <div className="text-xs font-serif-poem" style={{ color: "var(--ink-pale)" }}>{d.desc}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <div className="text-xs px-2 py-0.5 rounded-full"
+                        style={{
+                          background: isSelected ? d.color + "15" : "var(--secondary)",
+                          color: isSelected ? d.color : "var(--ink-pale)",
+                          fontSize: "11px",
+                        }}>
+                        {d.time}s
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: d.color }}>
+                          <span style={{ color: "white", fontSize: "11px" }}>✓</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{d.desc}</div>
                 </div>
-                <div className="text-xs text-muted-foreground">限时{d.time}秒</div>
-                {difficulty === d.level && <span style={{ color: d.color }}>✓</span>}
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         <button
           onClick={startGame}
           disabled={loadingQ}
           className="w-full py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98] disabled:opacity-50 text-white"
-          style={{ background: "var(--vermilion)", boxShadow: "0 4px 14px oklch(0.55 0.20 25 / 0.28)" }}
+          style={{
+            background: "var(--vermilion)",
+            boxShadow: "0 4px 14px oklch(0.55 0.20 25 / 0.28)",
+            letterSpacing: "0.06em",
+          }}
         >
-          {loadingQ ? "加载中..." : `⚔️ 开始 ${diffInfo?.name}`}
+          {loadingQ ? "加载中..." : `开始 ${diffInfo?.name}`}
         </button>
       </div>
     );
@@ -404,79 +442,127 @@ export default function Game() {
         {/* Question */}
         {currentQ ? (
           <div className="flex-1 flex flex-col">
-            <div className="rounded-2xl p-4 mb-4 bg-card border border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs px-2 py-0.5 rounded-full"
+            {/* 题目卡片 - 宋体大字风格 */}
+            <div className="rounded-2xl mb-4 overflow-hidden"
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                boxShadow: "0 2px 12px oklch(0.14 0.025 55 / 0.06)",
+              }}>
+              {/* 题目头部 */}
+              <div className="flex items-center gap-2 px-4 pt-4 pb-3"
+                style={{ borderBottom: "1px solid var(--border)" }}>
+                <span className="tag-seal"
                   style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
                   {TYPE_LABELS[currentQ.questionType] ?? "题目"}
                 </span>
                 {currentQ.sourcePoemTitle && (
-                  <span className="text-xs text-muted-foreground">《{currentQ.sourcePoemTitle}》</span>
+                  <span className="text-xs font-serif-poem" style={{ color: "var(--ink-pale)" }}>
+                    《{currentQ.sourcePoemTitle}》
+                  </span>
                 )}
               </div>
-              <p className="leading-relaxed text-foreground" style={{ fontSize: "17px", lineHeight: "1.85", fontFamily: "'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', sans-serif", fontWeight: 500 }}>
-                {renderQuestionContent(currentQ.content)}
-              </p>
+              {/* 题目内容 - 宋体大字 */}
+              <div className="px-5 py-5">
+                <p className="font-serif-poem text-foreground"
+                  style={{ fontSize: "20px", lineHeight: "2.0", fontWeight: 500, letterSpacing: "0.08em" }}>
+                  {renderQuestionContent(currentQ.content)}
+                </p>
+              </div>
             </div>
 
-            {/* Options */}
+            {/* 选项 - 带圆形字母徽章 */}
             <div className="space-y-2.5 mb-4">
               {(currentQ.options as string[]).map((opt, i) => {
                 const isEliminated = eliminatedOptions.includes(opt);
                 const isSelected = selectedAnswer === opt;
                 const isCorrectOpt = opt === currentQ.correctAnswer;
-                let btnStyle: React.CSSProperties = {
-                  background: "white",
-                  border: "1.5px solid oklch(0.88 0.01 80)",
+                const letter = ["A", "B", "C", "D"][i];
+
+                let containerStyle: React.CSSProperties = {
+                  background: "var(--card)",
+                  border: "1.5px solid var(--border)",
                   color: "var(--ink)",
                 };
+                let badgeStyle: React.CSSProperties = {
+                  background: "var(--secondary)",
+                  color: "var(--ink-light)",
+                };
+
                 if (isEliminated) {
-                  btnStyle = { ...btnStyle, opacity: 0.3, textDecoration: "line-through" };
+                  containerStyle = { ...containerStyle, opacity: 0.3, textDecoration: "line-through" };
                 } else if (answerState !== "idle") {
                   if (isCorrectOpt) {
-                    btnStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
+                    containerStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
+                    badgeStyle = { background: "#16A34A", color: "white" };
                   } else if (isSelected && !isCorrectOpt) {
-                    btnStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
+                    containerStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
+                    badgeStyle = { background: "#DC2626", color: "white" };
                   }
+                } else if (isSelected) {
+                  containerStyle = {
+                    background: "var(--vermilion-pale)",
+                    border: "1.5px solid var(--vermilion)",
+                    color: "var(--vermilion)",
+                  };
+                  badgeStyle = { background: "var(--vermilion)", color: "white" };
                 }
+
                 return (
                   <button
                     key={i}
                     onClick={() => handleOptionClick(opt)}
                     disabled={answerState !== "idle" || isEliminated}
-                    className="w-full text-left px-4 rounded-xl transition-all duration-150"
-                    style={{ ...btnStyle, fontSize: "16px", lineHeight: "1.6", minHeight: "52px", display: "flex", alignItems: "center" }}
+                    className="w-full text-left rounded-2xl transition-all duration-150 active:scale-[0.98]"
+                    style={{ ...containerStyle, minHeight: "56px", display: "flex", alignItems: "center", padding: "10px 16px", boxShadow: "0 1px 4px oklch(0.14 0.025 55 / 0.05)" }}
                   >
-                    <span className="mr-2 font-bold" style={{ color: "var(--vermilion)", minWidth: "20px", display: "inline-block" }}>
-                      {["A", "B", "C", "D"][i]}
-                    </span>
-                    <span className="flex-1">{opt}</span>
-                    {answerState !== "idle" && isCorrectOpt && <span className="ml-2 text-green-600 font-bold">✓</span>}
-                    {answerState !== "idle" && isSelected && !isCorrectOpt && <span className="ml-2 text-red-500 font-bold">✗</span>}
+                    {/* 圆形字母徽章 */}
+                    <span
+                      style={{
+                        ...badgeStyle,
+                        width: "28px", height: "28px",
+                        borderRadius: "50%",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "13px", fontWeight: 700,
+                        flexShrink: 0, marginRight: "12px",
+                        transition: "all 0.15s",
+                      }}
+                    >{letter}</span>
+                    <span className="flex-1" style={{ fontSize: "16px", lineHeight: "1.6" }}>{opt}</span>
+                    {answerState !== "idle" && isCorrectOpt && (
+                      <span style={{ color: "#16A34A", fontSize: "18px", marginLeft: "8px" }}>✓</span>
+                    )}
+                    {answerState !== "idle" && isSelected && !isCorrectOpt && (
+                      <span style={{ color: "#DC2626", fontSize: "18px", marginLeft: "8px" }}>✗</span>
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Score feedback */}
+            {/* 得分反馈 - 更优雅的布局 */}
             {answerState !== "idle" && (
-              <div className="rounded-xl p-3 mb-4 animate-slide-up text-center border"
+              <div className="rounded-2xl p-4 mb-4 animate-slide-up"
                 style={{
-                  background: answerState === "correct" ? "#F0FDF4" : "#FEF2F2",
-                  borderColor: answerState === "correct" ? "#16A34A40" : "#DC262640",
+                  background: answerState === "correct"
+                    ? "linear-gradient(135deg, #F0FDF4, #DCFCE7)"
+                    : "linear-gradient(135deg, #FEF2F2, #FEE2E2)",
+                  border: `1.5px solid ${answerState === "correct" ? "#16A34A40" : "#DC262640"}`,
                 }}>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-xl">{answerState === "correct" ? "✅" : "❌"}</span>
-                  <span className="text-base font-bold"
-                    style={{ color: answerState === "correct" ? "#15803D" : "#B91C1C" }}>
-                    {answerState === "correct"
-                      ? `+${lastScoreDelta}分`
-                      : lastScoreDelta < 0 ? `${lastScoreDelta}分` : "答错了"}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: "22px" }}>{answerState === "correct" ? "✅" : "❌"}</span>
+                    <span className="font-bold font-display"
+                      style={{ color: answerState === "correct" ? "#15803D" : "#B91C1C", fontSize: "17px" }}>
+                      {answerState === "correct"
+                        ? `+${lastScoreDelta}分`
+                        : lastScoreDelta < 0 ? `${lastScoreDelta}分` : "答错了"}
+                    </span>
+                  </div>
+                  <p className="text-xs" style={{ color: answerState === "correct" ? "#16A34A80" : "#DC262680" }}>
+                    {currentIdx + 1 >= (questions?.length ?? 7) ? "即将查看结果" : "即将下一题"}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {currentIdx + 1 >= (questions?.length ?? 7) ? "即将查看结果..." : "即将进入下一题..."}
-                </p>
               </div>
             )}
           </div>

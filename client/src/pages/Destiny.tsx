@@ -291,73 +291,122 @@ export default function Destiny() {
 
         return (
           <div className="animate-fade-in">
-            {/* Main card */}
-            <div className="rounded-2xl p-5 mb-4 text-center border"
-              style={{ background: matchInfo.bg, borderColor: matchInfo.color + "40" }}>
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 float-anim"
-                style={{ background: matchInfo.color + "15", border: `2px solid ${matchInfo.color}50` }}>
-                {poetEmoji}
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold mb-2"
-                style={{ background: matchInfo.color + "15", color: matchInfo.color, fontSize: "13px" }}>
-                ✨ {matchInfo.label}
-              </div>
-              <h2 className="font-bold font-display mb-0.5" style={{ color: matchInfo.color, fontSize: "24px" }}>
-                {poet.name}
-              </h2>
-              <p className="text-muted-foreground mb-3" style={{ fontSize: "14px" }}>
-                {poet.dynasty}代 · {poet.mbtiType}
-              </p>
-              <div className="relative mx-auto mb-3" style={{ width: 72, height: 72 }}>
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r="28" fill="none" stroke={matchInfo.color + "20"} strokeWidth="5" />
-                  <circle cx="36" cy="36" r="28" fill="none" stroke={matchInfo.color} strokeWidth="5"
-                    strokeDasharray={`${2 * Math.PI * 28}`}
-                    strokeDashoffset={`${2 * Math.PI * 28 * (1 - destiny.matchScore / 100)}`}
-                    strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-bold" style={{ color: matchInfo.color, fontSize: "16px" }}>{destiny.matchScore}%</span>
-                  <span className="text-muted-foreground" style={{ fontSize: "10px" }}>契合度</span>
+            {/* 主卡片 - 宣纸风格 */}
+            <div className="rounded-2xl mb-4 overflow-hidden border"
+              style={{
+                background: `linear-gradient(160deg, ${matchInfo.color}08 0%, var(--card) 40%)`,
+                borderColor: matchInfo.color + "35",
+                boxShadow: `0 4px 24px ${matchInfo.color}12`,
+              }}>
+              {/* 头部装饰条 */}
+              <div className="h-1.5 w-full"
+                style={{ background: `linear-gradient(90deg, ${matchInfo.color}, ${matchInfo.color}60)` }} />
+
+              <div className="p-5 text-center">
+                {/* 诗人头像 - 更大更丰富 */}
+                <div className="relative inline-block mb-4">
+                  <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto float-anim"
+                    style={{
+                      background: `radial-gradient(circle, ${matchInfo.color}18, ${matchInfo.color}08)`,
+                      border: `2px solid ${matchInfo.color}40`,
+                      boxShadow: `0 4px 16px ${matchInfo.color}20`,
+                    }}>
+                    {poetEmoji}
+                  </div>
+                  {/* 契合度小徽章 */}
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: matchInfo.color, boxShadow: `0 2px 8px ${matchInfo.color}50` }}>
+                    <span style={{ color: "white", fontSize: "11px", fontWeight: 700 }}>{destiny.matchScore}%</span>
+                  </div>
                 </div>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 justify-center mb-3">
-                  {tags.map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full"
-                      style={{ background: matchInfo.color + "12", color: matchInfo.color, fontSize: "13px" }}>
-                      {tag}
-                    </span>
-                  ))}
+
+                {/* 契合等级标签 */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-3"
+                  style={{
+                    background: matchInfo.color + "12",
+                    color: matchInfo.color,
+                    fontSize: "12px",
+                    fontFamily: "'Noto Serif SC', serif",
+                    letterSpacing: "0.1em",
+                    borderRadius: "2px",
+                    border: `1px solid ${matchInfo.color}30`,
+                  }}>
+                  {matchInfo.label}
                 </div>
-              )}
-              <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "15px" }}>
-                {poet.mbtiDescription}
-              </p>
+
+                {/* 诗人名 - 大字宋体 */}
+                <h2 className="font-display mb-1"
+                  style={{ color: matchInfo.color, fontSize: "28px", letterSpacing: "0.12em" }}>
+                  {poet.name}
+                </h2>
+                <p className="font-serif-poem text-muted-foreground mb-4"
+                  style={{ fontSize: "14px", letterSpacing: "0.06em" }}>
+                  {poet.dynasty}代 · {poet.mbtiType}
+                </p>
+
+                {/* 小分隔线 */}
+                <div className="divider-ink mx-8 mb-4" />
+
+                {/* 性格标签 */}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 justify-center mb-3">
+                    {tags.map((tag) => (
+                      <span key={tag}
+                        style={{
+                          background: matchInfo.color + "10",
+                          color: matchInfo.color,
+                          fontSize: "12px",
+                          padding: "3px 10px",
+                          borderRadius: "2px",
+                          border: `1px solid ${matchInfo.color}25`,
+                          fontFamily: "'Noto Serif SC', serif",
+                          letterSpacing: "0.06em",
+                        }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* MBTI 描述 */}
+                <p className="text-muted-foreground leading-relaxed font-serif-poem"
+                  style={{ fontSize: "14px", lineHeight: "1.9" }}>
+                  {poet.mbtiDescription}
+                </p>
+              </div>
             </div>
 
-            {/* Analysis report */}
+            {/* 灵魂分析报告 */}
             {destiny.analysisReport && (
-              <div className="rounded-xl p-4 mb-4 bg-card border border-border">
-                <h3 className="font-semibold mb-2 flex items-center gap-2 text-foreground" style={{ fontSize: "15px" }}>
-                  <span>📜</span> 灵魂分析报告
+              <div className="rounded-2xl p-4 mb-4 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)", boxShadow: "0 1px 6px oklch(0.14 0.025 55 / 0.04)" }}>
+                <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
+                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  <span style={{ color: "var(--gold)" }}>★</span> 灵魂分析报告
                 </h3>
-                <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "15px" }}>
+                <p className="font-serif-poem text-muted-foreground leading-relaxed"
+                  style={{ fontSize: "14px", lineHeight: "2.0" }}>
                   {destiny.analysisReport}
                 </p>
               </div>
             )}
 
-            {/* Acrostic poem */}
+            {/* 专属藏头诗 */}
             {destiny.acrosticPoem && (
-              <div className="rounded-xl p-4 mb-4 bg-card border"
-                style={{ borderColor: matchInfo.color + "30" }}>
-                <h3 className="font-semibold mb-3 flex items-center gap-2 text-foreground" style={{ fontSize: "15px" }}>
-                  <span>🖌️</span> 专属藏头诗
+              <div className="rounded-2xl p-4 mb-4 border"
+                style={{
+                  background: `linear-gradient(135deg, ${matchInfo.color}05, var(--card))`,
+                  borderColor: matchInfo.color + "25",
+                }}>
+                <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
+                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  <span style={{ color: "var(--vermilion)" }}>印</span> 专属藏头诗
                 </h3>
-                <div className="space-y-1">
+                <div className="space-y-1.5 pl-2"
+                  style={{ borderLeft: `2px solid ${matchInfo.color}40` }}>
                   {destiny.acrosticPoem.split("\n").filter(Boolean).map((line, i) => (
-                    <div key={i} className="font-display leading-relaxed text-foreground" style={{ fontSize: "16px" }}>
+                    <div key={i} className="font-serif-poem text-foreground"
+                      style={{ fontSize: "16px", lineHeight: "2.0", letterSpacing: "0.08em" }}>
                       {line}
                     </div>
                   ))}
@@ -365,16 +414,23 @@ export default function Destiny() {
               </div>
             )}
 
-            {/* Signature poems */}
+            {/* 代表作品 */}
             {poems.length > 0 && (
-              <div className="rounded-xl p-4 mb-4 bg-card border border-border">
-                <h3 className="font-semibold mb-3 flex items-center gap-2 text-foreground" style={{ fontSize: "15px" }}>
-                  <span>📖</span> 代表作品
+              <div className="rounded-2xl p-4 mb-4 border"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <h3 className="font-display mb-3 flex items-center gap-2 text-foreground"
+                  style={{ fontSize: "15px", letterSpacing: "0.06em" }}>
+                  <span style={{ color: "var(--celadon)" }}>卷</span> 代表作品
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {poems.slice(0, 3).map((poem, i) => (
-                    <div key={i} className="text-muted-foreground italic font-display leading-relaxed border-l-2 pl-3"
-                      style={{ borderColor: matchInfo.color + "50", fontSize: "15px" }}>
+                    <div key={i} className="font-serif-poem text-muted-foreground leading-relaxed pl-3"
+                      style={{
+                        borderLeft: `2px solid ${matchInfo.color}50`,
+                        fontSize: "14px",
+                        lineHeight: "2.0",
+                        letterSpacing: "0.06em",
+                      }}>
                       {poem}
                     </div>
                   ))}
@@ -384,40 +440,40 @@ export default function Destiny() {
 
             {/* 游客提示 */}
             {!isAuthenticated && (
-              <div className="rounded-xl p-3 mb-4 text-center bg-card border"
-                style={{ borderColor: "oklch(0.55 0.20 25 / 0.25)" }}>
-                <p className="text-xs text-muted-foreground mb-2">游客结果仅保存在本设备，登录后可永久保存并解锁更多功能</p>
+              <div className="rounded-xl p-3 mb-4 text-center border"
+                style={{ background: "var(--card)", borderColor: "oklch(0.50 0.19 22 / 0.22)" }}>
+                <p className="text-xs text-muted-foreground mb-2 font-serif-poem">游客结果仅保存在本设备，登录后可永久保存并解锁更多功能</p>
                 <a href={getLoginUrl()}
                   className="inline-block px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-                  style={{ background: "var(--vermilion)" }}>
-                  立即登录保存
+                  style={{ background: "var(--vermilion)", letterSpacing: "0.04em" }}>
+                  登录保存
                 </a>
               </div>
             )}
 
-            {/* Action buttons */}
+            {/* 操作按鈕 */}
             <div className="space-y-3 mb-6">
               <button
                 onClick={handleShare}
                 className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 text-white"
-                style={{ background: "#07C160", fontSize: "16px", minHeight: "52px" }}
+                style={{ background: "#07C160", fontSize: "16px", minHeight: "52px", letterSpacing: "0.04em" }}
               >
                 📱 分享到微信
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={generating}
-                className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50 border border-border bg-card text-foreground"
-                style={{ fontSize: "15px", minHeight: "48px" }}
+                className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50 border text-foreground"
+                style={{ background: "var(--card)", borderColor: "var(--border)", fontSize: "15px", minHeight: "48px", letterSpacing: "0.04em" }}
               >
-                {generating ? "✨ 重新觉醒中..." : "🔄 重新匹配本命诗人"}
+                {generating ? "✨ 重新觉醒中..." : "重新匹配本命诗人"}
               </button>
               <button
                 onClick={() => navigate("/game")}
-                className="w-full py-3 rounded-xl transition-all active:scale-95 text-muted-foreground"
-                style={{ fontSize: "15px", minHeight: "44px" }}
+                className="w-full py-3 rounded-xl transition-all active:scale-95 font-serif-poem"
+                style={{ fontSize: "14px", minHeight: "44px", color: "var(--ink-pale)", letterSpacing: "0.04em" }}
               >
-                ⚔️ 继续答题提升契合度
+                继续答题提升契合度
               </button>
             </div>
           </div>
