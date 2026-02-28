@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -30,6 +31,7 @@ const bannerPoem = BANNER_POEMS[Math.floor(Math.random() * BANNER_POEMS.length)]
 export default function Home() {
   const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const { data: gameState } = trpc.game.getState.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -69,24 +71,55 @@ export default function Home() {
               你的本命诗人是谁
             </p>
           </div>
-          {isAuthenticated ? (
+          <div className="flex items-center gap-2">
+            {/* 主题切换按钮 */}
             <button
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all"
-              style={{ borderColor: "var(--border)", background: "var(--card)" }}
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-9 h-9 rounded-full border transition-all"
+              style={{
+                borderColor: "var(--border)",
+                background: "var(--card)",
+                color: "var(--foreground)",
+              }}
+              title={theme === "light" ? "切换夜读模式" : "切换日间模式"}
             >
-              <span style={{ fontSize: "14px" }}>👤</span>
-              <span className="text-xs max-w-[80px] truncate text-foreground">{user?.name ?? "诗词人"}</span>
+              {theme === "light" ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+              )}
             </button>
-          ) : (
-            <a
-              href={getLoginUrl()}
-              className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-white"
-              style={{ background: "var(--vermilion)", letterSpacing: "0.04em" }}
-            >
-              登录
-            </a>
-          )}
+            {isAuthenticated ? (
+              <button
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all"
+                style={{ borderColor: "var(--border)", background: "var(--card)" }}
+              >
+                <span style={{ fontSize: "14px" }}>👤</span>
+                <span className="text-xs max-w-[80px] truncate text-foreground">{user?.name ?? "诗词人"}</span>
+              </button>
+            ) : (
+              <a
+                href={getLoginUrl()}
+                className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all text-white"
+                style={{ background: "var(--vermilion)", letterSpacing: "0.04em" }}
+              >
+                登录
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Hero Banner - 诗句装饰风格 */}
