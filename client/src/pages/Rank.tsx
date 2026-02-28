@@ -483,13 +483,13 @@ export default function Rank() {
                         {(() => {
                           const s = rank.story;
                           const p1 = s.indexOf('\u3002');
-                          let commaCount = 0, p2 = -1;
+                          let commaCount = 0, p3 = -1;
                           for (let j = 0; j < s.length; j++) {
-                            if (s[j] === '\uff0c') { commaCount++; if (commaCount === 2) { p2 = j; break; } }
+                            if (s[j] === '\uff0c') { commaCount++; if (commaCount === 3) { p3 = j; break; } }
                           }
                           const line1 = s.slice(0, p1 + 1);
-                          const line2 = p2 > p1 ? s.slice(p1 + 1, p2 + 1) : s.slice(p1 + 1);
-                          const line3 = p2 > p1 ? s.slice(p2 + 1) : '';
+                          const line2 = p3 > p1 ? s.slice(p1 + 1, p3 + 1) : s.slice(p1 + 1);
+                          const line3 = p3 > p1 ? s.slice(p3 + 1) : '';
                           return (
                             <>
                               <div>{line1}</div>

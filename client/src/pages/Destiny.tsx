@@ -373,7 +373,7 @@ export default function Destiny() {
                 )}
 
                 {/* MBTI 描述：诗人描述一行，对用户描述重新起行，联系之处重新起行 */}
-                <div className="text-muted-foreground font-serif-poem text-center"
+                <div className="text-muted-foreground font-serif-poem text-left"
                   style={{ fontSize: "15px", lineHeight: "2.0" }}>
                   {(() => {
                     const desc = poet.mbtiDescription;
@@ -408,42 +408,65 @@ export default function Destiny() {
                   style={{ fontSize: "15px", lineHeight: "2.0" }}>
                   {(() => {
                     const report = destiny.analysisReport!;
-                    // 按换行符分割段落（LLM输出通常包含\n）
-                    const rawParas = report.split('\n').filter(p => p.trim());
+                    const MBTI_KWS = ['MBTI', 'INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP',
+                      'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'];
+
+                    // 优先按 \n 分割段落（LLM 输出通常包含换行）
+                    const rawParas = report.split('\n').map(p => p.trim()).filter(Boolean);
                     if (rawParas.length >= 2) {
-                      return rawParas.map((para, i) => (
-                        <p key={i} style={{ marginBottom: i < rawParas.length - 1 ? '0.85em' : 0 }}>
+                      // 在已分段的基础上，尝试将包含MBTI关键词的段落与前段分开
+                      const result: string[] = [];
+                      for (const para of rawParas) {
+                        const hasMbti = MBTI_KWS.some(kw => para.includes(kw));
+                        // 如果当前段落包含MBTI关键词，且上一段不包含，则单独成段
+                        if (hasMbti && result.length > 0 && !MBTI_KWS.some(kw => result[result.length-1].includes(kw))) {
+                          result.push(para);
+                        } else if (result.length > 0 && !hasMbti) {
+                          // 尝试将同一层次的正文内容合并（避免过多段落）
+                          result.push(para);
+                        } else {
+                          result.push(para);
+                        }
+                      }
+                      return result.map((para, i) => (
+                        <p key={i} style={{ marginBottom: i < result.length - 1 ? '0.85em' : 0 }}>
                           {para}
                         </p>
                       ));
                     }
-                    // 如果没有换行，尝试按句号分割：第一句为问候，剩余按MBTI分析开始分割
+
+                    // 无换行符时：按句号分割
                     const sentences = report.split('\u3002').filter(s => s.trim());
-                    if (sentences.length <= 2) {
-                      return <p>{report}</p>;
-                    }
+                    if (sentences.length <= 1) return <p>{report}</p>;
+
                     // 第一句为问候
                     const greeting = sentences[0] + '\u3002';
-                    // 剩余内容：尝试在MBTI关键词处分割为两段
-                    const rest = sentences.slice(1).join('\u3002') + '\u3002';
-                    const mbtiKeywords = ['MBTI', 'INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP',
-                      'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'];
-                    let splitIdx = -1;
-                    for (const kw of mbtiKeywords) {
-                      const idx = rest.indexOf(kw);
-                      if (idx > 5) { splitIdx = idx; break; }
+                    const remaining = sentences.slice(1);
+
+                    // 在剩余句子中找第一个包含MBTI关键词的句子位置
+                    let mbtiSentIdx = -1;
+                    for (let i = 0; i < remaining.length; i++) {
+                      if (MBTI_KWS.some(kw => remaining[i].includes(kw))) {
+                        mbtiSentIdx = i;
+                        break;
+                      }
                     }
-                    if (splitIdx > 0) {
-                      const body = rest.slice(0, splitIdx).trim();
-                      const mbtiPart = rest.slice(splitIdx).trim();
+
+                    if (mbtiSentIdx > 0) {
+                      // 问候 | 正文（到MBTI前）| MBTI分析
+                      const body = remaining.slice(0, mbtiSentIdx).join('\u3002') + '\u3002';
+                      const mbtiPart = remaining.slice(mbtiSentIdx).join('\u3002') + '\u3002';
                       return (
                         <>
                           <p style={{ marginBottom: '0.85em' }}>{greeting}</p>
-                          {body && <p style={{ marginBottom: '0.85em' }}>{body}</p>}
+                          <p style={{ marginBottom: '0.85em' }}>{body}</p>
                           <p>{mbtiPart}</p>
                         </>
                       );
                     }
+
+                    // 找不到MBTI关键词：问候 + 剩余内容
+                    const rest = remaining.join('\u3002') + '\u3002';
                     return (
                       <>
                         <p style={{ marginBottom: '0.85em' }}>{greeting}</p>
