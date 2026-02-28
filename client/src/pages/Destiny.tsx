@@ -372,11 +372,26 @@ export default function Destiny() {
                   </div>
                 )}
 
-                {/* MBTI 描述 */}
-                <p className="text-muted-foreground leading-relaxed font-serif-poem"
-                  style={{ fontSize: "16px", lineHeight: "1.9" }}>
-                  {poet.mbtiDescription}
-                </p>
+                {/* MBTI 描述：诗人描述一行，对用户描述重新起行，联系之处重新起行 */}
+                <div className="text-muted-foreground font-serif-poem text-center"
+                  style={{ fontSize: "15px", lineHeight: "2.0" }}>
+                  {(() => {
+                    const desc = poet.mbtiDescription;
+                    // 按句号分割，过滤空行
+                    const sentences = desc.split('\u3002').filter(s => s.trim());
+                    if (sentences.length <= 1) {
+                      return <p>{desc}</p>;
+                    }
+                    // 第一句：诗人描述（通常是诗人的性格特点）
+                    // 第二句：对用户的描述（通常以“你”开头）
+                    // 第三句：联系之处（通常以“与”开头）
+                    return sentences.map((s, i) => (
+                      <p key={i} style={{ marginBottom: i < sentences.length - 1 ? '0.6em' : 0 }}>
+                        {s + '\u3002'}
+                      </p>
+                    ));
+                  })()}
+                </div>
               </div>
             </div>
 
@@ -388,10 +403,55 @@ export default function Destiny() {
                   style={{ fontSize: "17px", letterSpacing: "0.06em" }}>
                   <span style={{ color: "var(--gold)" }}>★</span> 灵魂分析报告
                 </h3>
-                <p className="font-serif-poem text-muted-foreground leading-relaxed"
-                  style={{ fontSize: "16px", lineHeight: "2.0" }}>
-                  {destiny.analysisReport}
-                </p>
+                {/* 分段显示：问候一行，正文重新起行，MBTI分析再次分段 */}
+                <div className="font-serif-poem text-muted-foreground"
+                  style={{ fontSize: "15px", lineHeight: "2.0" }}>
+                  {(() => {
+                    const report = destiny.analysisReport!;
+                    // 按换行符分割段落（LLM输出通常包含\n）
+                    const rawParas = report.split('\n').filter(p => p.trim());
+                    if (rawParas.length >= 2) {
+                      return rawParas.map((para, i) => (
+                        <p key={i} style={{ marginBottom: i < rawParas.length - 1 ? '0.85em' : 0 }}>
+                          {para}
+                        </p>
+                      ));
+                    }
+                    // 如果没有换行，尝试按句号分割：第一句为问候，剩余按MBTI分析开始分割
+                    const sentences = report.split('\u3002').filter(s => s.trim());
+                    if (sentences.length <= 2) {
+                      return <p>{report}</p>;
+                    }
+                    // 第一句为问候
+                    const greeting = sentences[0] + '\u3002';
+                    // 剩余内容：尝试在MBTI关键词处分割为两段
+                    const rest = sentences.slice(1).join('\u3002') + '\u3002';
+                    const mbtiKeywords = ['MBTI', 'INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP',
+                      'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'];
+                    let splitIdx = -1;
+                    for (const kw of mbtiKeywords) {
+                      const idx = rest.indexOf(kw);
+                      if (idx > 5) { splitIdx = idx; break; }
+                    }
+                    if (splitIdx > 0) {
+                      const body = rest.slice(0, splitIdx).trim();
+                      const mbtiPart = rest.slice(splitIdx).trim();
+                      return (
+                        <>
+                          <p style={{ marginBottom: '0.85em' }}>{greeting}</p>
+                          {body && <p style={{ marginBottom: '0.85em' }}>{body}</p>}
+                          <p>{mbtiPart}</p>
+                        </>
+                      );
+                    }
+                    return (
+                      <>
+                        <p style={{ marginBottom: '0.85em' }}>{greeting}</p>
+                        <p>{rest}</p>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             )}
 

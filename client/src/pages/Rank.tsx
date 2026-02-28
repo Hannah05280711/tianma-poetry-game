@@ -183,7 +183,10 @@ function RingBadge({
   const bgOpacity = effectiveUnlocked ? 0.12 : 0.05;
   const gradId = `grad-${rank.tier}-${size}`;
   const bgGradId = `bg-${rank.tier}-${size}`;
-  const iconSize = size * 0.32;
+  // 圆圈内图案大小：与本命诗人卡片（96px容器/48px图案=50%比例）保持一致
+  // 兵器谱圆圈内径 = size - 2*ringWidth，图案占内径50%
+  const innerDiameter = size - 2 * ringWidth;
+  const iconSize = innerDiameter * 0.52;
   const iconOffset = (size - iconSize) / 2;
 
   return (
@@ -248,7 +251,7 @@ function RingBadge({
         y={cy}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={iconSize * 0.85}
+        fontSize={iconSize}
         style={{ opacity: effectiveUnlocked ? 1 : 0.25, userSelect: "none" }}
       >
         {rank.emoji}
@@ -472,13 +475,30 @@ export default function Rank() {
                         )}
                       </div>
 
-                      {/* 第三行：兵器传说 */}
-                      <p
-                        className="text-muted-foreground leading-relaxed"
-                        style={{ fontSize: "13px" }}
+                      {/* 第三行：兵器传说（在第一个句号和第二个逗号处断行，三行居中） */}
+                      <div
+                        className="text-muted-foreground text-center"
+                        style={{ fontSize: "13px", lineHeight: "1.85" }}
                       >
-                        {rank.story}
-                      </p>
+                        {(() => {
+                          const s = rank.story;
+                          const p1 = s.indexOf('\u3002');
+                          let commaCount = 0, p2 = -1;
+                          for (let j = 0; j < s.length; j++) {
+                            if (s[j] === '\uff0c') { commaCount++; if (commaCount === 2) { p2 = j; break; } }
+                          }
+                          const line1 = s.slice(0, p1 + 1);
+                          const line2 = p2 > p1 ? s.slice(p1 + 1, p2 + 1) : s.slice(p1 + 1);
+                          const line3 = p2 > p1 ? s.slice(p2 + 1) : '';
+                          return (
+                            <>
+                              <div>{line1}</div>
+                              <div>{line2}</div>
+                              {line3 && <div>{line3}</div>}
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
 

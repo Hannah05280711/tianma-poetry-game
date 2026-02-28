@@ -1,0 +1,20 @@
+{
+  "query": "SELECT name, mbtiType, mbtiDescription FROM poets LIMIT 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT name, mbtiType, mbtiDescription FROM poets LIMIT 2;",
+  "rows": [
+    {
+      "name": "李白",
+      "mbtiType": "ENFP",
+      "mbtiDescription": "诗仙李白，天马行空，豪放不羁。你的灵魂如同他的诗句，充满无限可能与浪漫想象，渴望自由，向往远方。与李白同频的你，是那个在人群中最耀眼的存在，用热情点燃每一个瞬间，用想象力打破所有边界。"
+    },
+    {
+      "name": "杜甫",
+      "mbtiType": "INFJ",
+      "mbtiDescription": "诗圣杜甫，心怀天下，忧国忧民。你如他一般，有着深刻的洞察力与悲悯情怀，以笔为剑，记录时代的苦难与希望。与杜甫同频的你，是那个默默承担、用心感受世界的守望者。"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tmbtiType\tmbtiDescription\n李白\tENFP\t诗仙李白，天马行空，豪放不羁。你的灵魂如同他的诗句，充满无限可能与浪漫想象，渴望自由，向往远方。与李白同频的你，是那个在人群中最耀眼的存在，用热情点燃每一个瞬间，用想象力打破所有边界。\n杜甫\tINFJ\t诗圣杜甫，心怀天下，忧国忧民。你如他一般，有着深刻的洞察力与悲悯情怀，以笔为剑，记录时代的苦难与希望。与杜甫同频的你，是那个默默承担、用心感受世界的守望者。\n",
+  "stderr": "",
+  "execution_time_ms": 348
+}
