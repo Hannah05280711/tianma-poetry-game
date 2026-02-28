@@ -45,64 +45,130 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── 白色主题（默认）─────────────────────────────────────────── */
+/* ─── 亮色主题：方案E 朱砂正红（Chinese Aesthetics Color Scheme）─── */
 :root {
-  /* 宣纸背景 */
-  --background: oklch(0.975 0.008 80);
-  --foreground: oklch(0.14 0.025 55);
-  --card: oklch(0.99 0.005 75);
-  --card-foreground: oklch(0.14 0.025 55);
-  --popover: oklch(0.99 0.005 75);
-  --popover-foreground: oklch(0.14 0.025 55);
-  /* 胭脂红主色（比朱砂红更雅致）*/
-  --primary: oklch(0.50 0.19 22);
+  /* 背景：杏粉宣纸色 #F5EDE4 → oklch */
+  --background: oklch(0.955 0.016 68);
+  --foreground: oklch(0.14 0.028 50);
+  /* 卡片：杏仁象牙白 #FDF6EE → oklch */
+  --card: oklch(0.982 0.010 72);
+  --card-foreground: oklch(0.14 0.028 50);
+  --popover: oklch(0.982 0.010 72);
+  --popover-foreground: oklch(0.14 0.028 50);
+  /* 主色：朱砂正红 #B02B26 → oklch（方案E色1）*/
+  --primary: oklch(0.465 0.185 24);
   --primary-foreground: oklch(1.0 0 0);
-  /* 暖灰次色 */
-  --secondary: oklch(0.95 0.010 75);
-  --secondary-foreground: oklch(0.28 0.025 55);
-  --muted: oklch(0.94 0.010 75);
-  --muted-foreground: oklch(0.48 0.020 55);
-  /* 青碧强调色 */
-  --accent: oklch(0.92 0.045 190);
-  --accent-foreground: oklch(0.28 0.12 190);
-  --destructive: oklch(0.52 0.22 22);
+  /* 次色：暖杏灰 */
+  --secondary: oklch(0.945 0.014 68);
+  --secondary-foreground: oklch(0.28 0.025 50);
+  --muted: oklch(0.935 0.014 68);
+  --muted-foreground: oklch(0.48 0.020 50);
+  /* 强调色：碧绿 #3C9A7F → oklch（方案F借用，与朱砂红互补）*/
+  --accent: oklch(0.90 0.055 165);
+  --accent-foreground: oklch(0.28 0.14 165);
+  --destructive: oklch(0.55 0.22 24);
   --destructive-foreground: oklch(1.0 0 0);
-  /* 边框（暖色调）*/
-  --border: oklch(0.88 0.015 75);
-  --input: oklch(0.93 0.010 75);
-  --ring: oklch(0.50 0.19 22);
+  /* 边框：暖杏棕 */
+  --border: oklch(0.875 0.020 68);
+  --input: oklch(0.925 0.014 68);
+  --ring: oklch(0.465 0.185 24);
   --radius: 0.75rem;
 
-  --chart-1: oklch(0.55 0.20 25);
-  --chart-2: oklch(0.58 0.16 190);
-  --chart-3: oklch(0.65 0.14 140);
-  --chart-4: oklch(0.72 0.16 85);
-  --chart-5: oklch(0.62 0.18 300);
+  --chart-1: oklch(0.465 0.185 24);
+  --chart-2: oklch(0.55 0.16 165);
+  --chart-3: oklch(0.65 0.14 82);
+  --chart-4: oklch(0.62 0.18 300);
+  --chart-5: oklch(0.58 0.16 220);
 
-  --sidebar: oklch(0.98 0.005 80);
-  --sidebar-foreground: oklch(0.15 0.02 270);
-  --sidebar-primary: oklch(0.55 0.20 25);
+  --sidebar: oklch(0.965 0.010 72);
+  --sidebar-foreground: oklch(0.15 0.02 50);
+  --sidebar-primary: oklch(0.465 0.185 24);
   --sidebar-primary-foreground: oklch(1.0 0 0);
-  --sidebar-accent: oklch(0.94 0.01 80);
-  --sidebar-accent-foreground: oklch(0.15 0.02 270);
-  --sidebar-border: oklch(0.90 0.01 80);
-  --sidebar-ring: oklch(0.55 0.20 25);
+  --sidebar-accent: oklch(0.935 0.014 68);
+  --sidebar-accent-foreground: oklch(0.15 0.02 50);
+  --sidebar-border: oklch(0.875 0.020 68);
+  --sidebar-ring: oklch(0.465 0.185 24);
 
-  /* 国风专用色 */
-  --vermilion: oklch(0.50 0.19 22);
-  --vermilion-light: oklch(0.62 0.17 28);
-  --vermilion-pale: oklch(0.95 0.04 28);
-  --celadon: oklch(0.52 0.16 190);
-  --celadon-light: oklch(0.68 0.12 190);
-  --celadon-pale: oklch(0.92 0.045 190);
+  /* 国风专用色（方案E升级版）*/
+  /* 朱砂红系 #B02B26 / #D1411C / #F3BF9A */
+  --vermilion: oklch(0.465 0.185 24);
+  --vermilion-light: oklch(0.575 0.195 32);
+  --vermilion-pale: oklch(0.925 0.048 38);
+  /* 碧绿系 #3C9A7F（替代原青蓝）*/
+  --celadon: oklch(0.565 0.145 165);
+  --celadon-light: oklch(0.695 0.110 165);
+  --celadon-pale: oklch(0.90 0.055 165);
+  /* 金色系（保持不变）*/
   --gold: oklch(0.70 0.16 82);
   --gold-pale: oklch(0.96 0.06 82);
-  --ink: oklch(0.14 0.025 55);
-  --ink-light: oklch(0.32 0.025 55);
-  --ink-pale: oklch(0.52 0.020 55);
-  --paper: oklch(0.975 0.008 80);
-  --paper-warm: oklch(0.965 0.012 78);
-  --paper-cream: oklch(0.945 0.018 76);
+  /* 墨色文字 */
+  --ink: oklch(0.14 0.028 50);
+  --ink-light: oklch(0.32 0.025 50);
+  --ink-pale: oklch(0.52 0.020 50);
+  /* 宣纸底色系 */
+  --paper: oklch(0.955 0.016 68);
+  --paper-warm: oklch(0.945 0.020 66);
+  --paper-cream: oklch(0.930 0.024 64);
+}
+
+/* ─── 暗色主题：方案C 靛蓝深海（夜读模式）─────────────────────── */
+.dark {
+  /* 背景：深夜靛蓝 #0a1533 → oklch */
+  --background: oklch(0.18 0.065 252);
+  --foreground: oklch(0.88 0.025 220);
+  /* 卡片：深蓝 #1a336b → oklch */
+  --card: oklch(0.28 0.080 252);
+  --card-foreground: oklch(0.88 0.025 220);
+  --popover: oklch(0.28 0.080 252);
+  --popover-foreground: oklch(0.88 0.025 220);
+  /* 主色：月白蓝 #86a9bc → oklch */
+  --primary: oklch(0.68 0.075 220);
+  --primary-foreground: oklch(0.14 0.065 252);
+  /* 次色 */
+  --secondary: oklch(0.32 0.070 252);
+  --secondary-foreground: oklch(0.82 0.025 220);
+  --muted: oklch(0.30 0.065 252);
+  --muted-foreground: oklch(0.62 0.040 220);
+  /* 强调色：浅蓝白 #cad3dc */
+  --accent: oklch(0.38 0.060 252);
+  --accent-foreground: oklch(0.86 0.025 220);
+  --destructive: oklch(0.55 0.22 24);
+  --destructive-foreground: oklch(1.0 0 0);
+  /* 边框 */
+  --border: oklch(0.36 0.065 252);
+  --input: oklch(0.34 0.065 252);
+  --ring: oklch(0.68 0.075 220);
+
+  --chart-1: oklch(0.68 0.075 220);
+  --chart-2: oklch(0.65 0.14 165);
+  --chart-3: oklch(0.72 0.16 82);
+  --chart-4: oklch(0.62 0.18 300);
+  --chart-5: oklch(0.58 0.185 24);
+
+  --sidebar: oklch(0.22 0.072 252);
+  --sidebar-foreground: oklch(0.88 0.025 220);
+  --sidebar-primary: oklch(0.68 0.075 220);
+  --sidebar-primary-foreground: oklch(0.14 0.065 252);
+  --sidebar-accent: oklch(0.30 0.065 252);
+  --sidebar-accent-foreground: oklch(0.82 0.025 220);
+  --sidebar-border: oklch(0.36 0.065 252);
+  --sidebar-ring: oklch(0.68 0.075 220);
+
+  /* 国风专用色（夜读版）*/
+  --vermilion: oklch(0.68 0.075 220);
+  --vermilion-light: oklch(0.76 0.060 220);
+  --vermilion-pale: oklch(0.38 0.060 252);
+  --celadon: oklch(0.62 0.110 165);
+  --celadon-light: oklch(0.72 0.085 165);
+  --celadon-pale: oklch(0.36 0.060 252);
+  --gold: oklch(0.72 0.16 82);
+  --gold-pale: oklch(0.38 0.060 252);
+  --ink: oklch(0.88 0.025 220);
+  --ink-light: oklch(0.72 0.030 220);
+  --ink-pale: oklch(0.58 0.025 220);
+  --paper: oklch(0.18 0.065 252);
+  --paper-warm: oklch(0.22 0.072 252);
+  --paper-cream: oklch(0.28 0.080 252);
 }
 
 /* ─── Base Styles ─────────────────────────────────────────────── */
@@ -125,9 +191,9 @@
     /* 汇文明朝体 GBK 为全站主字体，降级到宋体、黑体 */
     font-family: "Huiwen-MinchoGBK", "Noto Serif SC", "STSong", "SimSun", "Source Han Serif SC", serif;
     background-image:
-      radial-gradient(ellipse at 15% 40%, oklch(0.96 0.012 75 / 0.35) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 15%, oklch(0.97 0.010 82 / 0.25) 0%, transparent 45%),
-      radial-gradient(ellipse at 50% 85%, oklch(0.95 0.014 78 / 0.20) 0%, transparent 50%);
+      radial-gradient(ellipse at 15% 40%, oklch(0.945 0.022 62 / 0.40) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 15%, oklch(0.960 0.018 70 / 0.30) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 85%, oklch(0.935 0.026 58 / 0.25) 0%, transparent 50%);
     font-size: 17px;          /* 正文 17px，汇文明朝体适配 */
     line-height: 1.75;        /* 行距 1.75，中文阅读最佳（1.6-1.8）*/
     letter-spacing: 0.02em;   /* 字间距微调，提升中文辨识度 */
@@ -208,12 +274,12 @@
   .bg-paper-texture {
     background-color: var(--paper);
     background-image:
-      radial-gradient(ellipse at 20% 50%, oklch(0.92 0.015 75 / 0.4) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, oklch(0.94 0.012 80 / 0.3) 0%, transparent 50%);
+      radial-gradient(ellipse at 20% 50%, oklch(0.935 0.026 62 / 0.45) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, oklch(0.950 0.020 68 / 0.35) 0%, transparent 50%);
   }
   .bg-card-paper {
     background-color: var(--card);
-    background-image: radial-gradient(ellipse at 50% 0%, oklch(0.97 0.010 78 / 0.6) 0%, transparent 70%);
+    background-image: radial-gradient(ellipse at 50% 0%, oklch(0.975 0.012 70 / 0.6) 0%, transparent 70%);
     border-color: var(--border);
   }
 
@@ -284,7 +350,7 @@
     animation: shimmer 3s linear infinite;
   }
   .gradient-text-vermilion {
-    background: linear-gradient(90deg, #C0392B, #E74C3C, #C0392B);
+    background: linear-gradient(90deg, #B02B26, #D1411C, #B02B26);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
