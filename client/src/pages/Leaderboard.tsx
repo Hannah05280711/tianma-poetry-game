@@ -40,7 +40,13 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* My rank */}
+      {/* My rank / Guest hint */}
+      {!isAuthenticated && (
+        <div className="rounded-xl p-3 mb-4 flex items-center gap-3 bg-card border border-border">
+          <div className="text-xl">💡</div>
+          <p className="text-xs text-muted-foreground flex-1">登录后可查看你的排名和本周积分</p>
+        </div>
+      )}
       {isAuthenticated && gameState && (
         <div className="rounded-2xl p-4 mb-4 border"
           style={{

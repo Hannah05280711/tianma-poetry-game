@@ -185,3 +185,9 @@
 - [x] 有 wechat_token 时使用 credentials: omit（避免跨域认证问题）✅
 - [x] 修复认证跳转逐转（有 wechat_token 或 UA 包含微信时不跳转 OAuth）✅
 - [x] refetchQ 添加错误处理（catch 块，防止 Promise reject 导致卡死）✅
+
+## 第二十七批：后续优化三项
+- [x] 答题页加载失败时显示重试按钮（不需返回关卡选择页）
+- [x] 每日任务游客引导：展示示例任务列表（渐变模糊遇罩效果）
+- [x] 排行榜游客引导：显示登录提示卡（排行榜本身无需登录即可查看）
+- [x] 前端处理 wechat_token URL 参数并存入 localStorage（main.tsx 已完整实现）

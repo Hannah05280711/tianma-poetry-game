@@ -255,20 +255,23 @@ export default function Game() {
 
   // 监听 seed 变化，当 seed 更新时自动重新拉取题目
   const [pendingStart, setPendingStart] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   useEffect(() => {
     if (pendingStart) {
+      setLoadFailed(false);
       refetchQ()
         .then((result) => {
-          // 无论成功还是失败，都进入游戏（游客模式下题目可能为空）
           if (result.data && result.data.length > 0) {
             setPhase("playing");
           } else {
-            toast.error("题目加载失败，请重试");
+            setLoadFailed(true);
+            toast.error("题目加载失败，请点击重试");
           }
           setPendingStart(false);
         })
         .catch(() => {
-          toast.error("网络异常，请检查连接后重试");
+          setLoadFailed(true);
+          toast.error("网络异常，请点击重试");
           setPendingStart(false);
         });
     }
@@ -392,18 +395,31 @@ export default function Game() {
           })}
         </div>
 
-        <button
-          onClick={startGame}
-          disabled={loadingQ}
-          className="w-full py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98] disabled:opacity-50 text-white"
-          style={{
-            background: "var(--vermilion)",
-            boxShadow: "0 4px 14px oklch(0.55 0.20 25 / 0.28)",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {loadingQ ? "加载中..." : `开始 ${diffInfo?.name}`}
-        </button>
+        {loadFailed ? (
+          <div className="space-y-2">
+            <p className="text-center text-sm text-muted-foreground">题目加载失败，请检查网络后重试</p>
+            <button
+              onClick={startGame}
+              className="w-full py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98] text-white"
+              style={{ background: "var(--vermilion)", letterSpacing: "0.06em" }}
+            >
+              🔄 重试
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={startGame}
+            disabled={loadingQ || pendingStart}
+            className="w-full py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98] disabled:opacity-50 text-white"
+            style={{
+              background: "var(--vermilion)",
+              boxShadow: "0 4px 14px oklch(0.55 0.20 25 / 0.28)",
+              letterSpacing: "0.06em",
+            }}
+          >
+            {(loadingQ || pendingStart) ? "加载中..." : `开始 ${diffInfo?.name}`}
+          </button>
+        )}
       </div>
     );
   }

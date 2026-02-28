@@ -25,12 +25,77 @@ export default function Daily() {
     onError: (e) => toast.error(e.message),
   });
 
+  // 示例任务数据（未登录时展示）
+  const mockTasks = [
+    { taskKey: "daily_login", taskName: "每日登录", description: "登录即可领取奖励", iconEmoji: "🌅", rewardScore: 10, rewardHints: 1, rewardInk: 0, completed: false, claimed: false, progress: 0, targetCount: 1 },
+    { taskKey: "answer_5", taskName: "答题达人", description: "完成 5 道题目", iconEmoji: "✏️", rewardScore: 20, rewardHints: 0, rewardInk: 1, completed: false, claimed: false, progress: 0, targetCount: 5 },
+    { taskKey: "correct_3", taskName: "连对三题", description: "连续答对 3 道", iconEmoji: "🔥", rewardScore: 30, rewardHints: 1, rewardInk: 0, completed: false, claimed: false, progress: 0, targetCount: 3 },
+  ];
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 gap-4 bg-background">
-        <div className="text-5xl float-anim">📅</div>
-        <p className="text-muted-foreground text-sm">每日任务需登录后查看</p>
-        <p className="text-xs text-muted-foreground">小程序登录后可自动同步</p>
+      <div className="min-h-screen page-content px-4 pt-safe bg-background">
+        {/* Header */}
+        <div className="flex items-center gap-3 py-4 mb-2 border-b border-border">
+          <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
+          <h1 className="font-semibold text-base font-display text-foreground">📅 每日任务</h1>
+        </div>
+
+        {/* 示例内容（模糊遗罩） */}
+        <div className="relative">
+          <div className="opacity-40 pointer-events-none select-none">
+            {/* Summary card preview */}
+            <div className="rounded-2xl p-4 mb-4 border"
+              style={{ background: "linear-gradient(135deg, #FFF5F5 0%, #FFFDF9 100%)", borderColor: "oklch(0.55 0.20 25 / 0.18)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-sm font-semibold text-foreground">今日进度</div>
+                  <div className="text-xs text-muted-foreground">0/3 任务完成</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">连续签到</div>
+                  <div className="text-lg font-bold" style={{ color: "var(--gold)" }}>0 天</div>
+                </div>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden bg-muted">
+                <div className="h-full rounded-full w-0" style={{ background: "linear-gradient(90deg, var(--vermilion), var(--gold))" }} />
+              </div>
+            </div>
+
+            {/* Task list preview */}
+            <div className="space-y-3 mb-4">
+              {mockTasks.map((task) => (
+                <div key={task.taskKey} className="rounded-2xl p-4 border bg-white"
+                  style={{ borderColor: "oklch(0.90 0.01 80)" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl flex-shrink-0">{task.iconEmoji}</div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm text-foreground">{task.taskName}</div>
+                      <div className="text-xs text-muted-foreground">{task.description}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs" style={{ color: "var(--gold)" }}>+{task.rewardScore}分</div>
+                      <div className="px-3 py-1 rounded-lg text-xs bg-muted text-muted-foreground mt-1">去完成</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 登录引导覆盖层 */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center"
+            style={{ background: "linear-gradient(to bottom, transparent 0%, oklch(0.97 0.01 80 / 0.85) 40%, oklch(0.97 0.01 80) 100%)" }}>
+            <div className="mt-32 text-center px-6">
+              <div className="text-4xl mb-3">📅</div>
+              <p className="font-semibold text-base text-foreground mb-1">登录后解锁每日任务</p>
+              <p className="text-sm text-muted-foreground">完成任务可获得积分和道具奖励</p>
+              <p className="text-xs text-muted-foreground mt-2">小程序登录后自动同步</p>
+            </div>
+          </div>
+        </div>
+
+        <BottomNav />
       </div>
     );
   }
