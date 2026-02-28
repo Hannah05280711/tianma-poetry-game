@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { fbTaskComplete } from "@/lib/feedback";
 
 export default function Daily() {
   const { isAuthenticated } = useAuth();
@@ -19,6 +20,7 @@ export default function Daily() {
   const claimMutation = trpc.game.claimTaskReward.useMutation({
     onSuccess: (data) => {
       toast.success(`🎉 领取成功！+${data.rewardScore}分`);
+      fbTaskComplete();
       refetch();
     },
     onError: (e) => toast.error(e.message),

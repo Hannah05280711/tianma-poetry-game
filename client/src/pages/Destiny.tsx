@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fbDestinyMatch, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -109,6 +110,8 @@ export default function Destiny() {
   const generateMutation = trpc.game.generateDestinyPoet.useMutation({
     onSuccess: (data) => {
       toast.success("✨ 本命诗人已觉醒！");
+      // 本命诗人匹配完成音效（古琴双弦 + 渐强震动）
+      setTimeout(() => fbDestinyMatch(), 300);
       if (isAuthenticated) {
         refetch();
       } else {
@@ -124,6 +127,7 @@ export default function Destiny() {
   });
 
   const handleGenerate = () => {
+    unlockAudio();
     setGenerating(true);
     if (isAuthenticated) {
       // 已登录：不传 guestStats，后端从 DB 加载

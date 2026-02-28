@@ -142,3 +142,15 @@
 
 ## 第二十批：主题切换
 - [x] 添加明暗主题切换按鈕（朱砂正红↔靛蓝深海），持久化到 localStorage✅
+
+## 第二十一批：触感与声效系统
+- [x] 创建 soundEngine.ts：古筝/木鱼/编钟/古琴音色合成，五声音阶音效
+- [x] 创建 haptics.ts：Web Vibration API 封装，分场景震动模式
+- [x] 创建 useSoundSettings hook：声音/震动开关，localStorage 持久化
+- [x] Game.tsx 接入：选项点击轻震、答对筝音+震动、答错木鱼+双震、连击编钟
+- [x] Game.tsx 接入：关卡完成五声琶音+渐强震动
+- [x] Armory.tsx/Game.tsx 接入：段位晋升编钟和弦+庆祝震动
+- [x] Destiny.tsx 接入：本命诗人匹配完成古琴双音+渐强震动
+- [x] Home.tsx/Game.tsx 接入：开始答题古琴起始音
+- [x] Profile.tsx 添加声音/震动独立开关（Toggle 组件，持久化 localStorage）
+- [x] 编写 soundEngine 单元测试（53个测试全部通过）

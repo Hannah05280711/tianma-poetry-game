@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { fbOptionTap, fbCorrect, fbWrong, fbCombo, fbLevelComplete, fbGameStart, fbStreakBroken, unlockAudio } from "@/lib/feedback";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
@@ -125,6 +126,8 @@ export default function Game() {
     setLastScoreDelta(0);
     if (currentIdx + 1 >= (questions?.length ?? 0)) {
       setPhase("result");
+      // 关卡完成庆祝音效
+      setTimeout(() => fbLevelComplete(), 100);
     } else {
       setCurrentIdx((i) => i + 1);
     }
@@ -135,6 +138,7 @@ export default function Game() {
     setAnswerState("wrong");
     setSelectedAnswer("__timeout__");
     setLastScoreDelta(-10);
+    fbWrong();
     submitMutation.mutate({
       questionId: currentQ.id,
       answer: "__timeout__",
@@ -169,6 +173,12 @@ export default function Game() {
     const isCorrect = answer === currentQ.correctAnswer;
     setAnswerState(isCorrect ? "correct" : "wrong");
     setSelectedAnswer(answer);
+    // 音效 + 震动反馈（与判题同步触发）
+    if (isCorrect) {
+      fbCorrect();
+    } else {
+      fbWrong();
+    }
     try {
       const result = await submitMutation.mutateAsync({
         questionId: currentQ.id,
@@ -182,6 +192,15 @@ export default function Game() {
         setSessionCorrect((c) => c + 1);
         setConsecutiveWins(result.newConsecutive);
         setSessionScore((s) => s + result.scoreDelta);
+        // 连击音效（3/5/10 连击触发）
+        if (result.newConsecutive >= 3) {
+          setTimeout(() => fbCombo(result.newConsecutive), 250);
+        }
+      } else {
+        // 连胜中断音效
+        if (consecutiveWins >= 3) {
+          setTimeout(() => fbStreakBroken(), 100);
+        }
       }
       if (result.reward) {
         setTimeout(() => toast.success(result.reward!.message), 300);
@@ -218,6 +237,7 @@ export default function Game() {
 
   const handleOptionClick = (option: string) => {
     if (answerState !== "idle" || eliminatedOptions.includes(option)) return;
+    fbOptionTap();
     handleSubmit(option);
   };
 
@@ -245,6 +265,8 @@ export default function Game() {
   }, [querySeed, pendingStart, refetchQ]);
 
   const startGame = () => {
+    unlockAudio(); // 解锁 AudioContext（需在用户交互中调用）
+    fbGameStart();
     setCurrentIdx(0);
     setSessionScore(0);
     setSessionCorrect(0);

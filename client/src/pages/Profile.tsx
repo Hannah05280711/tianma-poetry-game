@@ -3,6 +3,8 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
+import { useSoundSettings } from "@/hooks/useSoundSettings";
+import { isVibrationSupported } from "@/lib/haptics";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -12,6 +14,7 @@ const RANK_COLORS: Record<string, string> = {
 export default function Profile() {
   const { user, isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
+  const { soundEnabled, hapticEnabled, toggleSound, toggleHaptic } = useSoundSettings();
 
   const { data: gameState } = trpc.game.getState.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -124,6 +127,60 @@ export default function Profile() {
             <span className="ml-auto text-muted-foreground">›</span>
           </button>
         ))}
+      </div>
+
+      {/* Sound & Haptic Settings */}
+      <div className="rounded-2xl p-4 mb-4 bg-card border border-border">
+        <h3 className="font-semibold text-sm mb-3 text-foreground">🔔 声音与震动</h3>
+        <div className="space-y-3">
+          {/* 音效开关 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{soundEnabled ? "🔊" : "🔇"}</span>
+              <div>
+                <div className="text-sm font-medium text-foreground">音效</div>
+                <div className="text-xs text-muted-foreground">古筝木鱼等中式音效</div>
+              </div>
+            </div>
+            <button
+              onClick={toggleSound}
+              className="relative w-12 h-6 rounded-full transition-all duration-200 flex-shrink-0"
+              style={{
+                background: soundEnabled ? "var(--vermilion)" : "var(--muted)",
+              }}
+            >
+              <span
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                style={{ left: soundEnabled ? "26px" : "2px" }}
+              />
+            </button>
+          </div>
+          {/* 震动开关 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{hapticEnabled ? "📳" : "📴"}</span>
+              <div>
+                <div className="text-sm font-medium text-foreground">震动反馈</div>
+                <div className="text-xs text-muted-foreground">
+                  {isVibrationSupported() ? "答对答错触觉反馈" : "iOS 暂不支持"}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={toggleHaptic}
+              disabled={!isVibrationSupported()}
+              className="relative w-12 h-6 rounded-full transition-all duration-200 flex-shrink-0 disabled:opacity-40"
+              style={{
+                background: hapticEnabled && isVibrationSupported() ? "var(--vermilion)" : "var(--muted)",
+              }}
+            >
+              <span
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                style={{ left: hapticEnabled && isVibrationSupported() ? "26px" : "2px" }}
+              />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Logout */}
