@@ -471,74 +471,90 @@ export default function Game() {
               </div>
             </div>
 
-            {/* 选项 - 带圆形字母徽章 */}
-            <div className="space-y-2.5 mb-4">
-              {(currentQ.options as string[]).map((opt, i) => {
-                const isEliminated = eliminatedOptions.includes(opt);
-                const isSelected = selectedAnswer === opt;
-                const isCorrectOpt = opt === currentQ.correctAnswer;
-                const letter = ["A", "B", "C", "D"][i];
+            {/* 选项 - 无ABCD，单字一行四个，多字两行 */}
+            {(() => {
+              const options = currentQ.options as string[];
+              // 判断是否为单字选项（所有选项都是1个字）
+              const isSingleChar = options.every(o => o.length === 1);
+              // 判断是否为短选项（≤3字，排一行两个）
+              const isShortOpt = options.every(o => o.length <= 4);
 
-                let containerStyle: React.CSSProperties = {
-                  background: "var(--card)",
-                  border: "1.5px solid var(--border)",
-                  color: "var(--ink)",
-                };
-                let badgeStyle: React.CSSProperties = {
-                  background: "var(--secondary)",
-                  color: "var(--ink-light)",
-                };
+              return (
+                <div
+                  className="mb-4"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isSingleChar
+                      ? "repeat(4, 1fr)"
+                      : isShortOpt
+                      ? "repeat(2, 1fr)"
+                      : "repeat(1, 1fr)",
+                    gap: isSingleChar ? "10px" : "10px",
+                  }}
+                >
+                  {options.map((opt, i) => {
+                    const isEliminated = eliminatedOptions.includes(opt);
+                    const isSelected = selectedAnswer === opt;
+                    const isCorrectOpt = opt === currentQ.correctAnswer;
 
-                if (isEliminated) {
-                  containerStyle = { ...containerStyle, opacity: 0.3, textDecoration: "line-through" };
-                } else if (answerState !== "idle") {
-                  if (isCorrectOpt) {
-                    containerStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
-                    badgeStyle = { background: "#16A34A", color: "white" };
-                  } else if (isSelected && !isCorrectOpt) {
-                    containerStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
-                    badgeStyle = { background: "#DC2626", color: "white" };
-                  }
-                } else if (isSelected) {
-                  containerStyle = {
-                    background: "var(--vermilion-pale)",
-                    border: "1.5px solid var(--vermilion)",
-                    color: "var(--vermilion)",
-                  };
-                  badgeStyle = { background: "var(--vermilion)", color: "white" };
-                }
+                    let containerStyle: React.CSSProperties = {
+                      background: "var(--card)",
+                      border: "1.5px solid var(--border)",
+                      color: "var(--ink)",
+                    };
 
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleOptionClick(opt)}
-                    disabled={answerState !== "idle" || isEliminated}
-                    className="w-full text-left rounded-2xl transition-all duration-150 active:scale-[0.98]"
-                    style={{ ...containerStyle, minHeight: "56px", display: "flex", alignItems: "center", padding: "10px 16px", boxShadow: "0 1px 4px oklch(0.14 0.025 55 / 0.05)" }}
-                  >
-                    {/* 圆形字母徽章 */}
-                    <span
-                      style={{
-                        ...badgeStyle,
-                        width: "28px", height: "28px",
-                        borderRadius: "50%",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "13px", fontWeight: 700,
-                        flexShrink: 0, marginRight: "12px",
-                        transition: "all 0.15s",
-                      }}
-                    >{letter}</span>
-                    <span className="flex-1" style={{ fontSize: "16px", lineHeight: "1.6" }}>{opt}</span>
-                    {answerState !== "idle" && isCorrectOpt && (
-                      <span style={{ color: "#16A34A", fontSize: "18px", marginLeft: "8px" }}>✓</span>
-                    )}
-                    {answerState !== "idle" && isSelected && !isCorrectOpt && (
-                      <span style={{ color: "#DC2626", fontSize: "18px", marginLeft: "8px" }}>✗</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                    if (isEliminated) {
+                      containerStyle = { ...containerStyle, opacity: 0.3, textDecoration: "line-through" };
+                    } else if (answerState !== "idle") {
+                      if (isCorrectOpt) {
+                        containerStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
+                      } else if (isSelected && !isCorrectOpt) {
+                        containerStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
+                      }
+                    } else if (isSelected) {
+                      containerStyle = {
+                        background: "var(--vermilion-pale)",
+                        border: "1.5px solid var(--vermilion)",
+                        color: "var(--vermilion)",
+                      };
+                    }
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleOptionClick(opt)}
+                        disabled={answerState !== "idle" || isEliminated}
+                        className="rounded-2xl transition-all duration-150 active:scale-[0.97] relative"
+                        style={{
+                          ...containerStyle,
+                          minHeight: isSingleChar ? "64px" : "52px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: isSingleChar ? "8px 4px" : "10px 16px",
+                          boxShadow: "0 1px 4px oklch(0.14 0.025 55 / 0.05)",
+                          fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, STSong, serif",
+                          fontSize: "20px",
+                          fontWeight: 500,
+                          letterSpacing: "0.06em",
+                          lineHeight: "1.5",
+                          textAlign: "center",
+                        }}
+                      >
+                        <span>{opt}</span>
+                        {answerState !== "idle" && isCorrectOpt && (
+                          <span style={{ color: "#16A34A", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✓</span>
+                        )}
+                        {answerState !== "idle" && isSelected && !isCorrectOpt && (
+                          <span style={{ color: "#DC2626", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✗</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
 
             {/* 得分反馈 - 更优雅的布局 */}
             {answerState !== "idle" && (
