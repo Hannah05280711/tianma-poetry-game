@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
+import { registerWechatAuthRoutes } from "../wechatAuth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -36,6 +37,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  // 微信小程序登录
+  registerWechatAuthRoutes(app);
   // Chat API with streaming and tool calling
   registerChatRoutes(app);
   // tRPC API

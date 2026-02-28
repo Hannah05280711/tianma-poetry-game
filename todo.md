@@ -171,3 +171,10 @@
 - [x] 本命诗人 mbtiDescription 第一句 16px 加粗，后两句 14px
 - [x] 兵器谱解锁新兵器时 scale-in + 金色光晕动效
 - [x] 本命诗人卡片底部增加「重新解锁」按鈕
+
+## 第二十五批：微信小程序配置
+- [x] WECHAT_APP_ID / WECHAT_APP_SECRET 存入环境变量
+- [ ] server/_core/env.ts 添加 WECHAT_APP_ID / WECHAT_APP_SECRET
+- [ ] 后端添加微信登录接口 /api/auth/wechat（code2Session + 生成 JWT）
+- [ ] 创建微信小程序壳工程（miniprogram/ 目录）
+- [ ] 编写微信登录接口单元测试
