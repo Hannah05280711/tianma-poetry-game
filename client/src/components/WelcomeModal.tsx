@@ -81,11 +81,12 @@ export default function WelcomeModal() {
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl overflow-hidden"
+        className="w-full max-w-md rounded-t-3xl flex flex-col"
         style={{
           background: "var(--background)",
           boxShadow: "0 -8px 40px rgba(0,0,0,0.18)",
-          paddingBottom: "env(safe-area-inset-bottom, 16px)",
+          maxHeight: "90vh",
+          paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)",
         }}
       >
         {/* 顶部装饰条 */}
@@ -108,7 +109,7 @@ export default function WelcomeModal() {
           ))}
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 overflow-y-auto flex-1">
           {!isNickStep && currentStep ? (
             /* 玩法介绍步骤 */
             <div className="text-center">

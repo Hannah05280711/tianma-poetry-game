@@ -1,0 +1,170 @@
+{
+  "query": "SELECT id, content, questionType, sourcePoemTitle, correctAnswer, options FROM questions WHERE questionType IN ('fill', 'reorder') LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, content, questionType, sourcePoemTitle, correctAnswer, options FROM questions WHERE questionType IN ('fill', 'reorder') LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "content": "床前明__，疑是地上霜。",
+      "questionType": "fill",
+      "sourcePoemTitle": "静夜思",
+      "correctAnswer": "月",
+      "options": "[\"月\", \"光\", \"辉\", \"华\"]"
+    },
+    {
+      "id": "2",
+      "content": "举头望明月，低__思故乡。",
+      "questionType": "fill",
+      "sourcePoemTitle": "静夜思",
+      "correctAnswer": "头",
+      "options": "[\"头\", \"首\", \"眉\", \"目\"]"
+    },
+    {
+      "id": "3",
+      "content": "飞流直下三千尺，__是银河落九天。",
+      "questionType": "fill",
+      "sourcePoemTitle": "望庐山瀑布",
+      "correctAnswer": "疑",
+      "options": "[\"疑\", \"似\", \"如\", \"若\"]"
+    },
+    {
+      "id": "5",
+      "content": "朝辞白帝彩云间，__里江陵一日还。",
+      "questionType": "fill",
+      "sourcePoemTitle": "早发白帝城",
+      "correctAnswer": "千",
+      "options": "[\"千\", \"万\", \"百\", \"十\"]"
+    },
+    {
+      "id": "6",
+      "content": "两岸猿声啼不住，__舟已过万重山。",
+      "questionType": "fill",
+      "sourcePoemTitle": "早发白帝城",
+      "correctAnswer": "轻",
+      "options": "[\"轻\", \"小\", \"孤\", \"扁\"]"
+    },
+    {
+      "id": "7",
+      "content": "故人西辞黄鹤楼，烟花三月下__州。",
+      "questionType": "fill",
+      "sourcePoemTitle": "黄鹤楼送孟浩然之广陵",
+      "correctAnswer": "扬",
+      "options": "[\"扬\", \"广\", \"杭\", \"苏\"]"
+    },
+    {
+      "id": "8",
+      "content": "孤帆远影碧空尽，唯见长江天际__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "黄鹤楼送孟浩然之广陵",
+      "correctAnswer": "流",
+      "options": "[\"流\", \"去\", \"来\", \"走\"]"
+    },
+    {
+      "id": "9",
+      "content": "烽火连三月，家书抵__金。",
+      "questionType": "fill",
+      "sourcePoemTitle": "春望",
+      "correctAnswer": "万",
+      "options": "[\"万\", \"千\", \"百\", \"亿\"]"
+    },
+    {
+      "id": "10",
+      "content": "会当凌绝顶，一览众山__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "望岳",
+      "correctAnswer": "小",
+      "options": "[\"小\", \"大\", \"远\", \"近\"]"
+    },
+    {
+      "id": "11",
+      "content": "国破山河在，城春草木__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "春望",
+      "correctAnswer": "深",
+      "options": "[\"深\", \"生\", \"长\", \"绿\"]"
+    },
+    {
+      "id": "12",
+      "content": "感时花溅泪，恨别鸟惊__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "春望",
+      "correctAnswer": "心",
+      "options": "[\"心\", \"魂\", \"情\", \"怀\"]"
+    },
+    {
+      "id": "13",
+      "content": "随风潜入夜，润物细无__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "春夜喜雨",
+      "correctAnswer": "声",
+      "options": "[\"声\", \"息\", \"痕\", \"迹\"]"
+    },
+    {
+      "id": "14",
+      "content": "好雨知时节，当春乃__生。",
+      "questionType": "fill",
+      "sourcePoemTitle": "春夜喜雨",
+      "correctAnswer": "发",
+      "options": "[\"发\", \"萌\", \"茁\", \"催\"]"
+    },
+    {
+      "id": "15",
+      "content": "独在异乡为异客，每逢佳节倍__亲。",
+      "questionType": "fill",
+      "sourcePoemTitle": "九月九日忆山东兄弟",
+      "correctAnswer": "思",
+      "options": "[\"思\", \"念\", \"忆\", \"想\"]"
+    },
+    {
+      "id": "16",
+      "content": "遥知兄弟登高处，遍插茱萸少一__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "九月九日忆山东兄弟",
+      "correctAnswer": "人",
+      "options": "[\"人\", \"个\", \"位\", \"名\"]"
+    },
+    {
+      "id": "18",
+      "content": "大漠孤烟直，长河__日圆。",
+      "questionType": "fill",
+      "sourcePoemTitle": "使至塞上",
+      "correctAnswer": "落",
+      "options": "[\"落\", \"斜\", \"夕\", \"西\"]"
+    },
+    {
+      "id": "19",
+      "content": "但愿人长久，千里共__娟。",
+      "questionType": "fill",
+      "sourcePoemTitle": "水调歌头",
+      "correctAnswer": "婵",
+      "options": "[\"婵\", \"蝉\", \"禅\", \"缠\"]"
+    },
+    {
+      "id": "20",
+      "content": "明月几时有？把酒问__天。",
+      "questionType": "fill",
+      "sourcePoemTitle": "水调歌头",
+      "correctAnswer": "青",
+      "options": "[\"青\", \"苍\", \"碧\", \"蓝\"]"
+    },
+    {
+      "id": "21",
+      "content": "横看成岭侧成峰，远近高低各不__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "题西林壁",
+      "correctAnswer": "同",
+      "options": "[\"同\", \"异\", \"等\", \"一\"]"
+    },
+    {
+      "id": "22",
+      "content": "不识庐山真面目，只缘身在此山__。",
+      "questionType": "fill",
+      "sourcePoemTitle": "题西林壁",
+      "correctAnswer": "中",
+      "options": "[\"中\", \"里\", \"间\", \"内\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcontent\tquestionType\tsourcePoemTitle\tcorrectAnswer\toptions\n1\t床前明__，疑是地上霜。\tfill\t静夜思\t月\t[\"月\", \"光\", \"辉\", \"华\"]\n2\t举头望明月，低__思故乡。\tfill\t静夜思\t头\t[\"头\", \"首\", \"眉\", \"目\"]\n3\t飞流直下三千尺，__是银河落九天。\tfill\t望庐山瀑布\t疑\t[\"疑\", \"似\", \"如\", \"若\"]\n5\t朝辞白帝彩云间，__里江陵一日还。\tfill\t早发白帝城\t千\t[\"千\", \"万\", \"百\", \"十\"]\n6\t两岸猿声啼不住，__舟已过万重山。\tfill\t早发白帝城\t轻\t[\"轻\", \"小\", \"孤\", \"扁\"]\n7\t故人西辞黄鹤楼，烟花三月下__州。\tfill\t黄鹤楼送孟浩然之广陵\t扬\t[\"扬\", \"广\", \"杭\", \"苏\"]\n8\t孤帆远影碧空尽，唯见长江天际__。\tfill\t黄鹤楼送孟浩然之广陵\t流\t[\"流\", \"去\", \"来\", \"走\"]\n9\t烽火连三月，家书抵__金。\tfill\t春望\t万\t[\"万\", \"千\", \"百\", \"亿\"]\n10\t会当凌绝顶，一览众山__。\tfill\t望岳\t小\t[\"小\", \"大\", \"远\", \"近\"]\n11\t国破山河在，城春草木__。\tfill\t春望\t深\t[\"深\", \"生\", \"长\", \"绿\"]\n12\t感时花溅泪，恨别鸟惊__。\tfill\t春望\t心\t[\"心\", \"魂\", \"情\", \"怀\"]\n13\t随风潜入夜，润物细无__。\tfill\t春夜喜雨\t声\t[\"声\", \"息\", \"痕\", \"迹\"]\n14\t好雨知时节，当春乃__生。\tfill\t春夜喜雨\t发\t[\"发\", \"萌\", \"茁\", \"催\"]\n15\t独在异乡为异客，每逢佳节倍__亲。\tfill\t九月九日忆山东兄弟\t思\t[\"思\", \"念\", \"忆\", \"想\"]\n16\t遥知兄弟登高处，遍插茱萸少一__。\tfill\t九月九日忆山东兄弟\t人\t[\"人\", \"个\", \"位\", \"名\"]\n18\t大漠孤烟直，长河__日圆。\tfill\t使至塞上\t落\t[\"落\", \"斜\", \"夕\", \"西\"]\n19\t但愿人长久，千里共__娟。\tfill\t水调歌头\t婵\t[\"婵\", \"蝉\", \"禅\", \"缠\"]\n20\t明月几时有？把酒问__天。\tfill\t水调歌头\t青\t[\"青\", \"苍\", \"碧\", \"蓝\"]\n21\t横看成岭侧成峰，远近高低各不__。\tfill\t题西林壁\t同\t[\"同\", \"异\", \"等\", \"一\"]\n22\t不识庐山真面目，只缘身在此山__。\tfill\t题西林壁\t中\t[\"中\", \"里\", \"间\", \"内\"]\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

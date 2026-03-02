@@ -514,4 +514,23 @@ export const gameRouter = router({
       const analysis = await callLLM(prompt);
       return { analysis: analysis || "这首诗意境深远，值得细细品味。" };
     }),
+
+  // LLM: Generate acrostic poem for user's nickname/title
+  generateNicknameAcrostic: publicProcedure
+    .input(z.object({ nickname: z.string().min(1).max(10) }))
+    .mutation(async ({ input }) => {
+      // 提取名号中的汉字（去掉数字和下划线）
+      const chars = input.nickname.replace(/[^\u4e00-\u9fff]/g, "");
+      if (!chars || chars.length < 1) {
+        return { acrostic: "诗意人生，墨香千古。\n词韵悠长，风雅永存。" };
+      }
+      const useChars = chars.slice(0, Math.min(chars.length, 4)); // 最多取4字
+      const prompt = `请以"${useChars}"这${useChars.length}个字为藏头，创作一首藏头诗，要求：
+1. 每句开头的字依次是"${useChars.split("").join("、")}"
+2. 内容要有诗词意境，优美典雅
+3. 每句5-7字，共${useChars.length}句
+4. 只输出诗句，每句一行，不要解释、不要标点以外的内容`;
+      const acrostic = await callLLM(prompt);
+      return { acrostic: acrostic || `${useChars.split("").map(c => `${c}字为首，诗意绵长`).join("\n")}` };
+    }),
 });

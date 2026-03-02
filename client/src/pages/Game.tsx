@@ -10,6 +10,7 @@ import {
   consumeLocalHint,
   getRankByScore,
 } from "@/lib/localGameState";
+import { getTodayCalendarInfo } from "@/lib/calendarData";
 
 // 将题目内容中的 __ 替换为2字符宽度的横线
 function renderQuestionContent(content: string): React.ReactNode {
@@ -693,6 +694,31 @@ export default function Game() {
             <div className="font-semibold text-sm" style={{ color: "var(--gold)" }}>{localTotalScore}</div>
           </div>
         </div>
+
+        {/* 节日彩蛋 */}
+        {(() => {
+          const todayInfo = getTodayCalendarInfo();
+          if (!todayInfo.hasEvent || !todayInfo.event) return null;
+          const ev = todayInfo.event;
+          return (
+            <div
+              className="rounded-2xl p-4 mb-5 text-center"
+              style={{
+                background: ev.bgGradient || "linear-gradient(135deg, var(--vermilion-pale), oklch(0.97 0.02 55))",
+                border: `1px solid ${ev.color}30`,
+              }}
+            >
+              <div className="text-3xl mb-2">{ev.emoji}</div>
+              <div className="font-display text-base font-bold mb-1" style={{ color: ev.color }}>
+                {ev.name}快乐！
+              </div>
+              <div className="font-serif-poem text-sm leading-relaxed mb-1" style={{ color: ev.color + "cc" }}>
+                {ev.poem}
+              </div>
+              <div className="text-xs text-muted-foreground">—— {ev.poemAuthor}</div>
+            </div>
+          );
+        })()}
 
         <div className="space-y-3">
           <button

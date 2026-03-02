@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fbDestinyMatch, unlockAudio } from "@/lib/feedback";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
@@ -9,6 +9,150 @@ import {
   saveLocalDestinyPoet,
   resetLocalDestinyPoet,
 } from "@/lib/localGameState";
+
+// Canvas分享卡片生成
+async function generateShareCard(params: {
+  poetName: string;
+  poetEmoji: string;
+  dynasty: string;
+  mbtiType: string;
+  matchScore: number;
+  matchLabel: string;
+  matchColor: string;
+  acrosticPoem: string;
+  nickname: string;
+}): Promise<string> {
+  const { poetName, poetEmoji, dynasty, mbtiType, matchScore, matchLabel, matchColor, acrosticPoem, nickname } = params;
+  const W = 750, H = 1200;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  // 背景渐变色
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, "#1a0a00");
+  bgGrad.addColorStop(0.4, "#2d1200");
+  bgGrad.addColorStop(1, "#0d0500");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 水墨纹理装饰
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, 60 + Math.random() * 120, 0, Math.PI * 2);
+    ctx.fillStyle = matchColor;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // 顶部装饰线
+  const topGrad = ctx.createLinearGradient(0, 0, W, 0);
+  topGrad.addColorStop(0, "transparent");
+  topGrad.addColorStop(0.3, matchColor);
+  topGrad.addColorStop(0.7, matchColor);
+  topGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, W, 4);
+
+  // 标题
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.font = "bold 28px serif";
+  ctx.textAlign = "center";
+  ctx.fillText("天马行空·本命诗人", W / 2, 60);
+
+  // 诗人 emoji 大圈
+  const circleY = 200;
+  const circleR = 90;
+  const circleGrad = ctx.createRadialGradient(W/2, circleY, 0, W/2, circleY, circleR);
+  circleGrad.addColorStop(0, matchColor + "30");
+  circleGrad.addColorStop(1, matchColor + "08");
+  ctx.beginPath();
+  ctx.arc(W / 2, circleY, circleR, 0, Math.PI * 2);
+  ctx.fillStyle = circleGrad;
+  ctx.fill();
+  ctx.strokeStyle = matchColor + "60";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.font = "80px serif";
+  ctx.textAlign = "center";
+  ctx.fillText(poetEmoji, W / 2, circleY + 28);
+
+  // 契合度徽章
+  ctx.font = "bold 22px sans-serif";
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText(`${matchScore}%`, W / 2 + circleR - 10, circleY + circleR - 10);
+
+  // 匹配标签
+  const labelY = 320;
+  ctx.font = "26px serif";
+  ctx.fillStyle = matchColor;
+  ctx.textAlign = "center";
+  ctx.fillText(matchLabel, W / 2, labelY);
+
+  // 诗人名
+  ctx.font = "bold 72px serif";
+  ctx.fillStyle = matchColor;
+  ctx.textAlign = "center";
+  ctx.fillText(poetName, W / 2, labelY + 80);
+
+  // 朝代和 MBTI
+  ctx.font = "28px serif";
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.textAlign = "center";
+  ctx.fillText(`${dynasty}代 · ${mbtiType}`, W / 2, labelY + 130);
+
+  // 分隔线
+  ctx.strokeStyle = matchColor + "40";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(80, labelY + 160);
+  ctx.lineTo(W - 80, labelY + 160);
+  ctx.stroke();
+
+  // 藏头诗标题
+  const acrosticY = labelY + 210;
+  ctx.font = "bold 28px serif";
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.textAlign = "center";
+  ctx.fillText("— 专属藏头诗 —", W / 2, acrosticY);
+
+  // 藏头诗内容
+  const lines = acrosticPoem.split("\n").filter(Boolean).slice(0, 5);
+  lines.forEach((line, i) => {
+    const ly = acrosticY + 55 + i * 65;
+    ctx.font = "bold 36px serif";
+    ctx.fillStyle = matchColor;
+    ctx.textAlign = "center";
+    ctx.fillText(line.charAt(0), W / 2 - 100, ly);
+    ctx.font = "34px serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(line.slice(1), W / 2 + 20, ly);
+  });
+
+  // 底部用户名号和游戏信息
+  const bottomY = H - 100;
+  ctx.strokeStyle = matchColor + "30";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(80, bottomY - 20);
+  ctx.lineTo(W - 80, bottomY - 20);
+  ctx.stroke();
+
+  ctx.font = "24px sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.textAlign = "center";
+  ctx.fillText(`「${nickname}」的本命诗人`, W / 2, bottomY + 10);
+
+  ctx.font = "22px sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.fillText("天马行空·你的本命诗人是谁", W / 2, bottomY + 45);
+
+  return canvas.toDataURL("image/png");
+}
 
 const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
@@ -88,11 +232,16 @@ export default function Destiny() {
   const [showShareGuide, setShowShareGuide] = useState(false);
   const [destiny, setDestiny] = useState<DestinyResult | null>(null);
   const [totalAnswered, setTotalAnswered] = useState(0);
+  const [cardDataUrl, setCardDataUrl] = useState<string | null>(null);
+  const [generatingCard, setGeneratingCard] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [nickname, setNickname] = useState("");
 
   // 加载本地状态
   useEffect(() => {
     const state = loadLocalState();
     setTotalAnswered(state.totalAnswered);
+    setNickname(state.nickname);
 
     // 优先从本地存储读取完整的本命诗人结果（含AI分析）
     const localDestiny = loadLocalDestiny();
@@ -100,6 +249,23 @@ export default function Destiny() {
       setDestiny(localDestiny);
     }
   }, []);
+
+  const handleGenerateCard = async (poetName: string, poetEmoji: string, dynasty: string, mbtiType: string, matchScore: number, matchLabel: string, matchColor: string, acrosticPoem: string) => {
+    setGeneratingCard(true);
+    try {
+      const dataUrl = await generateShareCard({
+        poetName, poetEmoji, dynasty, mbtiType, matchScore, matchLabel, matchColor,
+        acrosticPoem: acrosticPoem || "",
+        nickname: nickname || "诗词达人",
+      });
+      setCardDataUrl(dataUrl);
+      setShowCardModal(true);
+    } catch (e) {
+      toast.error("卡片生成失败，请重试");
+    } finally {
+      setGeneratingCard(false);
+    }
+  };
 
   // 每次页面可见时刷新
   useEffect(() => {
@@ -509,6 +675,30 @@ export default function Destiny() {
             {/* 操作按钮 */}
             <div className="space-y-3 mb-6">
               <button
+                onClick={() => handleGenerateCard(
+                  poet.name,
+                  poetEmoji,
+                  poet.dynasty,
+                  poet.mbtiType,
+                  destiny.matchScore,
+                  matchInfo.label,
+                  matchInfo.color,
+                  destiny.acrosticPoem ?? ""
+                )}
+                disabled={generatingCard}
+                className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-60"
+                style={{
+                  background: `linear-gradient(135deg, ${matchInfo.color}, ${matchInfo.color}cc)`,
+                  color: "white",
+                  fontSize: "16px",
+                  minHeight: "52px",
+                  letterSpacing: "0.04em",
+                  boxShadow: `0 4px 16px ${matchInfo.color}40`,
+                }}
+              >
+                {generatingCard ? "生成卡片中..." : "🎨 生成分享卡片"}
+              </button>
+              <button
                 onClick={handleShare}
                 className="w-full py-3.5 rounded-xl font-semibold transition-all active:scale-95 text-white"
                 style={{ background: "#07C160", fontSize: "16px", minHeight: "52px", letterSpacing: "0.04em" }}
@@ -546,6 +736,48 @@ export default function Destiny() {
           </div>
         );
       })()}
+
+      {/* Canvas分享卡片弹窗 */}
+      {showCardModal && cardDataUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCardModal(false); }}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-3xl p-5"
+            style={{ background: "#1a0a00", paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
+          >
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <h3 className="text-center font-display text-white text-base mb-1">🎨 分享卡片已生成</h3>
+            <p className="text-center text-white/50 text-xs mb-4">在微信中长按图片即可保存到相册</p>
+            <div className="rounded-xl overflow-hidden mb-4" style={{ maxHeight: "55vh", overflowY: "auto" }}>
+              <img
+                src={cardDataUrl}
+                alt="分享卡片"
+                className="w-full block"
+                style={{ borderRadius: "12px" }}
+              />
+            </div>
+            <a
+              href={cardDataUrl}
+              download="天马本命诗人.png"
+              className="block w-full py-3 rounded-2xl font-bold text-base text-center text-white mb-2 transition-all active:scale-95"
+              style={{ background: "var(--vermilion)" }}
+            >
+              保存到相册
+            </a>
+            <button
+              onClick={() => setShowCardModal(false)}
+              className="w-full py-2 text-sm text-white/40"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

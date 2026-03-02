@@ -7,6 +7,16 @@ import { isVibrationSupported } from "@/lib/haptics";
 import { loadLocalState, saveLocalState, getRankByScore, updateLocalNickname, type LocalGameState } from "@/lib/localGameState";
 import { toast } from "sonner";
 
+// 随机生成诗意名号
+function generateNickname(): string {
+  const adjectives = ["飞花", "踏雪", "听雨", "望月", "抚琴", "煮酒", "赏梅", "问柳", "寻芳", "醉墨", "海棣", "天马", "山居", "江南", "山水"];
+  const nouns = ["剑客", "书生", "侠士", "词人", "墨客", "诗仙", "才子", "雅士", "隐者", "游侠", "居士", "词客", "山人", "江客"];
+  const num = Math.floor(Math.random() * 9000) + 1000;
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)]!;
+  const noun = nouns[Math.floor(Math.random() * nouns.length)]!;
+  return `${adj}${noun}_${num}`;
+}
+
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
   platinum: "#6B7280", diamond: "#2563EB", star: "#D97706", king: "#DC2626",
@@ -36,6 +46,23 @@ export default function Profile() {
   const accuracy = localState && localState.totalAnswered > 0
     ? Math.round((localState.totalCorrect / localState.totalAnswered) * 100)
     : 0;
+
+  // 名号藏头诗
+  const [showAcrostic, setShowAcrostic] = useState(false);
+  const [acrosticPoem, setAcrosticPoem] = useState("");
+  const acrosticMutation = trpc.game.generateNicknameAcrostic.useMutation({
+    onSuccess: (data) => {
+      setAcrosticPoem(data.acrostic);
+      setShowAcrostic(true);
+    },
+    onError: () => toast.error("生成失败，请稍后重试"),
+  });
+
+  const handleGenerateAcrostic = () => {
+    const nick = localState?.nickname ?? "";
+    if (!nick) { toast.error("请先设置名号"); return; }
+    acrosticMutation.mutate({ nickname: nick });
+  };
 
   // 存档码导出
   const [showArchive, setShowArchive] = useState(false);
@@ -137,12 +164,36 @@ export default function Profile() {
             </button>
           </div>
         ) : (
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-xl font-bold font-display text-foreground">{localState.nickname}</h2>
-            <button onClick={() => setEditingName(true)}
-              className="text-xs text-muted-foreground px-2 py-0.5 rounded border border-border">
-              改名
-            </button>
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold font-display text-foreground">{localState.nickname}</h2>
+              <button onClick={() => setEditingName(true)}
+                className="text-xs text-muted-foreground px-2 py-0.5 rounded border border-border">
+                改名
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const newNick = generateNickname();
+                  updateLocalNickname(newNick);
+                  setLocalState((prev) => prev ? { ...prev, nickname: newNick } : prev);
+                  setNameInput(newNick);
+                  toast.success(`新名号：${newNick}`);
+                }}
+                className="text-xs px-3 py-1 rounded-full border border-border text-muted-foreground active:scale-95 transition-all"
+              >
+                换一个名号
+              </button>
+              <button
+                onClick={handleGenerateAcrostic}
+                disabled={acrosticMutation.isPending}
+                className="text-xs px-3 py-1 rounded-full text-white active:scale-95 transition-all disabled:opacity-60"
+                style={{ background: "var(--vermilion)" }}
+              >
+                {acrosticMutation.isPending ? "生成中..." : "生成专属藏头诗"}
+              </button>
+            </div>
           </div>
         )}
 
@@ -342,6 +393,52 @@ export default function Profile() {
                 <button onClick={() => setShowArchive(false)} className="w-full py-2 text-sm text-muted-foreground">取消</button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 藏头诗弹窗 */}
+      {showAcrostic && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAcrostic(false); }}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl p-6"
+            style={{ background: "var(--background)", paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
+          >
+            <div className="flex justify-center mb-4">
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
+            </div>
+            <h3 className="font-display text-lg font-bold text-foreground mb-1 text-center">✨ 专属藏头诗</h3>
+            <p className="text-xs text-muted-foreground mb-4 text-center">以「{localState.nickname.replace(/[^\u4e00-\u9fff]/g, "")}」为藏头，专属为你生成</p>
+            <div
+              className="rounded-2xl p-5 mb-4 text-center"
+              style={{ background: "var(--vermilion-pale)", border: "1px solid var(--vermilion)20" }}
+            >
+              {acrosticPoem.split("\n").filter(Boolean).map((line, i) => (
+                <div key={i} className="text-base font-display py-1" style={{ color: "var(--vermilion)" }}>
+                  <span className="font-bold text-lg" style={{ color: "var(--gold)" }}>{line.charAt(0)}</span>
+                  <span>{line.slice(1)}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(acrosticPoem);
+                  toast.success("藏头诗已复制");
+                } catch {
+                  toast.error("复制失败，请手动选择复制");
+                }
+              }}
+              className="w-full py-3 rounded-2xl font-bold text-base text-white mb-2 transition-all active:scale-95"
+              style={{ background: "var(--vermilion)" }}
+            >
+              复制藏头诗
+            </button>
+            <button onClick={() => setShowAcrostic(false)} className="w-full py-2 text-sm text-muted-foreground">关闭</button>
           </div>
         </div>
       )}
