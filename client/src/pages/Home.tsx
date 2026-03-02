@@ -8,9 +8,15 @@ import WelcomeModal from "@/components/WelcomeModal";
 import { getTodayDisplay, getUpcomingEvents, type CalendarEvent } from "@/lib/calendarData";
 import { isLanternFestivalSeason, shouldShowLanternEgg } from "@/lib/lanternRiddleData";
 
+// 段位颜色：与兵器谱（Rank.tsx的 RANK_TIERS）完全一致
 const RANK_COLORS: Record<string, string> = {
-  bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
-  platinum: "#6B7280", diamond: "#2563EB", star: "#D97706", king: "#DC2626",
+  bronze:   "#B87333",  // 青铜剑
+  silver:   "#7A8A9A",  // 白银枪
+  gold:     "#C8960C",  // 黄金刀
+  platinum: "#5B8FA8",  // 铂金戟
+  diamond:  "#2563EB",  // 钻石弓
+  star:     "#D97706",  // 星耀扇
+  king:     "#9B2335",  // 王者笔
 };
 
 const POET_EMOJIS: Record<string, string> = {

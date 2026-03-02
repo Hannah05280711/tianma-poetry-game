@@ -95,40 +95,36 @@ const [poetRows] = await conn.execute('SELECT id, name FROM poets');
 const poetMap = {};
 for (const r of poetRows) poetMap[r.name] = r.id;
 
-// ─── 2. 兵器谱段位数据 ────────────────────────────────────────────────────────
+// ─── 2. 兵器谱段位数据（以 Rank.tsx 的 RANK_TIERS 为权威数据源）────────────────
+// 7个tier，每个tier分三小级（Ⅲ/Ⅱ/Ⅰ），分数节点：0/500/1500/3500/7000/12000/20000
 const weaponRanks = [
-  // 青铜剑 (0-299)
-  { tier: 'bronze', tierName: '青铜剑', sub: 3, name: '青铜剑·Ⅲ', weapon: '鱼肠剑', story: '专诸刺王僚，藏于鱼腹的勇决之剑，初入江湖的第一把剑。', min: 0, max: 99, emoji: '🗡️', color: '#CD7F32', glow: '#CD7F32' },
-  { tier: 'bronze', tierName: '青铜剑', sub: 2, name: '青铜剑·Ⅱ', weapon: '徐夫人匕首', story: '荆轲刺秦王所用，淬以剧毒，一寸见血的短刃。', min: 100, max: 199, emoji: '🗡️', color: '#CD7F32', glow: '#E8A060' },
-  { tier: 'bronze', tierName: '青铜剑', sub: 1, name: '青铜剑·Ⅰ', weapon: '越女剑', story: '越女阿青所传，轻灵飘逸，以柔克刚的剑法。', min: 200, max: 299, emoji: '🗡️', color: '#CD7F32', glow: '#F0B870' },
-  // 白银枪 (300-699)
-  { tier: 'silver', tierName: '白银枪', sub: 4, name: '白银枪·Ⅳ', weapon: '龙泉剑', story: '欧冶子所铸，剑气纵横三万里，天下第一名剑。', min: 300, max: 399, emoji: '🔱', color: '#C0C0C0', glow: '#D8D8D8' },
-  { tier: 'silver', tierName: '白银枪', sub: 3, name: '白银枪·Ⅲ', weapon: '太阿剑', story: '干将莫邪之师所铸，威压天下，诸侯莫敢不服。', min: 400, max: 499, emoji: '🔱', color: '#C0C0C0', glow: '#E0E0E0' },
-  { tier: 'silver', tierName: '白银枪', sub: 2, name: '白银枪·Ⅱ', weapon: '工布剑', story: '铸剑大师所作，剑身有山川纹路，气象万千。', min: 500, max: 599, emoji: '🔱', color: '#C0C0C0', glow: '#E8E8E8' },
-  { tier: 'silver', tierName: '白银枪', sub: 1, name: '白银枪·Ⅰ', weapon: '纯钧剑', story: '越王勾践宝剑，历经千年不锈，锋利如初。', min: 600, max: 699, emoji: '🔱', color: '#C0C0C0', glow: '#F0F0F0' },
-  // 黄金刀 (700-1199)
-  { tier: 'gold', tierName: '黄金刀', sub: 4, name: '黄金刀·Ⅳ', weapon: '尉迟恭鞭', story: '门神尉迟恭所用铁鞭，力大无穷，百战百胜。', min: 700, max: 849, emoji: '⚔️', color: '#FFD700', glow: '#FFE44D' },
-  { tier: 'gold', tierName: '黄金刀', sub: 3, name: '黄金刀·Ⅲ', weapon: '秦琼锏', story: '秦叔宝双锏，马踏黄河两岸，锏扫千军。', min: 850, max: 999, emoji: '⚔️', color: '#FFD700', glow: '#FFE866' },
-  { tier: 'gold', tierName: '黄金刀', sub: 2, name: '黄金刀·Ⅱ', weapon: '李元霸锤', story: '天下第一猛将李元霸所用擂鼓瓮金锤，无人能敌。', min: 1000, max: 1099, emoji: '⚔️', color: '#FFD700', glow: '#FFEC80' },
-  { tier: 'gold', tierName: '黄金刀', sub: 1, name: '黄金刀·Ⅰ', weapon: '甘宁钩', story: '江东猛虎甘宁所用铁链钩，水战无敌，威震三军。', min: 1100, max: 1199, emoji: '⚔️', color: '#FFD700', glow: '#FFF099' },
-  // 铂金戟 (1200-1799)
-  { tier: 'platinum', tierName: '铂金戟', sub: 3, name: '铂金戟·Ⅲ', weapon: '越王剑', story: '越王勾践卧薪尝胆，此剑见证了十年复仇的传奇。', min: 1200, max: 1399, emoji: '🏆', color: '#E5E4E2', glow: '#F0EEF0' },
-  { tier: 'platinum', tierName: '铂金戟', sub: 2, name: '铂金戟·Ⅱ', weapon: '干将莫邪', story: '干将莫邪双剑，雌雄相合，天下无双，爱情与铸剑的传说。', min: 1400, max: 1599, emoji: '🏆', color: '#E5E4E2', glow: '#F5F3F5' },
-  { tier: 'platinum', tierName: '铂金戟', sub: 1, name: '铂金戟·Ⅰ', weapon: '养由基弓', story: '百步穿杨的神射手养由基所用神弓，箭无虚发。', min: 1600, max: 1799, emoji: '🏆', color: '#E5E4E2', glow: '#FAFAFA' },
-  // 钻石弓 (1800-2499)
-  { tier: 'diamond', tierName: '钻石弓', sub: 5, name: '钻石弓·Ⅴ', weapon: '青龙刀', story: '关羽青龙偃月刀，重八十二斤，忠义之气贯长虹。', min: 1800, max: 1999, emoji: '💎', color: '#B9F2FF', glow: '#C8F5FF' },
-  { tier: 'diamond', tierName: '钻石弓', sub: 4, name: '钻石弓·Ⅳ', weapon: '天龙戟', story: '吕布方天画戟，天下第一武将的标志，所向披靡。', min: 2000, max: 2149, emoji: '💎', color: '#B9F2FF', glow: '#D0F7FF' },
-  { tier: 'diamond', tierName: '钻石弓', sub: 3, name: '钻石弓·Ⅲ', weapon: '丈八蛇矛', story: '张飞丈八蛇矛，当阳桥头一声吼，百万曹军皆胆寒。', min: 2150, max: 2299, emoji: '💎', color: '#B9F2FF', glow: '#D8F9FF' },
-  { tier: 'diamond', tierName: '钻石弓', sub: 2, name: '钻石弓·Ⅱ', weapon: '沥泉枪', story: '岳飞沥泉神枪，精忠报国，驰骋沙场，还我河山。', min: 2300, max: 2449, emoji: '💎', color: '#B9F2FF', glow: '#E0FBFF' },
-  { tier: 'diamond', tierName: '钻石弓', sub: 1, name: '钻石弓·Ⅰ', weapon: '青釭剑', story: '曹操青釭剑，削铁如泥，赵云长坂坡七进七出所夺。', min: 2450, max: 2499, emoji: '💎', color: '#B9F2FF', glow: '#E8FDFF' },
-  // 星耀扇 (2500-3499)
-  { tier: 'star', tierName: '星耀扇', sub: 5, name: '星耀扇·Ⅴ', weapon: '轩辕剑', story: '黄帝轩辕剑，华夏第一神剑，斩蚩尤定天下，开创文明之始。', min: 2500, max: 2699, emoji: '⭐', color: '#FFB347', glow: '#FFC060' },
-  { tier: 'star', tierName: '星耀扇', sub: 4, name: '星耀扇·Ⅳ', weapon: '蚩尤斧', story: '战神蚩尤所持神斧，力能开山裂地，上古最强战神的象征。', min: 2700, max: 2899, emoji: '⭐', color: '#FFB347', glow: '#FFD070' },
-  { tier: 'star', tierName: '星耀扇', sub: 3, name: '星耀扇·Ⅲ', weapon: '后羿弓', story: '后羿神弓，射落九日，拯救苍生，英雄主义的永恒象征。', min: 2900, max: 3099, emoji: '⭐', color: '#FFB347', glow: '#FFD880' },
-  { tier: 'star', tierName: '星耀扇', sub: 2, name: '星耀扇·Ⅱ', weapon: '女娲石', story: '女娲补天所用五彩神石，蕴含创世之力，化腐朽为神奇。', min: 3100, max: 3299, emoji: '⭐', color: '#FFB347', glow: '#FFE090' },
-  { tier: 'star', tierName: '星耀扇', sub: 1, name: '星耀扇·Ⅰ', weapon: '伏羲琴', story: '伏羲所制七弦琴，一曲可通天地，万物皆在琴音中和谐共鸣。', min: 3300, max: 3499, emoji: '⭐', color: '#FFB347', glow: '#FFE8A0' },
-  // 王者笔 (3500+)
-  { tier: 'king', tierName: '王者笔', sub: 1, name: '王者笔·天下第一', weapon: '兵主·蚩尤', story: '集天下兵器之精华，诗词王者的终极荣耀。你已超越所有段位，成为诗词世界的真正王者！', min: 3500, max: 99999, emoji: '👑', color: '#FF6B35', glow: '#FF8C00' },
+  // 青铜剑 0~499
+  { tier: 'bronze', tierName: '青铜剑', sub: 3, name: '青铜剑·Ⅲ', weapon: '青铜剑', story: '铸于上古，承载着最初的诗意与梦想。每一位诗词学者都从这里起步，磨砺心志，以诗为剑，开启征途。', min: 0, max: 166, emoji: '🗡️', color: '#B87333', glow: '#D4A574' },
+  { tier: 'bronze', tierName: '青铜剑', sub: 2, name: '青铜剑·Ⅱ', weapon: '青铜剑', story: '铸于上古，承载着最初的诗意与梦想。每一位诗词学者都从这里起步，磨砺心志，以诗为剑，开启征途。', min: 167, max: 333, emoji: '🗡️', color: '#B87333', glow: '#D4A574' },
+  { tier: 'bronze', tierName: '青铜剑', sub: 1, name: '青铜剑·Ⅰ', weapon: '青铜剑', story: '铸于上古，承载着最初的诗意与梦想。每一位诗词学者都从这里起步，磨砺心志，以诗为剑，开启征途。', min: 334, max: 499, emoji: '🗡️', color: '#B87333', glow: '#D4A574' },
+  // 白银枪 500~1499
+  { tier: 'silver', tierName: '白银枪', sub: 3, name: '白银枪·Ⅲ', weapon: '白银枪', story: '枪法如诗，刺破云霄。掌握此枪者，已能背诵千首唐诗，出口成章，令人叹服。', min: 500, max: 832, emoji: '🔱', color: '#7A8A9A', glow: '#A8B8C8' },
+  { tier: 'silver', tierName: '白银枪', sub: 2, name: '白银枪·Ⅱ', weapon: '白银枪', story: '枪法如诗，刺破云霄。掌握此枪者，已能背诵千首唐诗，出口成章，令人叹服。', min: 833, max: 1166, emoji: '🔱', color: '#7A8A9A', glow: '#A8B8C8' },
+  { tier: 'silver', tierName: '白银枪', sub: 1, name: '白银枪·Ⅰ', weapon: '白银枪', story: '枪法如诗，刺破云霄。掌握此枪者，已能背诵千首唐诗，出口成章，令人叹服。', min: 1167, max: 1499, emoji: '🔱', color: '#7A8A9A', glow: '#A8B8C8' },
+  // 黄金刀 1500~3499
+  { tier: 'gold', tierName: '黄金刀', sub: 3, name: '黄金刀·Ⅲ', weapon: '黄金刀', story: '刀光如日，照耀诗坛。持此刀者，宋词元曲信手拈来，一刀斩断万古愁，诗意横溢。', min: 1500, max: 2166, emoji: '⚔️', color: '#C8960C', glow: '#E8B84B' },
+  { tier: 'gold', tierName: '黄金刀', sub: 2, name: '黄金刀·Ⅱ', weapon: '黄金刀', story: '刀光如日，照耀诗坛。持此刀者，宋词元曲信手拈来，一刀斩断万古愁，诗意横溢。', min: 2167, max: 2833, emoji: '⚔️', color: '#C8960C', glow: '#E8B84B' },
+  { tier: 'gold', tierName: '黄金刀', sub: 1, name: '黄金刀·Ⅰ', weapon: '黄金刀', story: '刀光如日，照耀诗坛。持此刀者，宋词元曲信手拈来，一刀斩断万古愁，诗意横溢。', min: 2834, max: 3499, emoji: '⚔️', color: '#C8960C', glow: '#E8B84B' },
+  // 铂金戟 3500~6999
+  { tier: 'platinum', tierName: '铂金戟', sub: 3, name: '铂金戟·Ⅲ', weapon: '铂金戟', story: '戟分天地，诗贯古今。执此戟者，已是一方诗词宗师，楚辞汉赋皆在胸中，门下弟子无数。', min: 3500, max: 4666, emoji: '🏆', color: '#5B8FA8', glow: '#8BBDD4' },
+  { tier: 'platinum', tierName: '铂金戟', sub: 2, name: '铂金戟·Ⅱ', weapon: '铂金戟', story: '戟分天地，诗贯古今。执此戟者，已是一方诗词宗师，楚辞汉赋皆在胸中，门下弟子无数。', min: 4667, max: 5833, emoji: '🏆', color: '#5B8FA8', glow: '#8BBDD4' },
+  { tier: 'platinum', tierName: '铂金戟', sub: 1, name: '铂金戟·Ⅰ', weapon: '铂金戟', story: '戟分天地，诗贯古今。执此戟者，已是一方诗词宗师，楚辞汉赋皆在胸中，门下弟子无数。', min: 5834, max: 6999, emoji: '🏆', color: '#5B8FA8', glow: '#8BBDD4' },
+  // 钻石弓 7000~11999
+  { tier: 'diamond', tierName: '钻石弓', sub: 3, name: '钻石弓·Ⅲ', weapon: '钻石弓', story: '弓弦如丝，射穿时空。此弓射出的每一箭，都是一首流传千古的诗篇，字字珠玑，直击人心。', min: 7000, max: 8666, emoji: '💎', color: '#2563EB', glow: '#60A5FA' },
+  { tier: 'diamond', tierName: '钻石弓', sub: 2, name: '钻石弓·Ⅱ', weapon: '钻石弓', story: '弓弦如丝，射穿时空。此弓射出的每一箭，都是一首流传千古的诗篇，字字珠玑，直击人心。', min: 8667, max: 10333, emoji: '💎', color: '#2563EB', glow: '#60A5FA' },
+  { tier: 'diamond', tierName: '钻石弓', sub: 1, name: '钻石弓·Ⅰ', weapon: '钻石弓', story: '弓弦如丝，射穿时空。此弓射出的每一箭，都是一首流传千古的诗篇，字字珠玑，直击人心。', min: 10334, max: 11999, emoji: '💎', color: '#2563EB', glow: '#60A5FA' },
+  // 星耀扇 12000~19999
+  { tier: 'star', tierName: '星耀扇', sub: 3, name: '星耀扇·Ⅲ', weapon: '星耀扇', story: '扇动星河，诗意无边。持此扇者，已与古代诗人心灵相通，共赏明月，同醉春风，超凡入圣。', min: 12000, max: 14666, emoji: '✨', color: '#D97706', glow: '#FCD34D' },
+  { tier: 'star', tierName: '星耀扇', sub: 2, name: '星耀扇·Ⅱ', weapon: '星耀扇', story: '扇动星河，诗意无边。持此扇者，已与古代诗人心灵相通，共赏明月，同醉春风，超凡入圣。', min: 14667, max: 17333, emoji: '✨', color: '#D97706', glow: '#FCD34D' },
+  { tier: 'star', tierName: '星耀扇', sub: 1, name: '星耀扇·Ⅰ', weapon: '星耀扇', story: '扇动星河，诗意无边。持此扇者，已与古代诗人心灵相通，共赏明月，同醉春风，超凡入圣。', min: 17334, max: 19999, emoji: '✨', color: '#D97706', glow: '#FCD34D' },
+  // 王者笔 20000+
+  { tier: 'king', tierName: '王者笔', sub: 2, name: '王者笔·Ⅱ', weapon: '王者笔', story: '一笔定乾坤，万古留芳名。执此笔者，乃当世诗词之王，上下五千年，纵横诗词海，名垂青史。', min: 20000, max: 29999, emoji: '👑', color: '#9B2335', glow: '#E05C6E' },
+  { tier: 'king', tierName: '王者笔', sub: 1, name: '王者笔·Ⅰ', weapon: '王者笔', story: '一笔定乾坤，万古留芳名。执此笔者，乃当世诗词之王，上下五千年，纵横诗词海，名垂青史。', min: 30000, max: 999999, emoji: '👑', color: '#9B2335', glow: '#E05C6E' },
 ];
 
 console.log('Inserting weapon ranks...');

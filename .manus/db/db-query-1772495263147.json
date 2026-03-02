@@ -1,0 +1,109 @@
+{
+  "query": "DESCRIBE weaponRanks; SELECT COUNT(*) as total FROM weaponRanks;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute DESCRIBE weaponRanks; SELECT COUNT(*) as total FROM weaponRanks;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "rankTier",
+      "Type": "enum('bronze','silver','gold','platinum','diamond','star','king')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "rankName",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tierName",
+      "Type": "varchar(32)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "subRank",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "weaponName",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "weaponStory",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "minScore",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "maxScore",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "iconEmoji",
+      "Type": "varchar(16)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "⚔️",
+      "Extra": ""
+    },
+    {
+      "Field": "color",
+      "Type": "varchar(32)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#CD7F32",
+      "Extra": ""
+    },
+    {
+      "Field": "glowColor",
+      "Type": "varchar(32)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "#CD7F32",
+      "Extra": ""
+    }
+  ],
+  "messages": [
+    "total",
+    "25"
+  ],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nrankTier\tenum('bronze','silver','gold','platinum','diamond','star','king')\tNO\t\tNULL\t\nrankName\tvarchar(64)\tNO\t\tNULL\t\ntierName\tvarchar(32)\tNO\t\tNULL\t\nsubRank\tint\tNO\t\tNULL\t\nweaponName\tvarchar(64)\tNO\t\tNULL\t\nweaponStory\ttext\tYES\t\tNULL\t\nminScore\tint\tNO\t\tNULL\t\nmaxScore\tint\tNO\t\tNULL\t\niconEmoji\tvarchar(16)\tYES\t\t⚔️\t\ncolor\tvarchar(32)\tYES\t\t#CD7F32\t\nglowColor\tvarchar(32)\tYES\t\t#CD7F32\t\ntotal\n25\n",
+  "stderr": "",
+  "execution_time_ms": 1927
+}

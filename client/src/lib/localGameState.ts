@@ -102,27 +102,36 @@ export interface RankInfo {
   maxScore: number;
 }
 
+// 段位配置：以兵器谱（Rank.tsx的 RANK_TIERS）为权威数据源
+// 7个tier，每个tier分三小级（Ⅲ/Ⅱ/Ⅰ），分数节点与兵器谱完全对齐
 export const RANKS: RankInfo[] = [
-  { id: 1,  rankName: "青铜剑·Ⅲ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 0,    maxScore: 99 },
-  { id: 2,  rankName: "青铜剑·Ⅱ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 100,  maxScore: 199 },
-  { id: 3,  rankName: "青铜剑·Ⅰ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 200,  maxScore: 299 },
-  { id: 4,  rankName: "白银枪·Ⅲ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 300,  maxScore: 449 },
-  { id: 5,  rankName: "白银枪·Ⅱ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 450,  maxScore: 599 },
-  { id: 6,  rankName: "白银枪·Ⅰ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 600,  maxScore: 799 },
-  { id: 7,  rankName: "黄金戟·Ⅲ", tierName: "黄金戟", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 800,  maxScore: 999 },
-  { id: 8,  rankName: "黄金戟·Ⅱ", tierName: "黄金戟", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 1000, maxScore: 1249 },
-  { id: 9,  rankName: "黄金戟·Ⅰ", tierName: "黄金戟", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 1250, maxScore: 1499 },
-  { id: 10, rankName: "铂金弓·Ⅲ", tierName: "铂金弓", rankTier: "platinum", iconEmoji: "🏹",  minScore: 1500, maxScore: 1799 },
-  { id: 11, rankName: "铂金弓·Ⅱ", tierName: "铂金弓", rankTier: "platinum", iconEmoji: "🏹",  minScore: 1800, maxScore: 2099 },
-  { id: 12, rankName: "铂金弓·Ⅰ", tierName: "铂金弓", rankTier: "platinum", iconEmoji: "🏹",  minScore: 2100, maxScore: 2499 },
-  { id: 13, rankName: "钻石斧·Ⅲ", tierName: "钻石斧", rankTier: "diamond",  iconEmoji: "🪓",  minScore: 2500, maxScore: 2999 },
-  { id: 14, rankName: "钻石斧·Ⅱ", tierName: "钻石斧", rankTier: "diamond",  iconEmoji: "🪓",  minScore: 3000, maxScore: 3499 },
-  { id: 15, rankName: "钻石斧·Ⅰ", tierName: "钻石斧", rankTier: "diamond",  iconEmoji: "🪓",  minScore: 3500, maxScore: 3999 },
-  { id: 16, rankName: "星耀镰·Ⅲ", tierName: "星耀镰", rankTier: "star",     iconEmoji: "⚡",  minScore: 4000, maxScore: 4749 },
-  { id: 17, rankName: "星耀镰·Ⅱ", tierName: "星耀镰", rankTier: "star",     iconEmoji: "⚡",  minScore: 4750, maxScore: 5499 },
-  { id: 18, rankName: "星耀镰·Ⅰ", tierName: "星耀镰", rankTier: "star",     iconEmoji: "⚡",  minScore: 5500, maxScore: 6499 },
-  { id: 19, rankName: "王者鼎·Ⅱ", tierName: "王者鼎", rankTier: "king",     iconEmoji: "👑",  minScore: 6500, maxScore: 7999 },
-  { id: 20, rankName: "王者鼎·Ⅰ", tierName: "王者鼎", rankTier: "king",     iconEmoji: "👑",  minScore: 8000, maxScore: 999999 },
+  // 青铜剑 0~499（分三小级）
+  { id: 1,  rankName: "青铜剑·Ⅲ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 0,    maxScore: 166 },
+  { id: 2,  rankName: "青铜剑·Ⅱ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 167,  maxScore: 333 },
+  { id: 3,  rankName: "青铜剑·Ⅰ", tierName: "青铜剑", rankTier: "bronze",   iconEmoji: "🗡️",  minScore: 334,  maxScore: 499 },
+  // 白银枪 500~1499（分三小级）
+  { id: 4,  rankName: "白银枪·Ⅲ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 500,  maxScore: 832 },
+  { id: 5,  rankName: "白银枪·Ⅱ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 833,  maxScore: 1166 },
+  { id: 6,  rankName: "白银枪·Ⅰ", tierName: "白银枪", rankTier: "silver",   iconEmoji: "🔱",  minScore: 1167, maxScore: 1499 },
+  // 黄金刀 1500~3499（分三小级）
+  { id: 7,  rankName: "黄金刀·Ⅲ", tierName: "黄金刀", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 1500, maxScore: 2166 },
+  { id: 8,  rankName: "黄金刀·Ⅱ", tierName: "黄金刀", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 2167, maxScore: 2833 },
+  { id: 9,  rankName: "黄金刀·Ⅰ", tierName: "黄金刀", rankTier: "gold",     iconEmoji: "⚔️",  minScore: 2834, maxScore: 3499 },
+  // 铂金戟 3500~6999（分三小级）
+  { id: 10, rankName: "铂金戟·Ⅲ", tierName: "铂金戟", rankTier: "platinum", iconEmoji: "🏆",  minScore: 3500, maxScore: 4666 },
+  { id: 11, rankName: "铂金戟·Ⅱ", tierName: "铂金戟", rankTier: "platinum", iconEmoji: "🏆",  minScore: 4667, maxScore: 5833 },
+  { id: 12, rankName: "铂金戟·Ⅰ", tierName: "铂金戟", rankTier: "platinum", iconEmoji: "🏆",  minScore: 5834, maxScore: 6999 },
+  // 钻石弓 7000~11999（分三小级）
+  { id: 13, rankName: "钻石弓·Ⅲ", tierName: "钻石弓", rankTier: "diamond",  iconEmoji: "💎",  minScore: 7000,  maxScore: 8666 },
+  { id: 14, rankName: "钻石弓·Ⅱ", tierName: "钻石弓", rankTier: "diamond",  iconEmoji: "💎",  minScore: 8667,  maxScore: 10333 },
+  { id: 15, rankName: "钻石弓·Ⅰ", tierName: "钻石弓", rankTier: "diamond",  iconEmoji: "💎",  minScore: 10334, maxScore: 11999 },
+  // 星耀扇 12000~19999（分三小级）
+  { id: 16, rankName: "星耀扇·Ⅲ", tierName: "星耀扇", rankTier: "star",     iconEmoji: "✨",  minScore: 12000, maxScore: 14666 },
+  { id: 17, rankName: "星耀扇·Ⅱ", tierName: "星耀扇", rankTier: "star",     iconEmoji: "✨",  minScore: 14667, maxScore: 17333 },
+  { id: 18, rankName: "星耀扇·Ⅰ", tierName: "星耀扇", rankTier: "star",     iconEmoji: "✨",  minScore: 17334, maxScore: 19999 },
+  // 王者笔 20000+（分两小级）
+  { id: 19, rankName: "王者笔·Ⅱ", tierName: "王者笔", rankTier: "king",     iconEmoji: "👑",  minScore: 20000, maxScore: 29999 },
+  { id: 20, rankName: "王者笔·Ⅰ", tierName: "王者笔", rankTier: "king",     iconEmoji: "👑",  minScore: 30000, maxScore: 999999 },
 ];
 
 export function getRankByScore(score: number): RankInfo {
