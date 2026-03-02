@@ -456,18 +456,9 @@ export function getLanternFestivalRiddles(): LanternRiddle[] {
   return all;
 }
 
-/** 元宵节是否在今天或最近3天内 */
+/** 灯谜活动常驻显示（全年可玩） */
 export function isLanternFestivalSeason(): boolean {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
-  // 2026年元宵节：2月22日（农历正月十五）
-  // 通用：农历正月十五前后3天（公历2月中旬左右）
-  // 简化判断：2月12日-2月25日 或 1月30日-2月10日（春节后两周）
-  if (month === 2 && day >= 12 && day <= 25) return true;
-  if (month === 2 && day >= 1 && day <= 11) return true;
-  if (month === 1 && day >= 28) return true;
-  return false;
+  return true; // 灯谜活动全年开放，元宵节期间会在首页显示特别提示
 }
 
 /** 元宵节彩蛋是否应该显示（正月十五当天或前后各2天） */
