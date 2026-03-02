@@ -350,7 +350,7 @@ export default function Home() {
                 <span className="text-2xl">🏮</span>
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                   style={{ background: "rgba(255,200,50,0.2)", color: "#FFD700", border: "1px solid rgba(255,200,50,0.3)" }}>
-                  常驻活动
+                  元宵节彩蛋
                 </span>
               </div>
               <div className="font-bold text-base mb-0.5" style={{ color: "#FFD700", letterSpacing: "0.08em" }}>

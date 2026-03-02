@@ -229,7 +229,7 @@ export default function LanternRiddle() {
                   诗词灯谜馆
                 </h1>
                 <p className="text-sm mb-4" style={{ color: "#FFA040", letterSpacing: "0.06em" }}>
-                  传统文化趣味问答 · 全年常驻开放
+                  传统文化趣味问答 · 元宵节专属彩蛋
                 </p>
                 <div className="rounded-xl p-4 mb-5" style={{ background: "rgba(0,0,0,0.3)" }}>
                   <p className="text-sm leading-relaxed" style={{ color: "#FFD090" }}>
