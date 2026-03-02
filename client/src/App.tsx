@@ -11,6 +11,7 @@ import Destiny from "./pages/Destiny";
 import Daily from "./pages/Daily";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
+import LanternRiddle from "./pages/LanternRiddle";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/daily" component={Daily} />
       <Route path="/profile" component={Profile} />
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/lantern-riddle" component={LanternRiddle} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

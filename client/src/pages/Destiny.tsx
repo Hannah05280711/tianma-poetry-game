@@ -11,6 +11,21 @@ import {
 } from "@/lib/localGameState";
 
 // Canvas分享卡片生成
+// 助手函数：圆角矩形
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 async function generateShareCard(params: {
   poetName: string;
   poetEmoji: string;
@@ -18,138 +33,209 @@ async function generateShareCard(params: {
   mbtiType: string;
   matchScore: number;
   matchLabel: string;
-  matchColor: string;
+  matchColor: string;  // kept for fallback
   acrosticPoem: string;
   nickname: string;
 }): Promise<string> {
-  const { poetName, poetEmoji, dynasty, mbtiType, matchScore, matchLabel, matchColor, acrosticPoem, nickname } = params;
-  const W = 750, H = 1200;
+  const { poetName, poetEmoji, dynasty, mbtiType, matchScore, matchLabel, acrosticPoem, nickname } = params;
+  // 使用诗人专属古风配色
+  const theme = getPoetThemeColor(poetName, matchScore);
+  const matchColor = theme.primary;
+  const W = 750, H = 1334; // iPhone 比例
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // 背景渐变色
+  // ===== 背景：诗人专属色调 =====
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-  bgGrad.addColorStop(0, "#1a0a00");
-  bgGrad.addColorStop(0.4, "#2d1200");
-  bgGrad.addColorStop(1, "#0d0500");
+  bgGrad.addColorStop(0, theme.bg1);
+  bgGrad.addColorStop(0.6, theme.bg2);
+  bgGrad.addColorStop(1, theme.bg1);
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // 水墨纹理装饰
-  ctx.globalAlpha = 0.04;
-  for (let i = 0; i < 8; i++) {
-    ctx.beginPath();
-    ctx.arc(Math.random() * W, Math.random() * H, 60 + Math.random() * 120, 0, Math.PI * 2);
-    ctx.fillStyle = matchColor;
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
+  // ===== 水墨渗渍圆形装饰 =====
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = matchColor;
+  ctx.beginPath(); ctx.arc(650, 120, 180, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(100, 700, 220, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(700, 1100, 150, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 
-  // 顶部装饰线
-  const topGrad = ctx.createLinearGradient(0, 0, W, 0);
-  topGrad.addColorStop(0, "transparent");
-  topGrad.addColorStop(0.3, matchColor);
-  topGrad.addColorStop(0.7, matchColor);
-  topGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, W, 4);
-
-  // 标题
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.font = "bold 28px serif";
-  ctx.textAlign = "center";
-  ctx.fillText("天马行空·本命诗人", W / 2, 60);
-
-  // 诗人 emoji 大圈
-  const circleY = 200;
-  const circleR = 90;
-  const circleGrad = ctx.createRadialGradient(W/2, circleY, 0, W/2, circleY, circleR);
-  circleGrad.addColorStop(0, matchColor + "30");
-  circleGrad.addColorStop(1, matchColor + "08");
-  ctx.beginPath();
-  ctx.arc(W / 2, circleY, circleR, 0, Math.PI * 2);
-  ctx.fillStyle = circleGrad;
-  ctx.fill();
-  ctx.strokeStyle = matchColor + "60";
-  ctx.lineWidth = 2;
+  // ===== 外框装饰 =====
+  // 外圈边框
+  ctx.strokeStyle = matchColor + "50";
+  ctx.lineWidth = 3;
+  roundRect(ctx, 20, 20, W - 40, H - 40, 24);
+  ctx.stroke();
+  // 内圈边框
+  ctx.strokeStyle = matchColor + "25";
+  ctx.lineWidth = 1;
+  roundRect(ctx, 32, 32, W - 64, H - 64, 18);
   ctx.stroke();
 
-  ctx.font = "80px serif";
-  ctx.textAlign = "center";
-  ctx.fillText(poetEmoji, W / 2, circleY + 28);
+  // ===== 顶部标题区 =====
+  // 顶部装饰色块
+  ctx.save();
+  roundRect(ctx, 20, 20, W - 40, 100, 24);
+  ctx.clip();
+  const headerGrad = ctx.createLinearGradient(0, 0, W, 0);
+  headerGrad.addColorStop(0, matchColor + "18");
+  headerGrad.addColorStop(0.5, matchColor + "30");
+  headerGrad.addColorStop(1, matchColor + "18");
+  ctx.fillStyle = headerGrad;
+  ctx.fillRect(20, 20, W - 40, 100);
+  ctx.restore();
 
+  // 标题文字
+  ctx.font = "bold 30px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = matchColor;
+  ctx.textAlign = "center";
+  ctx.fillText("天马行空", W / 2, 62);
+  ctx.font = "22px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = matchColor + "99";
+  ctx.fillText("你的本命诗人是谁", W / 2, 92);
+
+  // ===== 诗人头像圆 =====
+  const circleX = W / 2, circleY = 260, circleR = 100;
+  // 外圈光晓
+  ctx.save();
+  const outerGlow = ctx.createRadialGradient(circleX, circleY, circleR * 0.7, circleX, circleY, circleR * 1.4);
+  outerGlow.addColorStop(0, matchColor + "30");
+  outerGlow.addColorStop(1, "transparent");
+  ctx.fillStyle = outerGlow;
+  ctx.beginPath(); ctx.arc(circleX, circleY, circleR * 1.4, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // 圆底色
+  const circleGrad = ctx.createRadialGradient(circleX, circleY - 20, 10, circleX, circleY, circleR);
+  circleGrad.addColorStop(0, "#FFFFFF");
+  circleGrad.addColorStop(1, matchColor + "20");
+  ctx.beginPath(); ctx.arc(circleX, circleY, circleR, 0, Math.PI * 2);
+  ctx.fillStyle = circleGrad; ctx.fill();
+  ctx.strokeStyle = matchColor + "80"; ctx.lineWidth = 3; ctx.stroke();
+  // emoji
+  ctx.font = "90px serif";
+  ctx.textAlign = "center";
+  ctx.fillText(poetEmoji, circleX, circleY + 32);
   // 契合度徽章
-  ctx.font = "bold 22px sans-serif";
+  ctx.save();
+  ctx.beginPath(); ctx.arc(circleX + circleR * 0.72, circleY + circleR * 0.72, 34, 0, Math.PI * 2);
+  ctx.fillStyle = matchColor; ctx.fill();
+  ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
+  ctx.restore();
+  ctx.font = "bold 22px 'PingFang SC', sans-serif";
   ctx.fillStyle = "white";
   ctx.textAlign = "center";
-  ctx.fillText(`${matchScore}%`, W / 2 + circleR - 10, circleY + circleR - 10);
+  ctx.fillText(`${matchScore}%`, circleX + circleR * 0.72, circleY + circleR * 0.72 + 8);
 
-  // 匹配标签
-  const labelY = 320;
-  ctx.font = "26px serif";
+  // ===== 诗人信息 =====
+  const infoY = 400;
+  // 匹配标签胶囊
+  const labelW = 160, labelH = 38;
+  ctx.save();
+  roundRect(ctx, W/2 - labelW/2, infoY - 28, labelW, labelH, 19);
+  ctx.fillStyle = matchColor + "18"; ctx.fill();
+  ctx.strokeStyle = matchColor + "60"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+  ctx.font = "bold 22px 'PingFang SC', 'Hiragino Sans GB', serif";
   ctx.fillStyle = matchColor;
   ctx.textAlign = "center";
-  ctx.fillText(matchLabel, W / 2, labelY);
+  ctx.fillText(matchLabel, W / 2, infoY + 2);
 
-  // 诗人名
-  ctx.font = "bold 72px serif";
+  // 诗人名（使用专属强调色）
+  ctx.font = "bold 88px 'PingFang SC', 'Hiragino Sans GB', serif";
+  ctx.fillStyle = theme.accent;
+  ctx.textAlign = "center";
+  ctx.fillText(poetName, W / 2, infoY + 100);
+
+  // 朝代 & MBTI
+  ctx.font = "28px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = theme.secondary;
+  ctx.textAlign = "center";
+  ctx.fillText(`${dynasty}代  ·  ${mbtiType}`, W / 2, infoY + 148);
+
+  // ===== 装饰分隔线 =====
+  const divY = infoY + 178;
+  // 中间菱形装饰
   ctx.fillStyle = matchColor;
-  ctx.textAlign = "center";
-  ctx.fillText(poetName, W / 2, labelY + 80);
-
-  // 朝代和 MBTI
-  ctx.font = "28px serif";
-  ctx.fillStyle = "rgba(255,255,255,0.55)";
-  ctx.textAlign = "center";
-  ctx.fillText(`${dynasty}代 · ${mbtiType}`, W / 2, labelY + 130);
-
-  // 分隔线
-  ctx.strokeStyle = matchColor + "40";
-  ctx.lineWidth = 1;
+  ctx.save();
+  ctx.translate(W / 2, divY);
   ctx.beginPath();
-  ctx.moveTo(80, labelY + 160);
-  ctx.lineTo(W - 80, labelY + 160);
-  ctx.stroke();
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.moveTo(0, -12); ctx.lineTo(5, -5); ctx.lineTo(12, 0);
+    ctx.lineTo(5, 5); ctx.lineTo(0, 12); ctx.lineTo(-5, 5);
+    ctx.lineTo(-12, 0); ctx.lineTo(-5, -5);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  // 两侧线条
+  const lineGrad1 = ctx.createLinearGradient(60, divY, W/2 - 30, divY);
+  lineGrad1.addColorStop(0, "transparent"); lineGrad1.addColorStop(1, matchColor + "80");
+  ctx.strokeStyle = lineGrad1; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(60, divY); ctx.lineTo(W/2 - 30, divY); ctx.stroke();
+  const lineGrad2 = ctx.createLinearGradient(W/2 + 30, divY, W - 60, divY);
+  lineGrad2.addColorStop(0, matchColor + "80"); lineGrad2.addColorStop(1, "transparent");
+  ctx.strokeStyle = lineGrad2;
+  ctx.beginPath(); ctx.moveTo(W/2 + 30, divY); ctx.lineTo(W - 60, divY); ctx.stroke();
 
-  // 藏头诗标题
-  const acrosticY = labelY + 210;
-  ctx.font = "bold 28px serif";
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  // ===== 藏头诗区域 =====
+  const acrosticStartY = divY + 50;
+  // 标题
+  ctx.font = "bold 26px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = theme.secondary;
   ctx.textAlign = "center";
-  ctx.fillText("— 专属藏头诗 —", W / 2, acrosticY);
+  ctx.fillText("——  专属藏头诗  ——", W / 2, acrosticStartY);
 
-  // 藏头诗内容
-  const lines = acrosticPoem.split("\n").filter(Boolean).slice(0, 5);
+  const lines = acrosticPoem.split("\n").filter(Boolean).slice(0, 4);
+  const lineH = 80;
   lines.forEach((line, i) => {
-    const ly = acrosticY + 55 + i * 65;
-    ctx.font = "bold 36px serif";
+    const ly = acrosticStartY + 55 + i * lineH;
+    // 行底色（奇偶行轻微不同）
+    if (i % 2 === 0) {
+      ctx.fillStyle = matchColor + "08";
+      ctx.fillRect(60, ly - 48, W - 120, lineH - 8);
+    }
+    // 藏头字（加大加色）
+    ctx.font = `bold 46px 'PingFang SC', 'Hiragino Sans GB', serif`;
     ctx.fillStyle = matchColor;
-    ctx.textAlign = "center";
-    ctx.fillText(line.charAt(0), W / 2 - 100, ly);
-    ctx.font = "34px serif";
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillText(line.slice(1), W / 2 + 20, ly);
+    ctx.textAlign = "left";
+    ctx.fillText(line.charAt(0), 80, ly);
+    // 剩余诗句
+    ctx.font = `40px 'PingFang SC', 'Hiragino Sans GB', serif`;
+    ctx.fillStyle = "#2C1810";
+    ctx.textAlign = "left";
+    ctx.fillText(line.slice(1), 140, ly);
   });
 
-  // 底部用户名号和游戏信息
-  const bottomY = H - 100;
-  ctx.strokeStyle = matchColor + "30";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(80, bottomY - 20);
-  ctx.lineTo(W - 80, bottomY - 20);
-  ctx.stroke();
+  // ===== 底部区域 =====
+  const footerY = H - 140;
+  // 底部分隔线
+  const footerLineGrad = ctx.createLinearGradient(60, footerY, W - 60, footerY);
+  footerLineGrad.addColorStop(0, "transparent");
+  footerLineGrad.addColorStop(0.3, matchColor + "60");
+  footerLineGrad.addColorStop(0.7, matchColor + "60");
+  footerLineGrad.addColorStop(1, "transparent");
+  ctx.strokeStyle = footerLineGrad; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, footerY); ctx.lineTo(W - 60, footerY); ctx.stroke();
 
-  ctx.font = "24px sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  // 用户名号
+  ctx.font = "bold 28px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = theme.accent;
   ctx.textAlign = "center";
-  ctx.fillText(`「${nickname}」的本命诗人`, W / 2, bottomY + 10);
+  ctx.fillText(`「${nickname}」 的本命诗人`, W / 2, footerY + 44);
 
-  ctx.font = "22px sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.fillText("天马行空·你的本命诗人是谁", W / 2, bottomY + 45);
+  // 小字底标
+  ctx.font = "22px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = matchColor + "99";
+  ctx.textAlign = "center";
+  ctx.fillText("天马行空 · 你的本命诗人是谁", W / 2, footerY + 80);
+  ctx.font = "20px 'PingFang SC', 'Hiragino Sans GB', sans-serif";
+  ctx.fillStyle = matchColor + "55";
+  ctx.fillText("www.tianmapoet.click", W / 2, footerY + 112);
 
   return canvas.toDataURL("image/png");
 }
@@ -158,19 +244,94 @@ const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
   "李清照": "🌸", "辛弃疾": "⚔️", "白居易": "🎵", "陶渊明": "🌿",
   "王昌龄": "🌅", "孟浩然": "🍃", "杜牧": "🍂", "李商隐": "🌹",
-  "贺知章": "🍶", "张若虚": "🌕", "王之涣": "🦅", "岑参": "❄️",
+  "贺知章": "🍶", "张若虚": "🌕", "王之浣": "🦅", "岑参": "❄️",
   "高适": "🏹", "韦应物": "🍵", "刘禹锡": "🪷", "柳宗元": "🐟",
-  "元稹": "💌", "韩愈": "📚", "温庭筠": "🎶", "李煜": "😢",
-  "冯延巳": "🌫️", "花蕊夫人": "🌺", "韦庄": "🍁", "欧阳修": "🎯",
+  "元稹": "💌", "韩愈": "📚", "温庭筠": "🎶", "李煎": "😢",
+  "冯延巳": "🌫️", "花蔢夫人": "🌺", "韦庄": "🍁", "欧阳修": "🎯",
   "晏殊": "🎴", "柳永": "🌧️", "晏几道": "🌷", "秦观": "🌙",
   "黄庭坚": "🖌️", "周邦彦": "🎻", "陆游": "🗡️", "范成大": "🌾",
-  "杨万里": "☀️", "朱熹": "📖", "姜夔": "🎵", "吴文英": "🌀",
-  "关汉卿": "🎭", "马致远": "🍂", "张养浩": "⚖️", "萨都剌": "🌊",
+  "杨万里": "☀️", "朱熙": "📖", "姜夔": "🎵", "吴文英": "🌀",
+  "关汉卿": "🎭", "马致远": "🍂", "张养浩": "⚖️", "萨都刺": "🌊",
   "白朴": "🎪", "郑光祖": "🎨", "王实甫": "💕", "乔吉": "🌸",
   "刘基": "🔮", "归有光": "🏠", "汤显祖": "🎭", "袁宏道": "🌿",
-  "徐渭": "🖊️", "王世贞": "📜", "纳兰性德": "❄️", "蒲松龄": "👻",
-  "龚自珍": "🌋", "梁启超": "🔥", "曹操": "⚔️", "屈原": "🌊", "李璟": "🌙",
+  "徐渭": "🔊", "王世贞": "📜", "纳兰性德": "❄️", "蒲松龄": "👻",
+  "龚自珍": "🌋", "梁启超": "🔥", "曹操": "⚔️", "屈原": "🌊", "李璊": "🌙",
 };
+
+/**
+ * 诗人专属古风配色系统
+ * 每位诗人根据其风格、朝代、代表意象定制主色调
+ */
+export const POET_THEME_COLORS: Record<string, {
+  primary: string;    // 主色（标题、藏头字、徽章）
+  secondary: string;  // 辅助色（分隔线、边框）
+  bg1: string;        // 背景渐变起始色
+  bg2: string;        // 背景渐变结束色
+  accent: string;     // 强调色（诗人名字颜色）
+  label: string;      // 契合标签文字色
+}> = {
+  // 李白：月白仙气，青莲居士，青白色调
+  "李白": { primary: "#2E6DA4", secondary: "#5B9BD5", bg1: "#EEF6FF", bg2: "#DBEAFE", accent: "#1A4F8A", label: "#2E6DA4" },
+  // 杜甫：忧国忧民，山河大地，深棕色调
+  "杜甫": { primary: "#5C4033", secondary: "#8B6355", bg1: "#FDF6F0", bg2: "#F5E6D8", accent: "#3E2723", label: "#5C4033" },
+  // 王维：诗中有画，青翠山色，翠绿色调
+  "王维": { primary: "#2D7D5A", secondary: "#4CAF85", bg1: "#F0FBF5", bg2: "#DCFCE7", accent: "#1B5E40", label: "#2D7D5A" },
+  // 苏轼：豪放大气，大江东去，水墨蓝色
+  "苏轼": { primary: "#1565C0", secondary: "#42A5F5", bg1: "#EFF8FF", bg2: "#DBEAFE", accent: "#0D47A1", label: "#1565C0" },
+  // 李清照：婉约清丽，海棠红梅，粉红色调
+  "李清照": { primary: "#B5446E", secondary: "#E879A0", bg1: "#FFF0F6", bg2: "#FCE7F3", accent: "#831843", label: "#B5446E" },
+  // 辛弃疾：爱国豪情，剑气山河，次红色调
+  "辛弃疾": { primary: "#B71C1C", secondary: "#EF5350", bg1: "#FFF5F5", bg2: "#FEE2E2", accent: "#7F0000", label: "#B71C1C" },
+  // 白居易：现实主义，江南风情，吴红色调
+  "白居易": { primary: "#C0392B", secondary: "#E74C3C", bg1: "#FFF8F7", bg2: "#FDECEA", accent: "#922B21", label: "#C0392B" },
+  // 陶渊明：归隐田园，采菊东篱，绿茂色调
+  "陶渊明": { primary: "#4A7C59", secondary: "#76B887", bg1: "#F2FBF4", bg2: "#DCFCE7", accent: "#2D5A3D", label: "#4A7C59" },
+  // 屈原：橚江投水，汇求上下，潐蓝色调
+  "屈原": { primary: "#1A5276", secondary: "#2E86C1", bg1: "#EBF5FB", bg2: "#D6EAF8", accent: "#0D2B40", label: "#1A5276" },
+  // 李商隐：沉郁美丽，无题红豆，深紫色调
+  "李商隐": { primary: "#6B2D8B", secondary: "#9B59B6", bg1: "#F9F0FF", bg2: "#F3E8FF", accent: "#4A1A6B", label: "#6B2D8B" },
+  // 李煎：春花秋月，江山故国，幽蓝色调
+  "李煎": { primary: "#2C5F8A", secondary: "#5B9BD5", bg1: "#EEF6FF", bg2: "#DBEAFE", accent: "#1A3A5C", label: "#2C5F8A" },
+  // 孟浩然：隔山隆隆，绿水青山，青翠色调
+  "孟浩然": { primary: "#1B7A5A", secondary: "#34A87E", bg1: "#F0FBF7", bg2: "#D1FAE5", accent: "#0F5240", label: "#1B7A5A" },
+  // 杜牧：秋天红叶，山行偷坐，欺红色调
+  "杜牧": { primary: "#C0392B", secondary: "#E74C3C", bg1: "#FFF5F5", bg2: "#FEE2E2", accent: "#922B21", label: "#C0392B" },
+  // 纳兰性德：冰雪情怀，山海关外，冰蓝色调
+  "纳兰性德": { primary: "#1A6B8A", secondary: "#2E9EC1", bg1: "#EEF9FF", bg2: "#CCEEFF", accent: "#0D3F55", label: "#1A6B8A" },
+  // 陆游：报国情怀，剑门求败，深棕红色调
+  "陆游": { primary: "#8B2500", secondary: "#C0392B", bg1: "#FFF3F0", bg2: "#FFE4DC", accent: "#5C1800", label: "#8B2500" },
+  // 柳永：浅唱低唱，济南烟雨，烟雨灰蓝色调
+  "柳永": { primary: "#546E7A", secondary: "#78909C", bg1: "#F5F8FA", bg2: "#ECEFF1", accent: "#37474F", label: "#546E7A" },
+  // 欧阳修：醒翁赋水，山色有无中，翠绿色调
+  "欧阳修": { primary: "#2E7D32", secondary: "#43A047", bg1: "#F1FBF2", bg2: "#DCFCE7", accent: "#1B5E20", label: "#2E7D32" },
+  // 刘禹锡：汉宫秋月，山上兰花，谷黄色调
+  "刘禹锡": { primary: "#B8860B", secondary: "#DAA520", bg1: "#FFFDF0", bg2: "#FEF9C3", accent: "#7A5800", label: "#B8860B" },
+  // 曹操：对酒当歌，气吸山河，钢铁灰色调
+  "曹操": { primary: "#455A64", secondary: "#607D8B", bg1: "#F4F7F9", bg2: "#ECEFF1", accent: "#263238", label: "#455A64" },
+  // 张若虚：春江花月，天海一色，月白色调
+  "张若虚": { primary: "#4A6FA5", secondary: "#7BA7D4", bg1: "#EEF5FF", bg2: "#DBEAFE", accent: "#2C4A7A", label: "#4A6FA5" },
+  // 王之浣：登鸹雀楼，落霞孤鹜，澄金色调
+  "王之浣": { primary: "#C8860C", secondary: "#E6A817", bg1: "#FFFBEB", bg2: "#FEF3C7", accent: "#8A5A00", label: "#C8860C" },
+  // 岑参：雪山天山，幽幽幽幽，冰雪白色调
+  "岑参": { primary: "#1E6B8A", secondary: "#2E9EC1", bg1: "#EEF9FF", bg2: "#E0F2FE", accent: "#0D3F55", label: "#1E6B8A" },
+  // 周邦彦：周密婷约，宫商流音，沉香紫色调
+  "周邦彦": { primary: "#7B3F8A", secondary: "#9B59B6", bg1: "#F9F0FF", bg2: "#F3E8FF", accent: "#4A1A6B", label: "#7B3F8A" },
+  // 黄庭坚：江西诗派，水墨丹青，湖蓝色调
+  "黄庭坚": { primary: "#1B6B8A", secondary: "#2E9EC1", bg1: "#EEF9FF", bg2: "#E0F2FE", accent: "#0D3F55", label: "#1B6B8A" },
+  // 姜夔：山水清音，白石道人，沉静灰蓝色调
+  "姜夔": { primary: "#4A6B7A", secondary: "#6B8FA0", bg1: "#F2F8FA", bg2: "#E0EEF3", accent: "#2C4A55", label: "#4A6B7A" },
+};
+
+/** 获取诗人主题色（没有专属配色则根据契合度回退） */
+function getPoetThemeColor(poetName: string, matchScore: number) {
+  const poetTheme = POET_THEME_COLORS[poetName];
+  if (poetTheme) return poetTheme;
+  // 回退：根据契合度分配色
+  if (matchScore >= 90) return { primary: "#C0392B", secondary: "#E74C3C", bg1: "#FFF5F5", bg2: "#FEE2E2", accent: "#922B21", label: "#C0392B" };
+  if (matchScore >= 75) return { primary: "#C8960C", secondary: "#E6A817", bg1: "#FFFBEB", bg2: "#FEF3C7", accent: "#8A5A00", label: "#C8960C" };
+  if (matchScore >= 60) return { primary: "#2D7D5A", secondary: "#4CAF85", bg1: "#F0FBF5", bg2: "#DCFCE7", accent: "#1B5E40", label: "#2D7D5A" };
+  return { primary: "#546E7A", secondary: "#78909C", bg1: "#F5F8FA", bg2: "#ECEFF1", accent: "#37474F", label: "#546E7A" };
+}
 
 const MATCH_COLORS = [
   { min: 90, color: "#C0392B", bg: "#FEF2F2", label: "天命契合" },
@@ -740,38 +901,68 @@ export default function Destiny() {
       {/* Canvas分享卡片弹窗 */}
       {showCardModal && cardDataUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{ background: "rgba(0,0,0,0.85)" }}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-end"
+          style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowCardModal(false); }}
         >
           <div
-            className="w-full max-w-sm rounded-t-3xl p-5"
-            style={{ background: "#1a0a00", paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
+            className="w-full max-w-md rounded-t-3xl p-5"
+            style={{ background: "#FAF3E8", paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
           >
             <div className="flex justify-center mb-3">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
             </div>
-            <h3 className="text-center font-display text-white text-base mb-1">🎨 分享卡片已生成</h3>
-            <p className="text-center text-white/50 text-xs mb-4">在微信中长按图片即可保存到相册</p>
-            <div className="rounded-xl overflow-hidden mb-4" style={{ maxHeight: "55vh", overflowY: "auto" }}>
+            <h3 className="text-center font-display text-base font-bold mb-1" style={{ color: "#2C1810" }}>🎨 分享卡片已生成</h3>
+            <p className="text-center text-xs mb-3" style={{ color: "#8B6B4A" }}>
+              微信中长按图片可保存到相册，浏览器可点「保存图片」
+            </p>
+            {/* 卡片预览 */}
+            <div
+              className="rounded-2xl overflow-hidden mb-4 mx-auto"
+              style={{ maxHeight: "52vh", overflowY: "auto", boxShadow: "0 4px 24px rgba(0,0,0,0.18)", maxWidth: "320px" }}
+            >
               <img
                 src={cardDataUrl}
-                alt="分享卡片"
+                alt="本命诗人分享卡片"
                 className="w-full block"
-                style={{ borderRadius: "12px" }}
+                style={{ display: "block" }}
               />
             </div>
-            <a
-              href={cardDataUrl}
-              download="天马本命诗人.png"
-              className="block w-full py-3 rounded-2xl font-bold text-base text-center text-white mb-2 transition-all active:scale-95"
+            {/* 保存按钮：同时支持 download 和长按提示 */}
+            <button
+              onClick={() => {
+                // 尝试使用 download 属性
+                const a = document.createElement("a");
+                a.href = cardDataUrl;
+                a.download = "天马本命诗人.png";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                // 微信内置浏览器不支持 download，提示用户长按
+                setTimeout(() => {
+                  toast.success("如未自动保存，请长按图片选「保存到相册」", { duration: 4000 });
+                }, 500);
+              }}
+              className="w-full py-3.5 rounded-2xl font-bold text-base text-white mb-2 transition-all active:scale-95"
               style={{ background: "var(--vermilion)" }}
             >
-              保存到相册
-            </a>
+              💾 保存到相册
+            </button>
+            <button
+              onClick={() => {
+                // 复制分享文案
+                const text = `我的本命诗人是「${destiny?.poet ? (destiny.poet as {name:string}).name : "诗词达人"}」！www.tianmapoet.click`;
+                navigator.clipboard?.writeText(text).then(() => toast.success("分享文案已复制，可直接发微信"));
+              }}
+              className="w-full py-3 rounded-2xl font-semibold text-sm mb-2 transition-all active:scale-95 border"
+              style={{ background: "#07C160", color: "white", borderColor: "#07C160" }}
+            >
+              📱 复制分享文案
+            </button>
             <button
               onClick={() => setShowCardModal(false)}
-              className="w-full py-2 text-sm text-white/40"
+              className="w-full py-2 text-sm"
+              style={{ color: "#8B6B4A" }}
             >
               关闭
             </button>

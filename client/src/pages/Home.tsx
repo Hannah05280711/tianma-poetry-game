@@ -6,6 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { loadLocalState, getRankByScore, type LocalGameState } from "@/lib/localGameState";
 import WelcomeModal from "@/components/WelcomeModal";
 import { getTodayDisplay, getUpcomingEvents, type CalendarEvent } from "@/lib/calendarData";
+import { isLanternFestivalSeason } from "@/lib/lanternRiddleData";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -329,6 +330,37 @@ export default function Home() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* 元宵灯谜彩蛋入口（元宵节前后显示） */}
+        {isLanternFestivalSeason() && (
+          <button
+            onClick={() => navigate("/lantern-riddle")}
+            className="w-full rounded-2xl p-4 mb-4 text-left transition-all active:scale-[0.98] relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #1A0A00 0%, #3D1500 50%, #1A0A00 100%)",
+              border: "1px solid rgba(255,200,50,0.4)",
+              boxShadow: "0 4px 20px rgba(232,69,69,0.25)",
+            }}
+          >
+            {/* 背景装饰灯笼 */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl opacity-20 select-none">🏮</div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-2xl">🏮</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: "rgba(255,200,50,0.2)", color: "#FFD700", border: "1px solid rgba(255,200,50,0.3)" }}>
+                  元宵彩蛋
+                </span>
+              </div>
+              <div className="font-bold text-base mb-0.5" style={{ color: "#FFD700", letterSpacing: "0.08em" }}>
+                元宵灯谜大会
+              </div>
+              <div className="text-xs" style={{ color: "#FFA04099" }}>
+                正月十五 · 猜灯谜赢彩头 · 诗词文字典故
+              </div>
+            </div>
+          </button>
         )}
 
         {/* Quick Actions */}
