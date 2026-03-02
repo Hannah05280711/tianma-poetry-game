@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { getLanternFestivalRiddles, type LanternRiddle } from "@/lib/lanternRiddleData";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
+import { playFireworkSound, playFirecrackerSound, initAudio } from "@/lib/soundEffects";
+import { loadLocalState, updateLocalState } from "@/lib/localGameState";
 
 // 灯笼颜色
 const LANTERN_COLORS = ["#E84545", "#FF8C00", "#E84545", "#C0392B", "#FF6B35"];
@@ -100,10 +102,15 @@ export default function LanternRiddle() {
     setIsCorrect(correct);
     if (correct) {
       setScore(s => s + (timeLeft > 10 ? 20 : timeLeft > 5 ? 15 : 10));
-      // 触发烟花
+      // 触发烟花动画
       burst(window.innerWidth / 2, window.innerHeight / 3);
       setTimeout(() => burst(window.innerWidth * 0.3, window.innerHeight * 0.4), 150);
       setTimeout(() => burst(window.innerWidth * 0.7, window.innerHeight * 0.4), 300);
+      // 播放烟花声效（欢快升调）
+      playFireworkSound();
+    } else if (option !== "__timeout__") {
+      // 播放鹭炮声效（降调）
+      playFirecrackerSound();
     }
     setShowExplanation(true);
   }, [selectedOption, riddles, currentIdx, timeLeft, burst]);
@@ -125,6 +132,38 @@ export default function LanternRiddle() {
   const riddle = riddles[currentIdx];
   const totalRiddles = riddles.length;
 
+  // 答对题数计算（基于分数估算）
+  const correctCount = Math.round(score / 15);
+
+  // 结果页保存灯谜达人数据 + 解锁成就
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (phase !== "result") return;
+    const RIDDLE_ACHIEVEMENTS = [
+      { id: "riddle_10", label: "灯谜初探", desc: "累计猜对 10 道灯谜", icon: "🎏", threshold: 10 },
+      { id: "riddle_30", label: "灯谜達人", desc: "累计猜对 30 道灯谜", icon: "🏶", threshold: 30 },
+      { id: "riddle_50", label: "灯谜大师", desc: "累计猜对 50 道灯谜", icon: "🌟", threshold: 50 },
+    ];
+    const newState = updateLocalState(prev => ({
+      ...prev,
+      riddleCorrectTotal: (prev.riddleCorrectTotal || 0) + correctCount,
+      riddlePlayCount: (prev.riddlePlayCount || 0) + 1,
+    }));
+    const currentTotal = newState.riddleCorrectTotal;
+    const alreadyUnlocked = newState.riddleAchievements || [];
+    const toUnlock = RIDDLE_ACHIEVEMENTS.filter(
+      a => currentTotal >= a.threshold && !alreadyUnlocked.includes(a.id)
+    );
+    if (toUnlock.length > 0) {
+      updateLocalState(prev => ({
+        ...prev,
+        riddleAchievements: [...(prev.riddleAchievements || []), ...toUnlock.map(a => a.id)],
+      }));
+      setNewAchievements(toUnlock.map(a => `${a.icon} ${a.label}`));
+    }
+  }, [phase]);
+
   // 结果评语
   const maxScore = totalRiddles * 20;
   const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
@@ -138,7 +177,8 @@ export default function LanternRiddle() {
     : "灯谜难倒英雄汉，不妨再试一次，熟能生巧！";
 
   const typeLabel: Record<string, string> = {
-    poetry: "诗词谜", word: "文字谜", poet: "诗人谜", classic: "典故谜"
+    poetry: "诗词谜", word: "文字谜", poet: "诗人谜", classic: "典故谜",
+    feihua: "飞花令", couplet: "对对联"
   };
   const diffLabel = ["", "简单", "中等", "困难"];
 
@@ -186,16 +226,16 @@ export default function LanternRiddle() {
               <div className="p-6 text-center">
                 <div className="text-6xl mb-3">🏮</div>
                 <h1 className="text-2xl font-bold mb-1" style={{ color: "#FFD700", letterSpacing: "0.12em" }}>
-                  元宵灯谜
+                  诗词灯谜馆
                 </h1>
                 <p className="text-sm mb-4" style={{ color: "#FFA040", letterSpacing: "0.06em" }}>
-                  正月十五 · 猜灯谜赢彩头
+                  传统文化趣味问答 · 全年常驻开放
                 </p>
                 <div className="rounded-xl p-4 mb-5" style={{ background: "rgba(0,0,0,0.3)" }}>
                   <p className="text-sm leading-relaxed" style={{ color: "#FFD090" }}>
-                    元宵节猜灯谜，是中华千年传统。<br />
-                    本次共 <span style={{ color: "#FFD700" }}>10</span> 道灯谜，<br />
-                    涵盖诗词谜、文字谜、诗人谜、典故谜。<br />
+                    猜灯谜是中华千年传统，趣味无穷。<br />
+                    本次共 <span style={{ color: "#FFD700" }}>12</span> 道题，<br />
+                    涵盖诗词谜、文字谜、飞花令、对对联。<br />
                     每题限时 <span style={{ color: "#FFD700" }}>20</span> 秒，越快答越高分！
                   </p>
                 </div>
@@ -203,8 +243,8 @@ export default function LanternRiddle() {
                   {[
                     { icon: "📜", label: "诗词谜", desc: "以诗句为谜面" },
                     { icon: "🔤", label: "文字谜", desc: "拆字组字猜谜" },
-                    { icon: "✍️", label: "诗人谜", desc: "猜出诗人身份" },
-                    { icon: "📚", label: "典故谜", desc: "传统节日知识" },
+                    { icon: "🌸", label: "飞花令", desc: "含指定字的诗句" },
+                    { icon: "🏷️", label: "对对联", desc: "上联对下联" },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl p-3 text-center"
                       style={{ background: "rgba(255,200,50,0.08)", border: "1px solid rgba(255,200,50,0.15)" }}>
@@ -215,7 +255,7 @@ export default function LanternRiddle() {
                   ))}
                 </div>
                 <button
-                  onClick={initGame}
+                  onClick={() => { initAudio(); initGame(); }}
                   className="w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-95"
                   style={{
                     background: "linear-gradient(135deg, #E84545, #FF8C00)",
@@ -382,6 +422,16 @@ export default function LanternRiddle() {
                     {resultMsg}
                   </p>
                 </div>
+
+                {/* 新解锁成就 */}
+                {newAchievements.length > 0 && (
+                  <div className="rounded-xl p-4 mb-4" style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.4)" }}>
+                    <div className="text-xs font-semibold mb-2" style={{ color: "#FFD700" }}>🏆 解锁新成就！</div>
+                    {newAchievements.map((a, i) => (
+                      <div key={i} className="text-sm font-bold" style={{ color: "#FFF176" }}>{a}</div>
+                    ))}
+                  </div>
+                )}
 
                 {/* 统计 */}
                 <div className="grid grid-cols-3 gap-3 mb-5">

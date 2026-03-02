@@ -1,6 +1,6 @@
 /**
- * 元宵节灯谜数据库
- * 包含：诗词灯谜、传统文字灯谜、诗人灯谜
+ * 诗词灯谜馆数据库
+ * 包含：诗词灯谜、传统文字灯谜、诗人灯谜、飞花令、对对联
  */
 
 export interface LanternRiddle {
@@ -8,7 +8,7 @@ export interface LanternRiddle {
   riddle: string;       // 谜面
   hint?: string;        // 提示（可选）
   answer: string;       // 谜底
-  type: "poetry" | "word" | "poet" | "classic"; // 类型
+  type: "poetry" | "word" | "poet" | "classic" | "feihua" | "couplet"; // 类型
   difficulty: 1 | 2 | 3; // 难度：1简单 2中等 3困难
   explanation: string;  // 解析
   options: string[];    // 四个选项（含正确答案）
@@ -424,14 +424,309 @@ export const LANTERN_RIDDLES: LanternRiddle[] = [
   },
 ];
 
+// ===== 飞花令（指定关键字，选含该字的诗句） =====
+export const FEIHUA_RIDDLES: LanternRiddle[] = [
+  {
+    id: 41,
+    riddle: "飞花令「月」：以下哪句诗中含有「月」字？",
+    hint: "选择含「月」的诗句",
+    answer: "举头望明月，低头思故乡",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "李白《静夜思》中「举头望明月」含有「月」字。飞花令是一种诗词游戏，选出含指定字的诗句。",
+    options: ["举头望明月，低头思故乡", "春眠不觉晓，处处闻啼鸟", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 42,
+    riddle: "飞花令「风」：以下哪句诗中含有「风」字？",
+    hint: "选择含「风」的诗句",
+    answer: "野火烧不尽，春风吹又生",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "白居易《赋得古原草送别》中「春风吹又生」含有「风」字。",
+    options: ["野火烧不尽，春风吹又生", "举头望明月，低头思故乡", "春眠不觉晓，处处闻啼鸟", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 43,
+    riddle: "飞花令「花」：以下哪句诗中含有「花」字？",
+    hint: "选择含「花」的诗句",
+    answer: "春色满园关不住，一枝红杏出墙来",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "叶绍翁《游园不值》中「一枝红杏出墙来」，杏即杏花，含「花」意。另外「春色满园」中也暗含百花。",
+    options: ["春色满园关不住，一枝红杏出墙来", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "会当凌绝顶，一览众山小"],
+  },
+  {
+    id: 44,
+    riddle: "飞花令「雪」：以下哪句诗中含有「雪」字？",
+    hint: "选择含「雪」的诗句",
+    answer: "山回路转不见君，雪上空留马行处",
+    type: "feihua",
+    difficulty: 2,
+    explanation: "岑参《白雪歌送武判官归京》中「雪上空留马行处」含有「雪」字。",
+    options: ["山回路转不见君，雪上空留马行处", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 45,
+    riddle: "飞花令「水」：以下哪句诗中含有「水」字？",
+    hint: "选择含「水」的诗句",
+    answer: "明月松间照，清泉石上流",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "王维《山居秋暝》中「清泉石上流」，泉即流水，含「水」意。",
+    options: ["明月松间照，清泉石上流", "举头望明月，低头思故乡", "大江东去，浪淘尽，千古风流人物", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 46,
+    riddle: "飞花令「山」：以下哪句诗中含有「山」字？",
+    hint: "选择含「山」的诗句",
+    answer: "会当凌绝顶，一览众山小",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "杜甫《望岳》中「一览众山小」含有「山」字。",
+    options: ["会当凌绝顶，一览众山小", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 47,
+    riddle: "飞花令「春」：以下哪句诗中含有「春」字？",
+    hint: "选择含「春」的诗句",
+    answer: "春眠不觉晓，处处闻啼鸟",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "孟浩然《春晓》中「春眠不觉晓」含有「春」字。",
+    options: ["春眠不觉晓，处处闻啼鸟", "举头望明月，低头思故乡", "会当凌绝顶，一览众山小", "山回路转不见君，雪上空留马行处"],
+  },
+  {
+    id: 48,
+    riddle: "飞花令「鸟」：以下哪句诗中含有「鸟」字？",
+    hint: "选择含「鸟」的诗句",
+    answer: "两个黄鹂鸣翠柳，一行白鹭上青天",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "杜甫《绝句》中「两个黄鹂鸣翠柳」，黄鹂是鸟，含「鸟」意。",
+    options: ["两个黄鹂鸣翠柳，一行白鹭上青天", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 49,
+    riddle: "飞花令「绿」：以下哪句诗中含有「绿」字？",
+    hint: "选择含「绿」的诗句",
+    answer: "春风又绿江南岸，明月何时照我还",
+    type: "feihua",
+    difficulty: 2,
+    explanation: "王安石《泊船瓜洲》中「春风又绿江南岸」含有「绿」字。",
+    options: ["春风又绿江南岸，明月何时照我还", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 50,
+    riddle: "飞花令「江」：以下哪句诗中含有「江」字？",
+    hint: "选择含「江」的诗句",
+    answer: "大江东去，浪淘尽，千古风流人物",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "苏轼《念奴娇·赤壁怀古》中「大江东去」含有「江」字。",
+    options: ["大江东去，浪淘尽，千古风流人物", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 61,
+    riddle: "飞花令「云」：以下哪句诗中含有「云」字？",
+    hint: "选择含「云」的诗句",
+    answer: "白云生处有人家",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "杜牧《山行》中「白云生处有人家」含有「云」字。",
+    options: ["白云生处有人家", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 62,
+    riddle: "飞花令「酒」：以下哪句诗中含有「酒」字？",
+    hint: "选择含「酒」的诗句",
+    answer: "劝君更尽一杯酒，西出阳关无故人",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "王维《送元二使安西》中「劝君更尽一杯酒」含有「酒」字。",
+    options: ["劝君更尽一杯酒，西出阳关无故人", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 63,
+    riddle: "飞花令「竹」：以下哪句诗中含有「竹」字？",
+    hint: "选择含「竹」的诗句",
+    answer: "竹外桃花三两枝，春江水暖鸭先知",
+    type: "feihua",
+    difficulty: 2,
+    explanation: "苏轼《惠崇春江晚景》中「竹外桃花三两枝」含有「竹」字。",
+    options: ["竹外桃花三两枝，春江水暖鸭先知", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 64,
+    riddle: "飞花令「梅」：以下哪句诗中含有「梅」字？",
+    hint: "选择含「梅」的诗句",
+    answer: "墙角数枝梅，凌寒独自开",
+    type: "feihua",
+    difficulty: 1,
+    explanation: "王安石《梅花》中「墙角数枝梅」含有「梅」字。",
+    options: ["墙角数枝梅，凌寒独自开", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+  {
+    id: 65,
+    riddle: "飞花令「秋」：以下哪句诗中含有「秋」字？",
+    hint: "选择含「秋」的诗句",
+    answer: "停车坐爱枫林晚，霜叶红于二月花",
+    type: "feihua",
+    difficulty: 2,
+    explanation: "杜牧《山行》中「霜叶红于二月花」描写深秋枫叶，含「秋」意。另外「枫林晚」也是秋景。",
+    options: ["停车坐爱枫林晚，霜叶红于二月花", "举头望明月，低头思故乡", "野火烧不尽，春风吹又生", "春色满园关不住，一枝红杏出墙来"],
+  },
+];
+
+// ===== 对对联（给出上联，选下联） =====
+export const COUPLET_RIDDLES: LanternRiddle[] = [
+  {
+    id: 51,
+    riddle: "对对联——上联：春回大地千山秀",
+    hint: "选出匹配的下联",
+    answer: "日暖神州万木荣",
+    type: "couplet",
+    difficulty: 2,
+    explanation: "上联「春回大地千山秀」，对应下联「日暖神州万木荣」，春对日，大地对神州，千山对万木，秀对荣。",
+    options: ["日暖神州万木荣", "风吹大地万花开", "雪覆山川千里白", "春来山水一山青"],
+  },
+  {
+    id: 52,
+    riddle: "对对联——上联：风调雨顺年丰收",
+    hint: "选出匹配的下联",
+    answer: "家和人兴万事兴",
+    type: "couplet",
+    difficulty: 1,
+    explanation: "上联「风调雨顺年丰收」，对应下联「家和人兴万事兴」，是常见的春联，寄托对年丰收、家庭和美的美好愿望。",
+    options: ["家和人兴万事兴", "天高云淡万里明", "山高水长年年好", "日出东方千山红"],
+  },
+  {
+    id: 53,
+    riddle: "对对联——上联：春花秋月冬雪夏雨",
+    hint: "选出匹配的下联",
+    answer: "唐诗宋词元曲明文",
+    type: "couplet",
+    difficulty: 3,
+    explanation: "上联「春花秋月冬雪夏雨」写四季自然，对应下联「唐诗宋词元曲明文」写四朝文学，对仗工整。",
+    options: ["唐诗宋词元曲明文", "山高水长年年好", "天高云淡万里明", "日出东方千山红"],
+  },
+  {
+    id: 54,
+    riddle: "对对联——上联：春风得意马蹄疾",
+    hint: "选出匹配的下联",
+    answer: "秋水共长天一色",
+    type: "couplet",
+    difficulty: 2,
+    explanation: "上联「春风得意马蹄疾」对应下联「秋水共长天一色」，春对秋，风对水，马蹄对天色，对仗工整。",
+    options: ["秋水共长天一色", "家和万事兴", "山高水长年年好", "日出东方千山红"],
+  },
+  {
+    id: 55,
+    riddle: "对对联——上联：天下兴亡，匹夫有责",
+    hint: "选出匹配的下联",
+    answer: "山高水长，岁岁平安",
+    type: "couplet",
+    difficulty: 3,
+    explanation: "上联「天下兴亡，匹夫有责」出自顾炎武《日知录》，对应下联应展现对家国的情怀。",
+    options: ["山高水长，岁岁平安", "家和万事兴，年年大吉利", "春花秋月，岁岁平安", "日出东方，岁岁年年好"],
+  },
+  {
+    id: 56,
+    riddle: "对对联——上联：海内存知己",
+    hint: "选出匹配的下联",
+    answer: "天涯若比邻",
+    type: "couplet",
+    difficulty: 2,
+    explanation: "王勃《送杜少府之任蜀州》中「海内存知己，天涯若比邻」，上下联对仗工整。",
+    options: ["天涯若比邻", "山高水长年年好", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 57,
+    riddle: "对对联——上联：山重水复疑无路",
+    hint: "选出匹配的下联",
+    answer: "柳暗花明又一村",
+    type: "couplet",
+    difficulty: 2,
+    explanation: "陆游《游山西村》中「山重水复疑无路，柳暗花明又一村」，上下联对仗工整。",
+    options: ["柳暗花明又一村", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 58,
+    riddle: "对对联——上联：春色满园关不住",
+    hint: "选出匹配的下联",
+    answer: "一枝红杏出墙来",
+    type: "couplet",
+    difficulty: 1,
+    explanation: "叶绍翁《游园不值》中「春色满园关不住，一枝红杏出墙来」，上下联对仗工整。",
+    options: ["一枝红杏出墙来", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 59,
+    riddle: "对对联——上联：水光潋滟晴方好",
+    hint: "选出匹配的下联",
+    answer: "山色空蒙雨亦奇",
+    type: "couplet",
+    difficulty: 2,
+    explanation: "苏轼《饮湖上初晴后雨》中「水光潋滟晴方好，山色空蒙雨亦奇」，上下联对仗工整。",
+    options: ["山色空蒙雨亦奇", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 60,
+    riddle: "对对联——上联：天若有情天亦老",
+    hint: "选出匹配的下联",
+    answer: "人间正道是沧桑",
+    type: "couplet",
+    difficulty: 3,
+    explanation: "毛泽东《人民解放军占领南京》中「天若有情天亦老，人间正道是沧桑」，化用李贺《金铜仙人辞汉歌》诗句。",
+    options: ["人间正道是沧桑", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 66,
+    riddle: "对对联——上联：欲穷千里目",
+    hint: "选出匹配的下联",
+    answer: "更上一层楼",
+    type: "couplet",
+    difficulty: 1,
+    explanation: "王之涣《登鹳雀楼》中「欲穷千里目，更上一层楼」，上下联对仗工整。",
+    options: ["更上一层楼", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 67,
+    riddle: "对对联——上联：两岸猿声啼不住",
+    hint: "选出匹配的下联",
+    answer: "轻舟已过万重山",
+    type: "couplet",
+    difficulty: 1,
+    explanation: "李白《早发白帝城》中「两岸猿声啼不住，轻舟已过万重山」，上下联对仗工整。",
+    options: ["轻舟已过万重山", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+  {
+    id: 68,
+    riddle: "对对联——上联：但愿人长久",
+    hint: "选出匹配的下联",
+    answer: "千里共婵娟",
+    type: "couplet",
+    difficulty: 1,
+    explanation: "苏轼《水调歌头》中「但愿人长久，千里共婵娟」，上下联对仗工整，是中秋节最著名的词句。",
+    options: ["千里共婵娟", "天高云淡万里明", "家和万事兴", "日出东方千山红"],
+  },
+];
+
+// 合并所有题目
+export const ALL_RIDDLES: LanternRiddle[] = [
+  ...LANTERN_RIDDLES,
+  ...FEIHUA_RIDDLES,
+  ...COUPLET_RIDDLES,
+];
+
 /** 按难度分组获取灯谜 */
 export function getRiddlesByDifficulty(difficulty: 1 | 2 | 3): LanternRiddle[] {
-  return LANTERN_RIDDLES.filter(r => r.difficulty === difficulty);
+  return ALL_RIDDLES.filter(r => r.difficulty === difficulty);
 }
 
 /** 获取随机灯谜（指定数量，可按类型过滤） */
 export function getRandomRiddles(count: number, type?: LanternRiddle["type"]): LanternRiddle[] {
-  let pool = type ? LANTERN_RIDDLES.filter(r => r.type === type) : [...LANTERN_RIDDLES];
+  let pool = type ? ALL_RIDDLES.filter(r => r.type === type) : [...ALL_RIDDLES];
   // 打乱顺序
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -440,14 +735,16 @@ export function getRandomRiddles(count: number, type?: LanternRiddle["type"]): L
   return pool.slice(0, count);
 }
 
-/** 获取元宵节专题灯谜（混合各类型，共10题） */
+/** 获取诗词灯谜馆题目（混合各类型，共12题） */
 export function getLanternFestivalRiddles(): LanternRiddle[] {
   // 各类型各取若干
-  const poetry = getRandomRiddles(3, "poetry");
-  const word = getRandomRiddles(3, "word");
+  const poetry = getRandomRiddles(2, "poetry");
+  const word = getRandomRiddles(2, "word");
   const poet = getRandomRiddles(2, "poet");
   const classic = getRandomRiddles(2, "classic");
-  const all = [...poetry, ...word, ...poet, ...classic];
+  const feihua = getRandomRiddles(2, "feihua");
+  const couplet = getRandomRiddles(2, "couplet");
+  const all = [...poetry, ...word, ...poet, ...classic, ...feihua, ...couplet];
   // 再次打乱
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

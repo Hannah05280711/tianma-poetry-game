@@ -33,6 +33,10 @@ export interface LocalGameState {
   weeklyDate: string;                       // 本周起始日期
   // 昵称（可选）
   nickname: string;
+  // 灯谜馆进度
+  riddleCorrectTotal: number;    // 灯谜馆累计答对题数
+  riddlePlayCount: number;       // 灯谜馆游玩局数
+  riddleAchievements: string[];  // 已解锁的灯谜成就ID
 }
 
 const DEFAULT_STATE: LocalGameState = {
@@ -58,6 +62,9 @@ const DEFAULT_STATE: LocalGameState = {
   weeklyScore: 0,
   weeklyDate: "",
   nickname: "诗词侠客",
+  riddleCorrectTotal: 0,
+  riddlePlayCount: 0,
+  riddleAchievements: [],
 };
 
 export function loadLocalState(): LocalGameState {

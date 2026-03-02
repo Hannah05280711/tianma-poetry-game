@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { loadLocalState } from "@/lib/localGameState";
 
 const RANK_TIERS = [
   {
@@ -275,12 +276,26 @@ function RingBadge({
   );
 }
 
+const RIDDLE_ACHIEVEMENTS = [
+  { id: "riddle_10", name: "灯谜入门", emoji: "🏮", desc: "猜对 10 道灯谜", required: 10, color: "#C8860C" },
+  { id: "riddle_30", name: "灯谜高手", emoji: "🎆", desc: "猜对 30 道灯谜", required: 30, color: "#B5446E" },
+  { id: "riddle_50", name: "灯谜达人", emoji: "🎉", desc: "猜对 50 道灯谜", required: 50, color: "#2E6DA4" },
+];
+
 export default function Rank() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   // 记录上次访问时的最高段位，用于检测新解锁
   const [prevTierIdx, setPrevTierIdx] = useState<number | null>(null);
   const [newlyUnlockedTier, setNewlyUnlockedTier] = useState<string | null>(null);
+  const [riddleCorrect, setRiddleCorrect] = useState(0);
+  const [localScore, setLocalScore] = useState(0);
+
+  useEffect(() => {
+    const state = loadLocalState();
+    setRiddleCorrect(state.riddleCorrectTotal ?? 0);
+    setLocalScore(state.totalScore ?? 0);
+  }, []);
 
   const { data: gameState } = trpc.game.getState.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -606,6 +621,60 @@ export default function Rank() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* 诗词灯谜馆成就 */}
+      <div className="px-4 pb-6">
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span style={{ fontSize: "20px" }}>🏮</span>
+            <h2 className="font-semibold text-foreground" style={{ fontSize: "17px" }}>诗词灯谜馆成就</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {RIDDLE_ACHIEVEMENTS.map((ach) => {
+              const unlocked = riddleCorrect >= ach.required;
+              return (
+                <div
+                  key={ach.id}
+                  className="rounded-2xl p-3 text-center border transition-all"
+                  style={{
+                    background: unlocked ? `${ach.color}12` : "var(--muted)",
+                    borderColor: unlocked ? `${ach.color}40` : "var(--border)",
+                    opacity: unlocked ? 1 : 0.6,
+                  }}
+                >
+                  <div style={{ fontSize: "32px", filter: unlocked ? "none" : "grayscale(1)" }}>
+                    {ach.emoji}
+                  </div>
+                  <div
+                    className="font-semibold mt-1"
+                    style={{ fontSize: "13px", color: unlocked ? ach.color : "var(--muted-foreground)" }}
+                  >
+                    {ach.name}
+                  </div>
+                  <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>
+                    {ach.desc}
+                  </div>
+                  {unlocked ? (
+                    <div
+                      className="mt-1.5 text-xs font-medium rounded-full px-2 py-0.5 inline-block"
+                      style={{ background: `${ach.color}20`, color: ach.color }}
+                    >
+                      已解锁
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 text-xs text-muted-foreground">
+                      {riddleCorrect}/{ach.required}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-center text-muted-foreground mt-3" style={{ fontSize: "12px" }}>
+            已累计猜对 <span className="font-semibold" style={{ color: "#C8860C" }}>{riddleCorrect}</span> 道灯谜
+          </p>
         </div>
       </div>
 
