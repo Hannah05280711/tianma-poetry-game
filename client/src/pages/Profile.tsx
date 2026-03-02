@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
 import { useSoundSettings } from "@/hooks/useSoundSettings";
 import { isVibrationSupported } from "@/lib/haptics";
-import { loadLocalState, getRankByScore, updateLocalNickname, type LocalGameState } from "@/lib/localGameState";
+import { loadLocalState, saveLocalState, getRankByScore, updateLocalNickname, type LocalGameState } from "@/lib/localGameState";
 import { toast } from "sonner";
 
 const RANK_COLORS: Record<string, string> = {
@@ -36,6 +36,46 @@ export default function Profile() {
   const accuracy = localState && localState.totalAnswered > 0
     ? Math.round((localState.totalCorrect / localState.totalAnswered) * 100)
     : 0;
+
+  // 存档码导出
+  const [showArchive, setShowArchive] = useState(false);
+  const [archiveCode, setArchiveCode] = useState("");
+  const [importInput, setImportInput] = useState("");
+  const [importMode, setImportMode] = useState(false);
+
+  const handleExport = () => {
+    const state = loadLocalState();
+    const json = JSON.stringify(state);
+    const code = btoa(encodeURIComponent(json));
+    setArchiveCode(code);
+    setImportMode(false);
+    setShowArchive(true);
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(archiveCode);
+      toast.success("存档码已复制到剪贴板");
+    } catch {
+      toast.error("复制失败，请手动长按选择复制");
+    }
+  };
+
+  const handleImport = () => {
+    try {
+      const json = decodeURIComponent(atob(importInput.trim()));
+      const parsed = JSON.parse(json) as Partial<LocalGameState>;
+      if (typeof parsed.totalScore !== "number") throw new Error("格式错误");
+      const current = loadLocalState();
+      saveLocalState({ ...current, ...parsed });
+      setLocalState(loadLocalState());
+      setShowArchive(false);
+      setImportInput("");
+      toast.success("存档恢复成功！");
+    } catch {
+      toast.error("存档码无效，请检查后重试");
+    }
+  };
 
   const handleSaveName = () => {
     const trimmed = nameInput.trim();
@@ -222,13 +262,89 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* 数据说明 */}
-      <div className="rounded-xl p-3 mb-4 border text-center"
-        style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-        <p className="text-xs text-muted-foreground">
-          游戏数据存储在本设备浏览器中，清除浏览器缓存后数据将丢失
+      {/* 存档码 */}
+      <div className="rounded-2xl p-4 mb-4 bg-card border border-border">
+        <h3 className="font-semibold text-sm mb-3 text-foreground">💾 数据备份</h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          游戏数据存储在本设备浏览器中，清除缓存后数据将丢失。导出存档码可在换设备或清除数据后恢复进度。
         </p>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
+            style={{ background: "var(--vermilion)" }}
+          >
+            📤 导出存档码
+          </button>
+          <button
+            onClick={() => { setImportMode(true); setShowArchive(true); }}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all active:scale-95"
+            style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            📥 导入存档码
+          </button>
+        </div>
       </div>
+
+      {/* 存档码弹窗 */}
+      {showArchive && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowArchive(false); }}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl p-6"
+            style={{ background: "var(--background)", paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
+          >
+            <div className="flex justify-center mb-4">
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
+            </div>
+            {!importMode ? (
+              <>
+                <h3 className="font-display text-lg font-bold text-foreground mb-1">📤 存档码</h3>
+                <p className="text-xs text-muted-foreground mb-3">复制以下存档码，换设备后粘贴即可恢复进度</p>
+                <div
+                  className="rounded-xl p-3 mb-3 text-xs font-mono break-all select-all border"
+                  style={{ background: "var(--muted)", borderColor: "var(--border)", color: "var(--foreground)", maxHeight: "120px", overflowY: "auto", lineHeight: 1.5 }}
+                >
+                  {archiveCode}
+                </div>
+                <button
+                  onClick={handleCopyCode}
+                  className="w-full py-3 rounded-2xl font-bold text-base text-white mb-2 transition-all active:scale-95"
+                  style={{ background: "var(--vermilion)" }}
+                >
+                  复制存档码
+                </button>
+                <button onClick={() => setShowArchive(false)} className="w-full py-2 text-sm text-muted-foreground">关闭</button>
+              </>
+            ) : (
+              <>
+                <h3 className="font-display text-lg font-bold text-foreground mb-1">📥 导入存档码</h3>
+                <p className="text-xs text-muted-foreground mb-3">粘贴之前导出的存档码以恢复进度（当前数据将被覆盖）</p>
+                <textarea
+                  value={importInput}
+                  onChange={(e) => setImportInput(e.target.value)}
+                  placeholder="粘贴存档码..."
+                  rows={4}
+                  className="w-full rounded-xl px-3 py-2 text-xs font-mono border outline-none mb-3 resize-none"
+                  style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                />
+                <button
+                  onClick={handleImport}
+                  disabled={!importInput.trim()}
+                  className="w-full py-3 rounded-2xl font-bold text-base text-white mb-2 transition-all active:scale-95 disabled:opacity-50"
+                  style={{ background: "var(--vermilion)" }}
+                >
+                  恢复存档
+                </button>
+                <button onClick={() => setShowArchive(false)} className="w-full py-2 text-sm text-muted-foreground">取消</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

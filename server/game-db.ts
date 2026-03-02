@@ -55,6 +55,52 @@ export async function getQuestionsByDifficulty(minDiff: number, maxDiff: number,
     .limit(count);
 }
 
+/**
+ * 按主题标签优先推送题目：先拉取匹配 themeTag 的题目，不足时用普通题目补充
+ * themeTag 可以是节日名（如"中秋"）、节气名（如"清明"）或诗人名（如"李白"）
+ */
+export async function getQuestionsByTheme(
+  themeTag: string,
+  minDiff: number,
+  maxDiff: number,
+  count: number
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const diffFilter = and(gte(questions.difficulty, minDiff), lte(questions.difficulty, maxDiff));
+
+  // 1. 先拉取匹配主题的题目（按诗人名或themeTag字段匹配）
+  const themeQs = await db
+    .select()
+    .from(questions)
+    .where(and(
+      diffFilter,
+      sql`(${questions.themeTag} LIKE ${`%${themeTag}%`} OR ${questions.sourcePoemAuthor} LIKE ${`%${themeTag}%`})`
+    ))
+    .orderBy(sql`RAND()`)
+    .limit(count * 3);
+
+  if (themeQs.length >= count) {
+    return themeQs.slice(0, count);
+  }
+
+  // 2. 不足时用普通题目补充
+  const needed = count - themeQs.length;
+  const existingIds = themeQs.map(q => q.id);
+  const extraQs = await db
+    .select()
+    .from(questions)
+    .where(and(
+      diffFilter,
+      existingIds.length > 0 ? sql`${questions.id} NOT IN (${sql.join(existingIds.map(id => sql`${id}`), sql`, `)})` : sql`1=1`
+    ))
+    .orderBy(sql`RAND()`)
+    .limit(needed * 3);
+
+  return [...themeQs, ...extraQs].slice(0, count);
+}
+
 export async function getQuestionById(id: number) {
   const db = await getDb();
   if (!db) return null;

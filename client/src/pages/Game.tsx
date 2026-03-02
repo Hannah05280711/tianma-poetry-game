@@ -62,6 +62,11 @@ export default function Game() {
   const [difficulty, setDifficulty] = useState(1);
   const [sessionId] = useState(() => nanoid());
   const [querySeed, setQuerySeed] = useState(() => nanoid());
+  // 从 URL 读取主题标签（节日/节气/诗人专题）
+  const [themeTag, setThemeTag] = useState<string | undefined>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("theme") ?? undefined;
+  });
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
@@ -93,7 +98,7 @@ export default function Game() {
   }, []);
 
   const { data: questions, isLoading: loadingQ, refetch: refetchQ } = trpc.game.getQuestions.useQuery(
-    { difficulty, count: 7, seed: querySeed },
+    { difficulty, count: 7, seed: querySeed, themeTag },
     {
       enabled: false,
       staleTime: 0,
@@ -322,6 +327,26 @@ export default function Game() {
             <div className="text-sm font-semibold" style={{ color: "var(--vermilion)" }}>×{localHints}</div>
           </div>
         </div>
+
+        {/* 节日/节气主题专题提示 */}
+        {themeTag && (
+          <div
+            className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3 border"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          >
+            <span className="text-xl">🎯</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground">「{themeTag}」主题专题</div>
+              <div className="text-xs text-muted-foreground mt-0.5">将优先推送与该主题相关的诗词题目</div>
+            </div>
+            <button
+              onClick={() => setThemeTag(undefined)}
+              className="text-xs text-muted-foreground px-2 py-1 rounded-lg border border-border"
+            >
+              取消
+            </button>
+          </div>
+        )}
 
         <div className="space-y-2.5 mb-6">
           {DIFFICULTY_INFO.map((d) => {

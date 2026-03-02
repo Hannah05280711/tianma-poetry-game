@@ -12,6 +12,7 @@ import {
   getDestinyPoet,
   getPoetById,
   getQuestionsByDifficulty,
+  getQuestionsByTheme,
   getRankByScore,
   getUserAnswerStats,
   getUserDailyTasks,
@@ -165,6 +166,8 @@ export const gameRouter = router({
       count: z.number().min(1).max(10).default(5),
       // seed 用于破坏 tRPC 缓存，每次开始新游戏时传入不同的 seed。后端不使用它，仅用于让请求看起来不同
       seed: z.string().optional(),
+      // 节日/节气/诗人主题标签，传入时优先推送相关题目
+      themeTag: z.string().optional(),
     }))
     .query(async ({ input }) => {
       // 拉取足够多的题目以便同诗去重后仍有足够数量
@@ -173,11 +176,10 @@ export const gameRouter = router({
       // 其他关卡取相邻难度范围，但严格排除 difficulty=5，确保王者关题目不混入其他关卡
       const minDiff = input.difficulty === 5 ? 5 : Math.max(1, input.difficulty - 1);
       const maxDiff = input.difficulty === 5 ? 5 : Math.min(4, input.difficulty + 1);
-      const qs = await getQuestionsByDifficulty(
-        minDiff,
-        maxDiff,
-        fetchCount
-      );
+      // 如果传入了主题标签，使用主题优先查询
+      const qs = input.themeTag
+        ? await getQuestionsByTheme(input.themeTag, minDiff, maxDiff, fetchCount)
+        : await getQuestionsByDifficulty(minDiff, maxDiff, fetchCount);
 
       // 同诗去重：每首诗只保留一题，避免同一首诗反复出现
       const seenPoems = new Set<string>();

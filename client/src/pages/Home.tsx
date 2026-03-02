@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
 import { useTheme } from "@/contexts/ThemeContext";
 import { loadLocalState, getRankByScore, type LocalGameState } from "@/lib/localGameState";
+import WelcomeModal from "@/components/WelcomeModal";
+import { getTodayDisplay, getUpcomingEvents, type CalendarEvent } from "@/lib/calendarData";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -15,22 +17,14 @@ const POET_EMOJIS: Record<string, string> = {
   "李清照": "🌸", "辛弃疾": "⚔️", "白居易": "🎵", "陶渊明": "🌿",
 };
 
-// 随机诗句装饰
-const BANNER_POEMS = [
-  { text: "床前明月光，疑是地上霜", author: "李白" },
-  { text: "春眠不觉晓，处处闻啼鸟", author: "孟浩然" },
-  { text: "举头望明月，低头思故乡", author: "李白" },
-  { text: "独在异乡为异客，每逢佳节倍思亲", author: "王维" },
-  { text: "会当凌绝顶，一览众山小", author: "杜甫" },
-  { text: "明月几时有，把酒问青天", author: "苏轼" },
-];
-
-const bannerPoem = BANNER_POEMS[Math.floor(Math.random() * BANNER_POEMS.length)]!;
-
 export default function Home() {
   const [, navigate] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [localState, setLocalState] = useState<LocalGameState | null>(null);
+
+  // 今日日历信息（节气/节日/诗人纪念日）
+  const todayDisplay = useMemo(() => getTodayDisplay(), []);
+  const upcomingEvents = useMemo(() => getUpcomingEvents(5), []);
 
   // 加载本地状态
   useEffect(() => {
@@ -41,7 +35,6 @@ export default function Home() {
   useEffect(() => {
     const handleFocus = () => setLocalState(loadLocalState());
     window.addEventListener("focus", handleFocus);
-    // 也监听 visibilitychange（微信内置浏览器更可靠）
     const handleVisible = () => {
       if (document.visibilityState === "visible") setLocalState(loadLocalState());
     };
@@ -52,7 +45,7 @@ export default function Home() {
     };
   }, []);
 
-  // 获取本命诗人信息（如果已解锁，通过 poetId 查询诗人详情）
+  // 获取本命诗人信息
   const { data: destinyPoetData } = trpc.game.getPoet.useQuery(
     { id: localState?.destinyPoetId ?? 0 },
     { enabled: (localState?.destinyPoetId ?? 0) > 0, retry: false }
@@ -62,8 +55,14 @@ export default function Home() {
   const rank = localState ? getRankByScore(localState.totalScore) : null;
   const rankColor = rank ? RANK_COLORS[rank.rankTier] ?? "#B87333" : "#B87333";
 
+  // 节日主题答题：跳转到游戏并传入主题标签
+  const handleThemeGame = (themeTag: string) => {
+    navigate(`/game?theme=${encodeURIComponent(themeTag)}`);
+  };
+
   return (
     <div className="min-h-screen page-content bg-background">
+      <WelcomeModal />
       <div className="px-4 pt-safe">
         {/* Header */}
         <div className="flex items-center justify-between py-4 mb-4"
@@ -120,64 +119,91 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Hero Banner - 诗句装饰风格 */}
+        {/* ===== 节日/节气 Hero Banner ===== */}
         <div
           className="relative rounded-2xl overflow-hidden mb-4 border"
           style={{
-            background: "linear-gradient(135deg, oklch(0.97 0.015 28) 0%, oklch(0.98 0.010 75) 50%, oklch(0.97 0.012 190) 100%)",
-            borderColor: "oklch(0.50 0.19 22 / 0.18)",
-            boxShadow: "0 4px 20px oklch(0.50 0.19 22 / 0.10)",
+            background: todayDisplay.bgGradient,
+            borderColor: todayDisplay.color + "30",
+            boxShadow: `0 4px 20px ${todayDisplay.color}15`,
           }}
         >
           {/* 装饰性大字 */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 select-none pointer-events-none"
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 select-none pointer-events-none"
             style={{
-              fontSize: "80px",
+              fontSize: "72px",
               fontFamily: "'Noto Serif SC', serif",
-              color: "oklch(0.50 0.19 22 / 0.07)",
+              color: todayDisplay.color + "10",
               fontWeight: 900,
               lineHeight: 1,
-              letterSpacing: "-0.02em",
             }}>
-            诗
+            {todayDisplay.emoji}
           </div>
 
           <div className="relative z-10 p-5">
+            {/* 节日/节气标签 */}
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                style={{
+                  background: todayDisplay.color + "15",
+                  color: todayDisplay.color,
+                  border: `1px solid ${todayDisplay.color}30`,
+                  fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', serif",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {todayDisplay.emoji} {todayDisplay.name}
+              </span>
+              <span className="text-xs text-muted-foreground">{todayDisplay.dateDesc}</span>
+            </div>
+
             {/* 诗句引用 */}
             <div className="mb-4">
-              <p className="font-serif-poem text-foreground mb-1"
-                style={{ fontSize: "15px", color: "var(--ink-light)", letterSpacing: "0.08em" }}>
-                「{bannerPoem.text}」
+              <p className="font-serif-poem mb-1"
+                style={{ fontSize: "15px", color: todayDisplay.color, letterSpacing: "0.08em", lineHeight: 1.7 }}>
+                「{todayDisplay.poem.length > 28 ? todayDisplay.poem.slice(0, 28) + "…" : todayDisplay.poem}」
               </p>
               <p className="text-xs font-serif-poem" style={{ color: "var(--ink-pale)" }}>
-                — {bannerPoem.author}
+                — {todayDisplay.poemAuthor}
               </p>
             </div>
 
-            <div className="mb-4">
-              <h2 className="font-display text-foreground mb-1" style={{ fontSize: "18px", letterSpacing: "0.06em" }}>
-                诗词闯关
-              </h2>
-              <p className="text-xs text-muted-foreground" style={{ letterSpacing: "0.04em" }}>
-                答题积分 · 晋升段位 · 解锁本命诗人
-              </p>
-            </div>
+            {/* 副标题 */}
+            <p className="text-xs text-muted-foreground mb-4" style={{ letterSpacing: "0.04em" }}>
+              {todayDisplay.subtitle}
+            </p>
 
-            <button
-              onClick={() => navigate("/game")}
-              className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
-              style={{
-                background: "var(--vermilion)",
-                boxShadow: "0 4px 14px oklch(0.50 0.19 22 / 0.30)",
-                letterSpacing: "0.06em",
-              }}
-            >
-              开始答题
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/game")}
+                className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
+                style={{
+                  background: todayDisplay.color,
+                  boxShadow: `0 4px 14px ${todayDisplay.color}40`,
+                  letterSpacing: "0.06em",
+                }}
+              >
+                开始答题
+              </button>
+              {/* 节日主题专题按钮 */}
+              <button
+                onClick={() => handleThemeGame(todayDisplay.themeTag)}
+                className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
+                style={{
+                  background: "transparent",
+                  borderColor: todayDisplay.color + "50",
+                  color: todayDisplay.color,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {todayDisplay.name}专题
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Stats Row - 始终显示本地数据 */}
+        {/* Stats Row */}
         {localState && (
           <div className="grid grid-cols-3 gap-3 mb-4 animate-slide-up">
             <div className="rounded-xl p-3 text-center border"
@@ -206,7 +232,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Destiny Poet Card - 已解锁本命诗人时显示 */}
+        {/* Destiny Poet Card */}
         {localState?.destinyPoetId && destinyPoet?.poet && (
           <div
             className="rounded-2xl p-4 mb-4 cursor-pointer transition-all active:scale-[0.98] animate-slide-up border"
@@ -270,6 +296,37 @@ export default function Home() {
                 </div>
               </div>
               <span className="text-muted-foreground text-lg">›</span>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 即将到来的节日/节气预告 ===== */}
+        {upcomingEvents.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold text-muted-foreground font-serif-poem">📅 近期节日节气</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {upcomingEvents.slice(0, 4).map((ev, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleThemeGame(ev.themeTag)}
+                  className="flex-shrink-0 rounded-xl px-3 py-2.5 text-center border transition-all active:scale-95"
+                  style={{
+                    background: ev.bgGradient,
+                    borderColor: ev.color + "30",
+                    minWidth: "80px",
+                  }}
+                >
+                  <div className="text-xl mb-1">{ev.emoji}</div>
+                  <div className="text-xs font-semibold" style={{ color: ev.color, letterSpacing: "0.04em" }}>
+                    {ev.name}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {ev.daysUntil === 1 ? "明天" : `${ev.daysUntil}天后`}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}
