@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { fbDestinyMatch, unlockAudio } from "@/lib/feedback";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import {
+  loadLocalState,
+  saveLocalDestinyPoet,
+  resetLocalDestinyPoet,
+} from "@/lib/localGameState";
 
 const POET_EMOJIS: Record<string, string> = {
   "李白": "🌙", "杜甫": "📜", "王维": "🏔️", "苏轼": "🌊",
@@ -35,7 +39,6 @@ function getMatchInfo(score: number) {
   return MATCH_COLORS.find(c => score >= c.min) ?? MATCH_COLORS[MATCH_COLORS.length - 1]!;
 }
 
-// 安全解析 JSON 字段（可能已是数组，也可能是字符串）
 function safeParseArray(val: unknown): string[] {
   if (Array.isArray(val)) return val as string[];
   if (typeof val === "string") {
@@ -44,28 +47,8 @@ function safeParseArray(val: unknown): string[] {
   return [];
 }
 
-// 游客答题统计存储键
-const GUEST_STATS_KEY = "tianma_guest_stats";
+const GAME_URL = "https://www.tianmapoet.click";
 
-interface GuestStats {
-  totalAnswered: number;
-  totalCorrect: number;
-  poetCorrectMap: Record<string, number>;
-  typePreferMap: Record<string, number>;
-  avgResponseTime: number;
-}
-
-function loadGuestStats(): GuestStats {
-  try {
-    const raw = localStorage.getItem(GUEST_STATS_KEY);
-    if (raw) return JSON.parse(raw) as GuestStats;
-  } catch { /* ignore */ }
-  return { totalAnswered: 0, totalCorrect: 0, poetCorrectMap: {}, typePreferMap: {}, avgResponseTime: 5.0 };
-}
-
-const GAME_URL = "https://tianmapoet-4lhgiefm.manus.space";
-
-// 本命诗人结果类型（游客模式下本地存储）
 interface DestinyResult {
   id: number;
   userId: number;
@@ -82,40 +65,69 @@ interface DestinyResult {
   } | null;
 }
 
+// 本地存储本命诗人结果
+const LOCAL_DESTINY_KEY = "tianma_destiny_result";
+
+function loadLocalDestiny(): DestinyResult | null {
+  try {
+    const raw = localStorage.getItem(LOCAL_DESTINY_KEY);
+    if (raw) return JSON.parse(raw) as DestinyResult;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveLocalDestiny(result: DestinyResult) {
+  try {
+    localStorage.setItem(LOCAL_DESTINY_KEY, JSON.stringify(result));
+  } catch { /* ignore */ }
+}
+
 export default function Destiny() {
-  const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [generating, setGenerating] = useState(false);
   const [showShareGuide, setShowShareGuide] = useState(false);
-  // 游客模式下的本地结果
-  const [guestDestiny, setGuestDestiny] = useState<DestinyResult | null>(null);
-  const [guestStats, setGuestStats] = useState<GuestStats>(() => loadGuestStats());
+  const [destiny, setDestiny] = useState<DestinyResult | null>(null);
+  const [totalAnswered, setTotalAnswered] = useState(0);
 
-  // 刷新游客统计
+  // 加载本地状态
   useEffect(() => {
-    if (!isAuthenticated) {
-      setGuestStats(loadGuestStats());
-    }
-  }, [isAuthenticated]);
+    const state = loadLocalState();
+    setTotalAnswered(state.totalAnswered);
 
-  // 已登录用户：从服务器获取本命诗人
-  const { data: serverDestiny, refetch } = trpc.game.getDestinyPoet.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-  const { data: gameState } = trpc.game.getState.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
+    // 优先从本地存储读取完整的本命诗人结果（含AI分析）
+    const localDestiny = loadLocalDestiny();
+    if (localDestiny) {
+      setDestiny(localDestiny);
+    }
+  }, []);
+
+  // 每次页面可见时刷新
+  useEffect(() => {
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") {
+        const state = loadLocalState();
+        setTotalAnswered(state.totalAnswered);
+        const localDestiny = loadLocalDestiny();
+        if (localDestiny) setDestiny(localDestiny);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => document.removeEventListener("visibilitychange", handleVisible);
+  }, []);
+
+  const canGenerate = totalAnswered >= 10;
 
   const generateMutation = trpc.game.generateDestinyPoet.useMutation({
     onSuccess: (data) => {
       toast.success("✨ 本命诗人已觉醒！");
-      // 本命诗人匹配完成音效（古琴双弦 + 渐强震动）
       setTimeout(() => fbDestinyMatch(), 300);
-      if (isAuthenticated) {
-        refetch();
-      } else {
-        // 游客模式：保存到本地状态
-        setGuestDestiny(data as DestinyResult);
+      const result = data as DestinyResult;
+      setDestiny(result);
+      // 保存完整结果到本地（含AI分析文本）
+      saveLocalDestiny(result);
+      // 更新本地状态中的诗人ID和契合度
+      if (result.poetId) {
+        saveLocalDestinyPoet(result.poetId, result.matchScore);
       }
       setGenerating(false);
     },
@@ -128,30 +140,27 @@ export default function Destiny() {
   const handleGenerate = () => {
     unlockAudio();
     setGenerating(true);
-    if (isAuthenticated) {
-      // 已登录：不传 guestStats，后端从 DB 加载
-      generateMutation.mutate({});
-    } else {
-      // 游客模式：传入本地统计数据
-      generateMutation.mutate({ guestStats });
-    }
+    const state = loadLocalState();
+    // 传入本地统计数据（游客模式）
+    generateMutation.mutate({
+      guestStats: {
+        totalAnswered: state.totalAnswered,
+        totalCorrect: state.totalCorrect,
+        poetCorrectMap: state.poetCorrectMap,
+        typePreferMap: state.typePreferMap,
+        avgResponseTime: state.avgResponseTime,
+      },
+    });
   };
 
-  // 当前展示的本命诗人数据（登录用服务器数据，游客用本地数据）
-  const destiny = isAuthenticated ? serverDestiny : guestDestiny;
-  const totalAnswered = isAuthenticated ? (gameState?.totalAnswered ?? 0) : guestStats.totalAnswered;
-  const canGenerate = totalAnswered >= 10;
-
-  // 微信分享：直接复制链接+文案，并显示操作指引
   const handleShare = () => {
     const poetName = destiny?.poet ? (destiny.poet as { name: string }).name : "诗词达人";
-    const rankName = gameState?.rank?.rankName ?? "诗词达人";
     const emoji = POET_EMOJIS[poetName] ?? "📜";
     const matchScore = destiny?.matchScore ?? 0;
 
     const shareText = [
       `${emoji} 我的本命诗人是「${poetName}」！`,
-      `灵魂契合度 ${matchScore}%，当前段位「${rankName}」`,
+      `灵魂契合度 ${matchScore}%`,
       ``,
       `🎮 天马行空·你的本命诗人是谁？`,
       `答题闯关·诗词测试·天命匹配`,
@@ -183,7 +192,6 @@ export default function Destiny() {
       <div className="flex items-center gap-3 py-3 mb-2">
         <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
         <h1 className="font-semibold font-display" style={{ fontSize: "17px" }}>✨ 本命诗人觉醒</h1>
-
       </div>
 
       {/* 微信分享指引弹窗 */}
@@ -237,7 +245,6 @@ export default function Destiny() {
             已答题：{totalAnswered} / 10
           </div>
 
-          {/* Progress */}
           <div className="max-w-xs mx-auto mb-6">
             <div className="h-2 rounded-full overflow-hidden bg-muted">
               <div className="h-full rounded-full transition-all duration-500"
@@ -267,12 +274,9 @@ export default function Destiny() {
             </button>
           )}
 
-          {/* 游客提示：登录可保存进度 */}
-          {!isAuthenticated && totalAnswered > 0 && (
-            <p className="mt-4 text-xs text-muted-foreground">
-              游客模式下结果仅保存在本设备，小程序登录后可永久保存
-            </p>
-          )}
+          <p className="mt-4 text-xs text-muted-foreground">
+            游戏数据存储在本设备，换设备后需重新答题
+          </p>
         </div>
       )}
 
@@ -289,19 +293,17 @@ export default function Destiny() {
 
         return (
           <div className="animate-fade-in">
-            {/* 主卡片 - 宣纸风格 */}
+            {/* 主卡片 */}
             <div className="rounded-2xl mb-4 overflow-hidden border"
               style={{
                 background: `linear-gradient(160deg, ${matchInfo.color}08 0%, var(--card) 40%)`,
                 borderColor: matchInfo.color + "35",
                 boxShadow: `0 4px 24px ${matchInfo.color}12`,
               }}>
-              {/* 头部装饰条 */}
               <div className="h-1.5 w-full"
                 style={{ background: `linear-gradient(90deg, ${matchInfo.color}, ${matchInfo.color}60)` }} />
 
               <div className="p-5 text-center">
-                {/* 诗人头像 - 更大更丰富 */}
                 <div className="relative inline-block mb-4">
                   <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto float-anim"
                     style={{
@@ -311,14 +313,12 @@ export default function Destiny() {
                     }}>
                     {poetEmoji}
                   </div>
-                  {/* 契合度小徽章 */}
                   <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
                     style={{ background: matchInfo.color, boxShadow: `0 2px 8px ${matchInfo.color}50` }}>
                     <span style={{ color: "white", fontSize: "11px", fontWeight: 700 }}>{destiny.matchScore}%</span>
                   </div>
                 </div>
 
-                {/* 契合等级标签 */}
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-3"
                   style={{
                     background: matchInfo.color + "12",
@@ -332,7 +332,6 @@ export default function Destiny() {
                   {matchInfo.label}
                 </div>
 
-                {/* 诗人名 - 大字宋体 */}
                 <h2 className="font-display mb-1"
                   style={{ color: matchInfo.color, fontSize: "32px", letterSpacing: "0.12em" }}>
                   {poet.name}
@@ -342,10 +341,8 @@ export default function Destiny() {
                   {poet.dynasty}代 · {poet.mbtiType}
                 </p>
 
-                {/* 小分隔线 */}
                 <div className="divider-ink mx-8 mb-4" />
 
-                {/* 性格标签 */}
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 justify-center mb-3">
                     {tags.map((tag) => (
@@ -366,11 +363,9 @@ export default function Destiny() {
                   </div>
                 )}
 
-                {/* MBTI 描述：诗人描述一行，对用户描述重新起行，联系之处重新起行 */}
                 <div className="font-serif-poem text-left">
                   {(() => {
                     const desc = poet.mbtiDescription;
-                    // 按句号分割，过滤空行
                     const sentences = desc.split('\u3002').filter(s => s.trim());
                     if (sentences.length <= 1) {
                       return <p className="text-muted-foreground" style={{ fontSize: "15px", lineHeight: "2.0" }}>{desc}</p>;
@@ -401,7 +396,6 @@ export default function Destiny() {
                   style={{ fontSize: "17px", letterSpacing: "0.06em" }}>
                   <span style={{ color: "var(--gold)" }}>★</span> 灵魂分析报告
                 </h3>
-                {/* 分段显示：问候一行，正文重新起行，MBTI分析再次分段 */}
                 <div className="font-serif-poem text-muted-foreground"
                   style={{ fontSize: "15px", lineHeight: "2.0" }}>
                   {(() => {
@@ -409,18 +403,12 @@ export default function Destiny() {
                     const MBTI_KWS = ['MBTI', 'INFJ', 'INFP', 'INTJ', 'INTP', 'ISFJ', 'ISFP', 'ISTJ', 'ISTP',
                       'ENFJ', 'ENFP', 'ENTJ', 'ENTP', 'ESFJ', 'ESFP', 'ESTJ', 'ESTP'];
 
-                    // 优先按 \n 分割段落（LLM 输出通常包含换行）
                     const rawParas = report.split('\n').map(p => p.trim()).filter(Boolean);
                     if (rawParas.length >= 2) {
-                      // 在已分段的基础上，尝试将包含MBTI关键词的段落与前段分开
                       const result: string[] = [];
                       for (const para of rawParas) {
                         const hasMbti = MBTI_KWS.some(kw => para.includes(kw));
-                        // 如果当前段落包含MBTI关键词，且上一段不包含，则单独成段
                         if (hasMbti && result.length > 0 && !MBTI_KWS.some(kw => result[result.length-1].includes(kw))) {
-                          result.push(para);
-                        } else if (result.length > 0 && !hasMbti) {
-                          // 尝试将同一层次的正文内容合并（避免过多段落）
                           result.push(para);
                         } else {
                           result.push(para);
@@ -433,15 +421,12 @@ export default function Destiny() {
                       ));
                     }
 
-                    // 无换行符时：按句号分割
                     const sentences = report.split('\u3002').filter(s => s.trim());
                     if (sentences.length <= 1) return <p>{report}</p>;
 
-                    // 第一句为问候
                     const greeting = sentences[0] + '\u3002';
                     const remaining = sentences.slice(1);
 
-                    // 在剩余句子中找第一个包含MBTI关键词的句子位置
                     let mbtiSentIdx = -1;
                     for (let i = 0; i < remaining.length; i++) {
                       if (MBTI_KWS.some(kw => remaining[i].includes(kw))) {
@@ -451,7 +436,6 @@ export default function Destiny() {
                     }
 
                     if (mbtiSentIdx > 0) {
-                      // 问候 | 正文（到MBTI前）| MBTI分析
                       const body = remaining.slice(0, mbtiSentIdx).join('\u3002') + '\u3002';
                       const mbtiPart = remaining.slice(mbtiSentIdx).join('\u3002') + '\u3002';
                       return (
@@ -463,7 +447,6 @@ export default function Destiny() {
                       );
                     }
 
-                    // 找不到MBTI关键词：问候 + 剩余内容
                     const rest = remaining.join('\u3002') + '\u3002';
                     return (
                       <>
@@ -523,15 +506,7 @@ export default function Destiny() {
               </div>
             )}
 
-            {/* 游客提示 */}
-            {!isAuthenticated && (
-              <div className="rounded-xl p-3 mb-4 text-center border"
-                style={{ background: "var(--card)", borderColor: "oklch(0.50 0.19 22 / 0.22)" }}>
-                <p className="text-xs text-muted-foreground font-serif-poem">游客结果仅保存在本设备，小程序登录后可永久保存</p>
-              </div>
-            )}
-
-            {/* 操作按鈕 */}
+            {/* 操作按钮 */}
             <div className="space-y-3 mb-6">
               <button
                 onClick={handleShare}
@@ -555,18 +530,12 @@ export default function Destiny() {
               >
                 继续答题提升契合度
               </button>
-              {/* 重新解锁按鈕：清除本命诗人数据并跳转答题页 */}
               <button
                 onClick={() => {
-                  if (isAuthenticated) {
-                    // 已登录：重新匹配（即调用 generateMutation）
-                    handleGenerate();
-                  } else {
-                    // 游客模式：清除本地数据并跳转答题
-                    localStorage.removeItem('guest_destiny_result');
-                    setGuestDestiny(null);
-                    navigate("/game");
-                  }
+                  localStorage.removeItem(LOCAL_DESTINY_KEY);
+                  resetLocalDestinyPoet();
+                  setDestiny(null);
+                  navigate("/game");
                 }}
                 className="w-full py-2.5 rounded-xl transition-all active:scale-95 font-serif-poem text-muted-foreground"
                 style={{ fontSize: "13px", minHeight: "40px", letterSpacing: "0.04em", textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: "3px" }}

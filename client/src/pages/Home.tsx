@@ -1,9 +1,9 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
-import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
+import { loadLocalState, getRankByScore, type LocalGameState } from "@/lib/localGameState";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -28,33 +28,39 @@ const BANNER_POEMS = [
 const bannerPoem = BANNER_POEMS[Math.floor(Math.random() * BANNER_POEMS.length)]!;
 
 export default function Home() {
-  const { user, isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [localState, setLocalState] = useState<LocalGameState | null>(null);
 
-  const { data: gameState } = trpc.game.getState.useQuery(undefined, {
-    enabled: isAuthenticated,
-    retry: false,
-  });
-  const { data: destinyPoet } = trpc.game.getDestinyPoet.useQuery(undefined, {
-    enabled: isAuthenticated,
-    retry: false,
-  });
+  // 加载本地状态
+  useEffect(() => {
+    setLocalState(loadLocalState());
+  }, []);
 
-  const rankColor = gameState?.rank
-    ? RANK_COLORS[gameState.rank.rankTier] ?? "#B87333"
-    : "#B87333";
+  // 每次页面获得焦点时刷新本地状态（从游戏页返回后更新数据）
+  useEffect(() => {
+    const handleFocus = () => setLocalState(loadLocalState());
+    window.addEventListener("focus", handleFocus);
+    // 也监听 visibilitychange（微信内置浏览器更可靠）
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") setLocalState(loadLocalState());
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisible);
+    };
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center animate-fade-in">
-          <div className="text-5xl mb-4 float-anim" style={{ fontFamily: "serif" }}>墨</div>
-          <p className="text-sm text-muted-foreground font-serif-poem">墨香飘来...</p>
-        </div>
-      </div>
-    );
-  }
+  // 获取本命诗人信息（如果已解锁，通过 poetId 查询诗人详情）
+  const { data: destinyPoetData } = trpc.game.getPoet.useQuery(
+    { id: localState?.destinyPoetId ?? 0 },
+    { enabled: (localState?.destinyPoetId ?? 0) > 0, retry: false }
+  );
+  const destinyPoet = destinyPoetData ? { poet: destinyPoetData } : null;
+
+  const rank = localState ? getRankByScore(localState.totalScore) : null;
+  const rankColor = rank ? RANK_COLORS[rank.rankTier] ?? "#B87333" : "#B87333";
 
   return (
     <div className="min-h-screen page-content bg-background">
@@ -100,16 +106,17 @@ export default function Home() {
                 </svg>
               )}
             </button>
-            {isAuthenticated ? (
-              <button
-                onClick={() => navigate("/profile")}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all"
-                style={{ borderColor: "var(--border)", background: "var(--card)" }}
-              >
-                <span style={{ fontSize: "14px" }}>👤</span>
-                <span className="text-xs max-w-[80px] truncate text-foreground">{user?.name ?? "诗词人"}</span>
-              </button>
-            ) : null}
+            {/* 个人主页按钮 */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-all"
+              style={{ borderColor: "var(--border)", background: "var(--card)" }}
+            >
+              <span style={{ fontSize: "14px" }}>👤</span>
+              <span className="text-xs max-w-[80px] truncate text-foreground">
+                {localState?.nickname ?? "诗词侠客"}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -170,37 +177,37 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Row (if logged in) */}
-        {isAuthenticated && gameState && (
+        {/* Stats Row - 始终显示本地数据 */}
+        {localState && (
           <div className="grid grid-cols-3 gap-3 mb-4 animate-slide-up">
             <div className="rounded-xl p-3 text-center border"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               <div className="font-bold font-display" style={{ fontSize: "20px", color: "var(--gold)" }}>
-                {gameState.totalScore}
+                {localState.totalScore}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5 font-serif-poem">总积分</div>
             </div>
             <div className="rounded-xl p-3 text-center border"
               style={{ background: "var(--card)", borderColor: rankColor + "40" }}>
               <div className="font-bold" style={{ fontSize: "20px", color: rankColor }}>
-                {gameState.rank?.iconEmoji ?? "🗡️"}
+                {rank?.iconEmoji ?? "🗡️"}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5 truncate font-serif-poem">
-                {gameState.rank?.tierName ?? "青铜剑"}
+                {rank?.tierName ?? "青铜剑"}
               </div>
             </div>
             <div className="rounded-xl p-3 text-center border"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               <div className="font-bold font-display" style={{ fontSize: "20px", color: "var(--celadon)" }}>
-                {gameState.consecutiveWins}
+                {localState.consecutiveWins}
               </div>
               <div className="text-[10px] text-muted-foreground mt-0.5 font-serif-poem">连胜</div>
             </div>
           </div>
         )}
 
-        {/* Destiny Poet Card */}
-        {isAuthenticated && destinyPoet?.poet && (
+        {/* Destiny Poet Card - 已解锁本命诗人时显示 */}
+        {localState?.destinyPoetId && destinyPoet?.poet && (
           <div
             className="rounded-2xl p-4 mb-4 cursor-pointer transition-all active:scale-[0.98] animate-slide-up border"
             style={{
@@ -224,13 +231,42 @@ export default function Home() {
                     style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
                     本命诗人
                   </span>
-                  <span className="text-xs text-muted-foreground">{destinyPoet.matchScore}% 契合</span>
+                  <span className="text-xs text-muted-foreground">{localState.destinyMatchScore}% 契合</span>
                 </div>
                 <div className="font-bold font-display text-foreground" style={{ fontSize: "17px" }}>
                   {(destinyPoet.poet as { name: string }).name}
                 </div>
                 <div className="text-xs font-serif-poem text-muted-foreground">
                   {(destinyPoet.poet as { dynasty: string; mbtiType: string }).dynasty}代 · {(destinyPoet.poet as { mbtiType: string }).mbtiType}
+                </div>
+              </div>
+              <span className="text-muted-foreground text-lg">›</span>
+            </div>
+          </div>
+        )}
+
+        {/* 未解锁本命诗人时的引导提示 */}
+        {localState && !localState.destinyPoetId && (
+          <div
+            className="rounded-2xl p-4 mb-4 border cursor-pointer transition-all active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.97 0.015 28 / 0.4), var(--card))",
+              borderColor: "oklch(0.50 0.19 22 / 0.15)",
+              borderStyle: "dashed",
+            }}
+            onClick={() => navigate("/destiny")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+                style={{ background: "var(--secondary)", border: "1.5px dashed var(--border)" }}>
+                ✨
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm text-foreground mb-0.5">本命诗人尚未觉醒</div>
+                <div className="text-xs text-muted-foreground">
+                  {localState.totalAnswered < 100
+                    ? `再答 ${100 - localState.totalAnswered} 题即可解锁`
+                    : "点击前往解锁你的本命诗人"}
                 </div>
               </div>
               <span className="text-muted-foreground text-lg">›</span>
@@ -264,7 +300,7 @@ export default function Home() {
         </div>
 
         {/* Ink drops */}
-        {isAuthenticated && gameState && (
+        {localState && (
           <div className="rounded-xl p-3 mb-4 flex items-center gap-3 border"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             <span className="text-xs font-serif-poem text-muted-foreground shrink-0">墨滴</span>
@@ -273,7 +309,7 @@ export default function Home() {
                 <div key={i}
                   className="w-2 h-2 rounded-full transition-all"
                   style={{
-                    background: i < (gameState.inkDrops ?? 0)
+                    background: i < (localState.inkDrops ?? 0)
                       ? "var(--celadon)"
                       : "var(--border)",
                   }}
@@ -281,11 +317,45 @@ export default function Home() {
               ))}
             </div>
             <span className="text-sm font-bold shrink-0 font-display" style={{ color: "var(--celadon)" }}>
-              {gameState.inkDrops}/20
+              {localState.inkDrops}/20
             </span>
           </div>
         )}
 
+        {/* 答题统计 */}
+        {localState && localState.totalAnswered > 0 && (
+          <div className="rounded-xl p-3 mb-4 border"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-serif-poem text-muted-foreground">答题统计</span>
+              <span className="text-xs text-muted-foreground">
+                正确率 {localState.totalAnswered > 0
+                  ? Math.round(localState.totalCorrect / localState.totalAnswered * 100)
+                  : 0}%
+              </span>
+            </div>
+            <div className="flex gap-4 mt-2">
+              <div className="text-center">
+                <div className="font-bold text-sm font-display" style={{ color: "var(--ink)" }}>
+                  {localState.totalAnswered}
+                </div>
+                <div className="text-[10px] text-muted-foreground">总答题</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-sm font-display" style={{ color: "var(--celadon)" }}>
+                  {localState.totalCorrect}
+                </div>
+                <div className="text-[10px] text-muted-foreground">答对</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-sm font-display" style={{ color: "var(--gold)" }}>
+                  {localState.totalAnswered - localState.totalCorrect}
+                </div>
+                <div className="text-[10px] text-muted-foreground">答错</div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 

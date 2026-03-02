@@ -1,29 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { fbOptionTap, fbCorrect, fbWrong, fbCombo, fbLevelComplete, fbGameStart, fbStreakBroken, unlockAudio } from "@/lib/feedback";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
-
-// 游客答题统计存储键
-const GUEST_STATS_KEY = "tianma_guest_stats";
-
-function loadGuestStats() {
-  try {
-    const raw = localStorage.getItem(GUEST_STATS_KEY);
-    if (raw) return JSON.parse(raw) as {
-      totalAnswered: number; totalCorrect: number;
-      poetCorrectMap: Record<string, number>; typePreferMap: Record<string, number>;
-      avgResponseTime: number;
-    };
-  } catch { /* ignore */ }
-  return { totalAnswered: 0, totalCorrect: 0, poetCorrectMap: {}, typePreferMap: {}, avgResponseTime: 5.0 };
-}
-
-function saveGuestStats(stats: ReturnType<typeof loadGuestStats>) {
-  try { localStorage.setItem(GUEST_STATS_KEY, JSON.stringify(stats)); } catch { /* ignore */ }
-}
+import {
+  loadLocalState,
+  processLocalAnswer,
+  consumeLocalHint,
+  getRankByScore,
+} from "@/lib/localGameState";
 
 // 将题目内容中的 __ 替换为2字符宽度的横线
 function renderQuestionContent(content: string): React.ReactNode {
@@ -71,7 +57,6 @@ const TYPE_LABELS: Record<string, string> = {
 const AUTO_ADVANCE_DELAY = 1200;
 
 export default function Game() {
-  const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [phase, setPhase] = useState<GamePhase>("select");
   const [difficulty, setDifficulty] = useState(1);
@@ -86,6 +71,10 @@ export default function Game() {
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [consecutiveWins, setConsecutiveWins] = useState(0);
   const [lastScoreDelta, setLastScoreDelta] = useState<number>(0);
+  const [localHints, setLocalHints] = useState(0);
+  const [localTotalScore, setLocalTotalScore] = useState(0);
+  const [localRankName, setLocalRankName] = useState("青铜剑·Ⅲ");
+  const [localRankEmoji, setLocalRankEmoji] = useState("🗡️");
   const startTimeRef = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,22 +82,26 @@ export default function Game() {
   const diffInfo = DIFFICULTY_INFO[difficulty - 1];
   const maxTime = diffInfo?.time ?? 20;
 
+  // 加载本地状态
+  useEffect(() => {
+    const state = loadLocalState();
+    setLocalHints(state.hintsCount);
+    setLocalTotalScore(state.totalScore);
+    const rank = getRankByScore(state.totalScore);
+    setLocalRankName(rank.rankName);
+    setLocalRankEmoji(rank.iconEmoji);
+  }, []);
+
   const { data: questions, isLoading: loadingQ, refetch: refetchQ } = trpc.game.getQuestions.useQuery(
     { difficulty, count: 7, seed: querySeed },
     {
       enabled: false,
-      // 禁用缓存，确保每次都从服务器获取新题目
       staleTime: 0,
       gcTime: 0,
     }
   );
 
-  const { data: gameState, refetch: refetchState } = trpc.game.getState.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
   const submitMutation = trpc.game.submitAnswer.useMutation();
-  const hintMutation = trpc.game.useHint.useMutation();
 
   const currentQ = questions?.[currentIdx];
 
@@ -126,7 +119,6 @@ export default function Game() {
     setLastScoreDelta(0);
     if (currentIdx + 1 >= (questions?.length ?? 0)) {
       setPhase("result");
-      // 关卡完成庆祝音效
       setTimeout(() => fbLevelComplete(), 100);
     } else {
       setCurrentIdx((i) => i + 1);
@@ -139,6 +131,13 @@ export default function Game() {
     setSelectedAnswer("__timeout__");
     setLastScoreDelta(-10);
     fbWrong();
+    // 本地处理超时
+    const result = processLocalAnswer(false, currentQ.poetId ?? 0, currentQ.questionType ?? "fill", maxTime);
+    setLocalTotalScore(result.newState.totalScore);
+    const rank = getRankByScore(result.newState.totalScore);
+    setLocalRankName(rank.rankName);
+    setLocalRankEmoji(rank.iconEmoji);
+    // 同时提交到服务器（游客模式，不影响本地）
     submitMutation.mutate({
       questionId: currentQ.id,
       answer: "__timeout__",
@@ -173,67 +172,67 @@ export default function Game() {
     const isCorrect = answer === currentQ.correctAnswer;
     setAnswerState(isCorrect ? "correct" : "wrong");
     setSelectedAnswer(answer);
-    // 音效 + 震动反馈（与判题同步触发）
+
     if (isCorrect) {
       fbCorrect();
     } else {
       fbWrong();
     }
+
+    // 本地处理答题结果（主要逻辑）
+    const localResult = processLocalAnswer(
+      isCorrect,
+      currentQ.poetId ?? 0,
+      currentQ.questionType ?? "fill",
+      responseTime,
+    );
+    setLocalTotalScore(localResult.newState.totalScore);
+    setLocalHints(localResult.newState.hintsCount);
+    const rank = getRankByScore(localResult.newState.totalScore);
+    setLocalRankName(rank.rankName);
+    setLocalRankEmoji(rank.iconEmoji);
+
+    const scoreDelta = localResult.scoreDelta;
+    setLastScoreDelta(scoreDelta);
+
+    if (isCorrect) {
+      setSessionCorrect((c) => c + 1);
+      const newConsec = localResult.newState.consecutiveWins;
+      setConsecutiveWins(newConsec);
+      setSessionScore((s) => s + scoreDelta);
+      if (newConsec >= 3) {
+        setTimeout(() => fbCombo(newConsec), 250);
+      }
+    } else {
+      if (consecutiveWins >= 3) {
+        setTimeout(() => fbStreakBroken(), 100);
+      }
+      setConsecutiveWins(0);
+    }
+
+    if (localResult.reward) {
+      setTimeout(() => toast.success(localResult.reward!.message), 300);
+    }
+    if (localResult.rankChanged) {
+      setTimeout(() => toast.success(`🎉 段位晋升！${localResult.newRank.rankName}`, { duration: 3000 }), 500);
+    }
+    if (localResult.shouldUnlockDestiny) {
+      setTimeout(() => toast.info("✨ 已答满100题！前往「本命觉醒」解锁你的本命诗人", { duration: 5000 }), 1000);
+    }
+
+    // 同时提交到服务器（游客模式，服务器会返回结果但我们主要用本地的）
     try {
-      const result = await submitMutation.mutateAsync({
+      await submitMutation.mutateAsync({
         questionId: currentQ.id,
         answer,
         responseTime,
         sessionId,
         useShield: false,
       });
-      setLastScoreDelta(result.scoreDelta);
-      if (result.isCorrect) {
-        setSessionCorrect((c) => c + 1);
-        setConsecutiveWins(result.newConsecutive);
-        setSessionScore((s) => s + result.scoreDelta);
-        // 连击音效（3/5/10 连击触发）
-        if (result.newConsecutive >= 3) {
-          setTimeout(() => fbCombo(result.newConsecutive), 250);
-        }
-      } else {
-        // 连胜中断音效
-        if (consecutiveWins >= 3) {
-          setTimeout(() => fbStreakBroken(), 100);
-        }
-      }
-      if (result.reward) {
-        setTimeout(() => toast.success(result.reward!.message), 300);
-      }
-      if (result.rankChanged && result.newRank) {
-        setTimeout(() => toast.success(`🎉 段位晋升！${result.newRank!.rankName}`, { duration: 3000 }), 500);
-      }
-      if (isAuthenticated) {
-        refetchState();
-      } else {
-        // 游客模式：将答题统计保存到 localStorage
-        const prevStats = loadGuestStats();
-        const newTotal = prevStats.totalAnswered + 1;
-        const newCorrect = prevStats.totalCorrect + (isCorrect ? 1 : 0);
-        const poetId = String(currentQ.poetId ?? 0);
-        const qType = currentQ.questionType ?? "fill";
-        const poetMap = { ...prevStats.poetCorrectMap };
-        if (isCorrect && poetId !== "0") poetMap[poetId] = (poetMap[poetId] ?? 0) + 1;
-        const typeMap = { ...prevStats.typePreferMap };
-        typeMap[qType] = (typeMap[qType] ?? 0) + 1;
-        // 加权平均响应时间
-        const newAvg = (prevStats.avgResponseTime * prevStats.totalAnswered + responseTime) / newTotal;
-        saveGuestStats({
-          totalAnswered: newTotal,
-          totalCorrect: newCorrect,
-          poetCorrectMap: poetMap,
-          typePreferMap: typeMap,
-          avgResponseTime: newAvg,
-        });
-      }
-    } catch { /* silently continue */ }
+    } catch { /* 游客模式下服务器错误不影响本地游戏 */ }
+
     autoAdvanceRef.current = setTimeout(advanceToNext, AUTO_ADVANCE_DELAY);
-  }, [currentQ, answerState, sessionId, submitMutation, refetchState, isAuthenticated, advanceToNext]);
+  }, [currentQ, answerState, sessionId, submitMutation, advanceToNext, consecutiveWins]);
 
   const handleOptionClick = (option: string) => {
     if (answerState !== "idle" || eliminatedOptions.includes(option)) return;
@@ -241,16 +240,20 @@ export default function Game() {
     handleSubmit(option);
   };
 
-  const handleUseHint = async () => {
+  const handleUseHint = () => {
     if (!currentQ || answerState !== "idle") return;
-    if (!isAuthenticated) { toast.info("登录后可使用提示卡"); return; }
-    if ((gameState?.hintsCount ?? 0) <= 0) { toast.error("没有提示卡了"); return; }
-    try {
-      const result = await hintMutation.mutateAsync({ questionId: currentQ.id });
-      setEliminatedOptions((prev) => [...prev, result.removedOption]);
+    if (localHints <= 0) { toast.error("没有提示卡了"); return; }
+    const used = consumeLocalHint();
+    if (!used) { toast.error("没有提示卡了"); return; }
+    setLocalHints((h) => h - 1);
+    // 排除一个错误选项
+    const options = currentQ.options as string[];
+    const wrong = options.filter((o) => o !== currentQ.correctAnswer && !eliminatedOptions.includes(o));
+    if (wrong.length > 0) {
+      const toRemove = wrong[Math.floor(Math.random() * wrong.length)]!;
+      setEliminatedOptions((prev) => [...prev, toRemove]);
       toast.info("已排除一个错误选项");
-      refetchState();
-    } catch { toast.error("使用失败"); }
+    }
   };
 
   // 监听 seed 变化，当 seed 更新时自动重新拉取题目
@@ -278,7 +281,7 @@ export default function Game() {
   }, [querySeed, pendingStart, refetchQ]);
 
   const startGame = () => {
-    unlockAudio(); // 解锁 AudioContext（需在用户交互中调用）
+    unlockAudio();
     fbGameStart();
     setCurrentIdx(0);
     setSessionScore(0);
@@ -288,7 +291,6 @@ export default function Game() {
     setSelectedAnswer(null);
     setEliminatedOptions([]);
     setLastScoreDelta(0);
-    // 生成新 seed 会触发 useEffect 中的 refetch，确保缓存已破坏
     setQuerySeed(nanoid());
     setPendingStart(true);
   };
@@ -300,39 +302,26 @@ export default function Game() {
         <div className="flex items-center gap-3 py-4 mb-2 border-b border-border">
           <button onClick={() => navigate("/")} className="text-muted-foreground text-xl leading-none">‹</button>
           <h1 className="font-semibold text-base font-display text-foreground">选择关卡</h1>
-          {!isAuthenticated && (
-            <span className="ml-auto text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-              游客模式
-            </span>
-          )}
         </div>
 
-        {isAuthenticated && gameState && (
-          <div className="rounded-xl p-3 mb-4 flex items-center justify-between bg-card border border-border">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{gameState.rank?.iconEmoji ?? "🗡️"}</span>
-              <div>
-                <div className="text-xs text-muted-foreground">当前段位</div>
-                <div className="text-sm font-semibold text-foreground">{gameState.rank?.rankName ?? "青铜剑·Ⅲ"}</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">总积分</div>
-              <div className="text-sm font-semibold" style={{ color: "var(--gold)" }}>{gameState.totalScore}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">提示卡</div>
-              <div className="text-sm font-semibold" style={{ color: "var(--vermilion)" }}>×{gameState.hintsCount}</div>
+        {/* 本地积分/段位显示 */}
+        <div className="rounded-xl p-3 mb-4 flex items-center justify-between bg-card border border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{localRankEmoji}</span>
+            <div>
+              <div className="text-xs text-muted-foreground">当前段位</div>
+              <div className="text-sm font-semibold text-foreground">{localRankName}</div>
             </div>
           </div>
-        )}
-
-        {!isAuthenticated && (
-          <div className="rounded-xl p-3 mb-4 flex items-center gap-2 bg-card border border-border">
-            <span className="text-lg">💡</span>
-            <p className="text-xs text-muted-foreground flex-1">游客模式可直接答题，登录后积分和段位将被保存</p>
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">总积分</div>
+            <div className="text-sm font-semibold" style={{ color: "var(--gold)" }}>{localTotalScore}</div>
           </div>
-        )}
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">提示卡</div>
+            <div className="text-sm font-semibold" style={{ color: "var(--vermilion)" }}>×{localHints}</div>
+          </div>
+        </div>
 
         <div className="space-y-2.5 mb-6">
           {DIFFICULTY_INFO.map((d) => {
@@ -352,12 +341,10 @@ export default function Game() {
                     : "0 1px 4px oklch(0.14 0.025 55 / 0.04)",
                 }}
               >
-                {/* 选中时的左边色条 */}
                 <div className="flex items-stretch">
                   <div className="w-1 flex-shrink-0 rounded-l-2xl"
                     style={{ background: isSelected ? d.color : "transparent" }} />
                   <div className="flex items-center gap-3 p-4 flex-1">
-                    {/* 图标圆形背景 */}
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0"
                       style={{
                         background: isSelected ? d.color + "18" : "var(--secondary)",
@@ -451,18 +438,15 @@ export default function Game() {
                 </span>
               )}
             </div>
-            {isAuthenticated ? (
-              <button
-                onClick={handleUseHint}
-                disabled={answerState !== "idle" || (gameState?.hintsCount ?? 0) <= 0}
-                className="text-sm px-2 py-1 rounded-lg transition-all disabled:opacity-40"
-                style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}
-              >
-                💡×{gameState?.hintsCount ?? 0}
-              </button>
-            ) : (
-              <div className="text-xs text-muted-foreground">游客</div>
-            )}
+            {/* 提示卡按钮 */}
+            <button
+              onClick={handleUseHint}
+              disabled={answerState !== "idle" || localHints <= 0}
+              className="text-sm px-2 py-1 rounded-lg transition-all disabled:opacity-40"
+              style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}
+            >
+              💡×{localHints}
+            </button>
           </div>
 
           {/* Progress bar */}
@@ -490,14 +474,13 @@ export default function Game() {
         {/* Question */}
         {currentQ ? (
           <div className="flex-1 flex flex-col">
-            {/* 题目卡片 - 宋体大字风格 */}
+            {/* 题目卡片 */}
             <div className="rounded-2xl mb-4 overflow-hidden"
               style={{
                 background: "var(--card)",
                 border: "1px solid var(--border)",
                 boxShadow: "0 2px 12px oklch(0.14 0.025 55 / 0.06)",
               }}>
-              {/* 题目头部 */}
               <div className="flex items-center gap-2 px-4 pt-4 pb-3"
                 style={{ borderBottom: "1px solid var(--border)" }}>
                 <span className="tag-seal"
@@ -510,7 +493,6 @@ export default function Game() {
                   </span>
                 )}
               </div>
-              {/* 题目内容 - 宋体大字，题干比选项大一号 */}
               <div className="px-5 py-5">
                 <p className="font-serif-poem text-foreground"
                   style={{ fontSize: "24px", lineHeight: "2.0", fontWeight: 500, letterSpacing: "0.08em" }}>
@@ -519,12 +501,10 @@ export default function Game() {
               </div>
             </div>
 
-            {/* 选项 - 无ABCD，单字一行四个，多字两行 */}
+            {/* 选项 */}
             {(() => {
               const options = currentQ.options as string[];
-              // 判断是否为单字选项（所有选项都是1个字）
               const isSingleChar = options.every(o => o.length === 1);
-              // 判断是否为短选项（≤3字，排一行两个）
               const isShortOpt = options.every(o => o.length <= 4);
 
               return (
@@ -537,7 +517,7 @@ export default function Game() {
                       : isShortOpt
                       ? "repeat(2, 1fr)"
                       : "repeat(1, 1fr)",
-                    gap: isSingleChar ? "10px" : "10px",
+                    gap: "10px",
                   }}
                 >
                   {options.map((opt, i) => {
@@ -603,8 +583,7 @@ export default function Game() {
               );
             })()}
 
-
-            {/* 得分反馈 - 更优雅的布局 */}
+            {/* 得分反馈 */}
             {answerState !== "idle" && (
               <div className="rounded-2xl p-4 mb-4 animate-slide-up"
                 style={{
@@ -677,21 +656,18 @@ export default function Game() {
           </div>
         </div>
 
-        {isAuthenticated && gameState && (
-          <div className="rounded-xl p-3 mb-5 flex items-center gap-3 bg-card border border-border">
-            <span className="text-2xl">{gameState.rank?.iconEmoji ?? "🗡️"}</span>
-            <div>
-              <div className="text-xs text-muted-foreground">当前段位</div>
-              <div className="font-semibold text-sm text-foreground">{gameState.rank?.rankName ?? "青铜剑·Ⅲ"}</div>
-            </div>
-            <div className="ml-auto text-right">
-              <div className="text-xs text-muted-foreground">总积分</div>
-              <div className="font-semibold text-sm" style={{ color: "var(--gold)" }}>{gameState.totalScore}</div>
-            </div>
+        {/* 本地段位显示 */}
+        <div className="rounded-xl p-3 mb-5 flex items-center gap-3 bg-card border border-border">
+          <span className="text-2xl">{localRankEmoji}</span>
+          <div>
+            <div className="text-xs text-muted-foreground">当前段位</div>
+            <div className="font-semibold text-sm text-foreground">{localRankName}</div>
           </div>
-        )}
-
-
+          <div className="ml-auto text-right">
+            <div className="text-xs text-muted-foreground">总积分</div>
+            <div className="font-semibold text-sm" style={{ color: "var(--gold)" }}>{localTotalScore}</div>
+          </div>
+        </div>
 
         <div className="space-y-3">
           <button
@@ -710,10 +686,9 @@ export default function Game() {
           </button>
           <button
             onClick={() => {
-              const shareText = `我在「天马行空·你的本命诗人是谁」答题得了${sessionScore}分！正确率${Math.round((sessionCorrect / (questions?.length ?? 7)) * 100)}%，快来挑战我吧！📜
-https://tianmapoet-4lhgiefm.manus.space`;
+              const shareText = `我在「天马行空·你的本命诗人是谁」答题得了${sessionScore}分！正确率${Math.round((sessionCorrect / (questions?.length ?? 7)) * 100)}%，快来挑战我吧！📜\nhttps://www.tianmapoet.click`;
               if (navigator.share) {
-                navigator.share({ title: "天马行空·本命诗人", text: shareText, url: "https://tianmapoet-4lhgiefm.manus.space" });
+                navigator.share({ title: "天马行空·本命诗人", text: shareText, url: "https://www.tianmapoet.click" });
               } else {
                 navigator.clipboard.writeText(shareText).then(() => toast.success("分享文案已复制，可粘贴到微信发送给好友！"));
               }

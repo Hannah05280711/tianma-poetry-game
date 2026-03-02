@@ -1,7 +1,8 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import BottomNav from "@/components/BottomNav";
+import { loadLocalState, getRankByScore } from "@/lib/localGameState";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -18,16 +19,24 @@ function getWeekKey() {
 }
 
 export default function Leaderboard() {
-  const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const [localNickname, setLocalNickname] = useState("我");
+  const [localWeekScore, setLocalWeekScore] = useState(0);
+  const [localRankName, setLocalRankName] = useState("青铜剑·Ⅲ");
+  const [localRankTier, setLocalRankTier] = useState("bronze");
+
+  useEffect(() => {
+    const state = loadLocalState();
+    setLocalNickname(state.nickname);
+    setLocalWeekScore(state.weeklyScore ?? 0);
+    const rank = getRankByScore(state.totalScore);
+    setLocalRankName(rank.rankName);
+    setLocalRankTier(rank.rankTier);
+  }, []);
 
   const { data: leaderboard, isLoading } = trpc.game.getWeeklyLeaderboard.useQuery();
-  const { data: gameState } = trpc.game.getState.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
 
   const weekKey = getWeekKey();
-  const myRank = leaderboard?.findIndex((e) => e.userName === user?.name);
 
   return (
     <div className="min-h-screen page-content px-4 pt-safe bg-background">
@@ -40,39 +49,34 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* My rank / Guest hint */}
-      {!isAuthenticated && (
-        <div className="rounded-xl p-3 mb-4 flex items-center gap-3 bg-card border border-border">
-          <div className="text-xl">💡</div>
-          <p className="text-xs text-muted-foreground flex-1">登录后可查看你的排名和本周积分</p>
-        </div>
-      )}
-      {isAuthenticated && gameState && (
-        <div className="rounded-2xl p-4 mb-4 border"
-          style={{
-            background: "linear-gradient(135deg, var(--vermilion-pale) 0%, #FFFDF9 100%)",
-            borderColor: "oklch(0.55 0.20 25 / 0.22)",
-          }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm"
-              style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
-              {myRank !== undefined && myRank >= 0 ? `#${myRank + 1}` : "—"}
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold text-sm text-foreground">{user?.name ?? "你"}</div>
-              <div className="text-xs text-muted-foreground">
-                {gameState.rank?.rankName ?? "青铜剑·Ⅲ"}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">本周积分</div>
-              <div className="font-bold" style={{ color: "var(--gold)" }}>
-                {leaderboard?.find(e => e.userName === user?.name)?.weekScore ?? 0}
-              </div>
+      {/* 本地用户本周积分 */}
+      <div className="rounded-2xl p-4 mb-4 border"
+        style={{
+          background: "linear-gradient(135deg, var(--vermilion-pale) 0%, var(--card) 100%)",
+          borderColor: "oklch(0.55 0.20 25 / 0.22)",
+        }}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm"
+            style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
+            我
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-sm text-foreground">{localNickname}</div>
+            <div className="text-xs text-muted-foreground">{localRankName}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">本周积分</div>
+            <div className="font-bold" style={{ color: "var(--gold)" }}>
+              {localWeekScore}
             </div>
           </div>
         </div>
-      )}
+        {localWeekScore === 0 && (
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            去答题积累本周积分，上榜需登录账号
+          </p>
+        )}
+      </div>
 
       {/* Top 3 podium */}
       {leaderboard && leaderboard.length >= 3 && (
@@ -81,7 +85,7 @@ export default function Leaderboard() {
           <div className="flex-1 text-center">
             <div className="text-3xl mb-1">🥈</div>
             <div className="rounded-t-xl py-4 px-2 border border-b-0"
-              style={{ background: "#F8F8F8", borderColor: "#8A8A8A30" }}>
+              style={{ background: "var(--card)", borderColor: "#8A8A8A30" }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl mx-auto mb-1 font-semibold bg-muted text-foreground">
                 {leaderboard[1]?.userName?.charAt(0) ?? "?"}
               </div>
@@ -110,7 +114,7 @@ export default function Leaderboard() {
           <div className="flex-1 text-center">
             <div className="text-3xl mb-1">🥉</div>
             <div className="rounded-t-xl py-3 px-2 border border-b-0"
-              style={{ background: "#F8F6F4", borderColor: "#B8733330" }}>
+              style={{ background: "var(--card)", borderColor: "#B8733330" }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl mx-auto mb-1 font-semibold bg-muted text-foreground">
                 {leaderboard[2]?.userName?.charAt(0) ?? "?"}
               </div>
@@ -133,14 +137,13 @@ export default function Leaderboard() {
       ) : (
         <div className="space-y-2 mb-6">
           {leaderboard?.map((entry, idx) => {
-            const isMe = entry.userName === user?.name;
             const rankColor = entry.rankTier ? (RANK_COLORS[entry.rankTier] ?? "#B87333") : "#B87333";
             return (
               <div key={entry.userId}
                 className="rounded-xl p-3 flex items-center gap-3 transition-all border"
                 style={{
-                  background: isMe ? "var(--vermilion-pale)" : "white",
-                  borderColor: isMe ? "oklch(0.55 0.20 25 / 0.28)" : "oklch(0.90 0.01 80)",
+                  background: "var(--card)",
+                  borderColor: "var(--border)",
                 }}>
                 <div className="w-8 text-center flex-shrink-0">
                   {idx < 3 ? (
@@ -158,8 +161,6 @@ export default function Leaderboard() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-sm truncate text-foreground">{entry.userName ?? "匿名"}</span>
-                    {isMe && <span className="text-[10px] px-1.5 py-0.5 rounded-full"
-                      style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>我</span>}
                   </div>
                   <div className="text-xs text-muted-foreground">{entry.rankTier ?? "bronze"} 段</div>
                 </div>
