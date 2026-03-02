@@ -170,7 +170,7 @@ const WEAPON_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-// SVG 圆环徽章组件（Apple Fitness 风格）
+// 兵器徽章组件：已解锁显示实心彩色徽章，未解锁显示灰度圆圈
 function RingBadge({
   rank,
   unlocked,
@@ -184,91 +184,91 @@ function RingBadge({
   progress?: number;
   size?: number;
 }) {
-  // 青铜剑是初始兵器，始终彩色显示
   const effectiveUnlocked = unlocked || rank.minScore === 0;
-  const r = size * 0.38;
   const cx = size / 2;
   const cy = size / 2;
-  const circumference = 2 * Math.PI * r;
-  const strokeDash = circumference * Math.min(1, Math.max(0, progress / 100));
+  const gradId = `solid-grad-${rank.tier}-${size}`;
+  const shadowId = `shadow-${rank.tier}-${size}`;
+  const iconSize = size * 0.42;
+
+  if (effectiveUnlocked) {
+    // 已解锁：实心彩色徽章（渐变圆形背景 + 兵器 Emoji）
+    const r = size * 0.46;
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{
+          filter: isCurrent
+            ? `drop-shadow(0 0 ${size * 0.12}px ${rank.color}80)`
+            : `drop-shadow(0 0 ${size * 0.06}px ${rank.color}40)`,
+        }}
+      >
+        <defs>
+          <radialGradient id={gradId} cx="38%" cy="35%" r="65%">
+            <stop offset="0%" stopColor={rank.gradientFrom} stopOpacity="1" />
+            <stop offset="100%" stopColor={rank.gradientTo} stopOpacity="1" />
+          </radialGradient>
+        </defs>
+        {/* 实心圆形背景 */}
+        <circle cx={cx} cy={cy} r={r} fill={`url(#${gradId})`} />
+        {/* 内圈光泽效果 */}
+        <circle cx={cx} cy={cy} r={r} fill="none"
+          stroke="rgba(255,255,255,0.25)" strokeWidth={size * 0.025}
+        />
+        {/* 高光小圆 */}
+        <circle cx={cx * 0.72} cy={cy * 0.68} r={r * 0.22}
+          fill="rgba(255,255,255,0.18)"
+        />
+        {/* 兵器 Emoji */}
+        <text
+          x={cx} y={cy}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={iconSize}
+          style={{ userSelect: "none" }}
+        >
+          {rank.emoji}
+        </text>
+        {/* 当前段位进度圆弧（仅 isCurrent 显示） */}
+        {isCurrent && (
+          <>
+            <circle cx={cx} cy={cy} r={r + size * 0.06}
+              fill="none" stroke={rank.color + "30"} strokeWidth={size * 0.05}
+            />
+            <circle cx={cx} cy={cy} r={r + size * 0.06}
+              fill="none" stroke={rank.colorLight} strokeWidth={size * 0.05}
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * (r + size * 0.06) * Math.min(1, progress / 100)} ${2 * Math.PI * (r + size * 0.06)}`}
+              transform={`rotate(-90 ${cx} ${cy})`}
+            />
+          </>
+        )}
+      </svg>
+    );
+  }
+
+  // 未解锁：灰度圆圈 + 灰度兵器
+  const r = size * 0.38;
   const ringWidth = size * 0.11;
-
-  const ringColor = effectiveUnlocked ? rank.gradientFrom : "#C8C8C8";
-  const ringColorEnd = effectiveUnlocked ? rank.gradientTo : "#A0A0A0";
-  const iconColor = effectiveUnlocked ? rank.color : "#A0A0A0";
-  const bgOpacity = effectiveUnlocked ? 0.12 : 0.05;
-  const gradId = `grad-${rank.tier}-${size}`;
-  const bgGradId = `bg-${rank.tier}-${size}`;
-  // 圆圈内图案大小：与本命诗人卡片（96px容器/48px图案=50%比例）保持一致
-  // 兵器谱圆圈内径 = size - 2*ringWidth，图案占内径50%
-  const innerDiameter = size - 2 * ringWidth;
-  const iconSize = innerDiameter * 0.52;
-  const iconOffset = (size - iconSize) / 2;
-
   return (
     <svg
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      style={{
-        filter: effectiveUnlocked && isCurrent
-          ? `drop-shadow(0 0 ${size * 0.09}px ${rank.color}70)`
-          : "none",
-      }}
     >
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={ringColor} />
-          <stop offset="100%" stopColor={ringColorEnd} />
-        </linearGradient>
-        <radialGradient id={bgGradId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={effectiveUnlocked ? rank.color : "#888"} stopOpacity={bgOpacity * 2} />
-          <stop offset="100%" stopColor={effectiveUnlocked ? rank.color : "#888"} stopOpacity={0} />
-        </radialGradient>
-      </defs>
-
-      {/* 背景晕染 */}
-      <circle cx={cx} cy={cy} r={r + ringWidth / 2} fill={`url(#${bgGradId})`} />
-
-      {/* 轨道底环 */}
-      <circle
-        cx={cx} cy={cy} r={r}
-        fill="none"
-        stroke={effectiveUnlocked ? rank.color + "22" : "#E0E0E0"}
-        strokeWidth={ringWidth}
+      {/* 灰度轨道底环 */}
+      <circle cx={cx} cy={cy} r={r}
+        fill="none" stroke="#D8D8D8" strokeWidth={ringWidth}
       />
-
-      {/* 进度环 */}
-      {effectiveUnlocked && (
-        <circle
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth={ringWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${strokeDash} ${circumference}`}
-          transform={`rotate(-90 ${cx} ${cy})`}
-        />
-      )}
-
-      {/* 进度端点光点 */}
-      {effectiveUnlocked && progress > 3 && progress < 100 && (
-        <circle
-          cx={cx + r * Math.cos((strokeDash / circumference) * 2 * Math.PI - Math.PI / 2)}
-          cy={cy + r * Math.sin((strokeDash / circumference) * 2 * Math.PI - Math.PI / 2)}
-          r={ringWidth * 0.55}
-          fill={rank.colorLight}
-        />
-      )}
-
-      {/* 中心兵器 Emoji 图标 */}
+      {/* 灰度兵器 */}
       <text
-        x={cx}
-        y={cy}
+        x={cx} y={cy}
         textAnchor="middle"
         dominantBaseline="central"
         fontSize={iconSize}
-        style={{ opacity: effectiveUnlocked ? 1 : 0.25, userSelect: "none" }}
+        style={{ opacity: 0.2, userSelect: "none" }}
       >
         {rank.emoji}
       </text>
@@ -301,15 +301,23 @@ export default function Rank() {
     enabled: isAuthenticated,
   });
 
-  const currentTier = gameState?.rank?.rankTier ?? "bronze";
-  const currentScore = gameState?.totalScore ?? 0;
-  const currentTierIdx = RANK_TIERS.findIndex(r => r.tier === currentTier);
+  // 优先使用localScore（本地存储）判断解锁状态，不依赖登录
+  const currentScore = localScore;
+  // 根据 localScore 计算当前段位
+  const currentTierIdx = (() => {
+    let idx = 0;
+    for (let i = 0; i < RANK_TIERS.length; i++) {
+      if (localScore >= RANK_TIERS[i]!.minScore) idx = i;
+    }
+    return idx;
+  })();
+  const currentTier = RANK_TIERS[currentTierIdx]?.tier ?? "bronze";
   const currentRankData = RANK_TIERS[currentTierIdx];
   const nextTier = RANK_TIERS[currentTierIdx + 1];
 
   // 检测段位变化，触发新解锁动效
   useEffect(() => {
-    if (!isAuthenticated || currentTierIdx < 0) return;
+    if (currentTierIdx < 0) return;
     const storageKey = 'rank_prev_tier_idx';
     const stored = sessionStorage.getItem(storageKey);
     const storedIdx = stored !== null ? parseInt(stored, 10) : null;
@@ -442,8 +450,9 @@ export default function Rank() {
         {/* 兵器卡片列表 */}
         <div className="space-y-4 mb-6">
           {RANK_TIERS.map((rank) => {
-            const unlocked = isAuthenticated && currentScore >= rank.minScore;
-            const isCurrent = rank.tier === currentTier && isAuthenticated;
+            // 使用localScore判断解锁，不依赖登录状态
+            const unlocked = localScore >= rank.minScore;
+            const isCurrent = rank.tier === currentTier;
             const nextR = RANK_TIERS[RANK_TIERS.indexOf(rank) + 1];
             const prog = unlocked ? (isCurrent ? tierProgress : 100) : 0;
 
@@ -459,7 +468,7 @@ export default function Rank() {
                     ? rank.color + "06"
                     : "var(--card)",
                   borderColor: isNewlyUnlocked ? rank.color : isCurrent ? rank.color + "50" : unlocked ? rank.color + "25" : "var(--border)",
-                  opacity: isAuthenticated && !unlocked ? 0.55 : 1,
+                  opacity: !unlocked ? 0.5 : 1,
                   boxShadow: isNewlyUnlocked ? `0 0 0 2px ${rank.color}60, 0 0 24px ${rank.color}40` : undefined,
                   animation: isNewlyUnlocked ? 'rankUnlock 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' : undefined,
                 }}
@@ -499,10 +508,10 @@ export default function Rank() {
                             当前
                           </span>
                         )}
-                        {isAuthenticated && unlocked && !isCurrent && (
+                        {unlocked && !isCurrent && (
                           <span className="text-xs text-muted-foreground">✓ 已解锁</span>
                         )}
-                        {isAuthenticated && !unlocked && (
+                        {!unlocked && (
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="opacity-40 flex-shrink-0">
                             <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
                             <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
