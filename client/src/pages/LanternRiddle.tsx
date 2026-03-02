@@ -333,39 +333,47 @@ export default function LanternRiddle() {
               </p>
             </div>
 
-            {/* 选项 */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {riddle.options.map((opt) => {
-                let bg = "rgba(255,200,50,0.06)";
-                let border = "rgba(255,200,50,0.2)";
-                let textColor = "#FFD090";
-                if (selectedOption !== null) {
-                  if (opt === riddle.answer) {
-                    bg = "rgba(34,197,94,0.15)"; border = "#22C55E"; textColor = "#4ADE80";
-                  } else if (opt === selectedOption && !isCorrect) {
-                    bg = "rgba(239,68,68,0.15)"; border = "#EF4444"; textColor = "#FCA5A5";
-                  }
-                }
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => handleAnswer(opt)}
-                    disabled={selectedOption !== null}
-                    className="py-4 px-3 rounded-xl text-center font-semibold transition-all active:scale-95 disabled:cursor-default"
-                    style={{
-                      background: bg,
-                      border: `1.5px solid ${border}`,
-                      color: textColor,
-                      fontSize: "16px",
-                      letterSpacing: "0.04em",
-                      minHeight: 60,
-                    }}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
+            {/* 选项：飞花令/对对联用单列，其他用两列 */}
+            {(() => {
+              const isLongOption = riddle.type === "feihua" || riddle.type === "couplet";
+              return (
+                <div className={`${isLongOption ? "flex flex-col" : "grid grid-cols-2"} gap-3 mb-4`}>
+                  {riddle.options.map((opt) => {
+                    let bg = "rgba(255,200,50,0.06)";
+                    let border = "rgba(255,200,50,0.2)";
+                    let textColor = "#FFD090";
+                    if (selectedOption !== null) {
+                      if (opt === riddle.answer) {
+                        bg = "rgba(34,197,94,0.15)"; border = "#22C55E"; textColor = "#4ADE80";
+                      } else if (opt === selectedOption && !isCorrect) {
+                        bg = "rgba(239,68,68,0.15)"; border = "#EF4444"; textColor = "#FCA5A5";
+                      }
+                    }
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => handleAnswer(opt)}
+                        disabled={selectedOption !== null}
+                        className="w-full rounded-xl text-center font-semibold transition-all active:scale-95 disabled:cursor-default"
+                        style={{
+                          background: bg,
+                          border: `1.5px solid ${border}`,
+                          color: textColor,
+                          fontSize: isLongOption ? "14px" : "16px",
+                          letterSpacing: isLongOption ? "0.02em" : "0.04em",
+                          padding: isLongOption ? "12px 14px" : "16px 12px",
+                          minHeight: isLongOption ? 48 : 60,
+                          textAlign: "left",
+                          lineHeight: "1.6",
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* 解析 */}
             {showExplanation && (

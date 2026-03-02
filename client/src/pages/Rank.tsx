@@ -356,8 +356,8 @@ export default function Rank() {
 
       <div className="px-4 pt-5">
 
-        {/* 当前段位卡片（仅登录用户显示）*/}
-        {isAuthenticated && gameState?.rank && currentRankData && (
+        {/* 当前段位卡片（基于本地积分）*/}
+        {currentRankData && (
           <div
             className="rounded-2xl p-5 mb-6 border overflow-hidden relative"
             style={{
@@ -387,7 +387,7 @@ export default function Rank() {
                     className="font-bold font-display"
                     style={{ fontSize: "21px", color: currentRankData.color }}
                   >
-                    {gameState.rank.rankName}
+                    {currentRankData.name}
                   </span>
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -429,13 +429,13 @@ export default function Rank() {
           </div>
         )}
 
-        {/* 游客提示 */}
-        {!isAuthenticated && (
+        {/* 当前积分提示（无积分时显示引导） */}
+        {localScore === 0 && (
           <div className="rounded-xl p-4 mb-5 flex items-start gap-3 bg-card border border-border">
             <div className="text-xl mt-0.5">💡</div>
             <div>
-              <div className="font-semibold text-foreground mb-0.5" style={{ fontSize: "15px" }}>登录解锁段位追踪</div>
-              <p className="text-xs text-muted-foreground">登录后可查看你的当前段位、积分进度和兵器解锁状态</p>
+              <div className="font-semibold text-foreground mb-0.5" style={{ fontSize: "15px" }}>开始答题解锁兵器</div>
+              <p className="text-xs text-muted-foreground">答题得分可解锁更高段位兵器，积分越高兵器越强力</p>
             </div>
           </div>
         )}
@@ -605,10 +605,10 @@ export default function Rank() {
                           }}
                         />
                       </div>
-                      {/* 子段位标记 */}
+                      {/* 子段位标记：基于进度百分比判断 */}
                       <div className="flex gap-2 mt-3">
-                        {["Ⅲ", "Ⅱ", "Ⅰ"].map((sub, subIdx) => {
-                          const isCurrentSub = gameState?.rank?.subRank === (subIdx + 1);
+                        {["\u2162", "\u2161", "\u2160"].map((sub, subIdx) => {
+                          const isCurrentSub = prog < 33 ? subIdx === 0 : prog < 66 ? subIdx === 1 : subIdx === 2;
                           return (
                             <div
                               key={sub}
