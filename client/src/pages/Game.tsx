@@ -700,22 +700,41 @@ export default function Game() {
           const todayInfo = getTodayCalendarInfo();
           if (!todayInfo.hasEvent || !todayInfo.event) return null;
           const ev = todayInfo.event;
+          const isLantern = ev.name === "元宵节";
           return (
             <div
               className="rounded-2xl p-4 mb-5 text-center"
               style={{
                 background: ev.bgGradient || "linear-gradient(135deg, var(--vermilion-pale), oklch(0.97 0.02 55))",
-                border: `1px solid ${ev.color}30`,
+                border: isLantern ? "1px solid rgba(255,200,50,0.5)" : `1px solid ${ev.color}30`,
+                boxShadow: isLantern ? "0 4px 20px rgba(232,69,69,0.3)" : undefined,
               }}
             >
               <div className="text-3xl mb-2">{ev.emoji}</div>
-              <div className="font-display text-base font-bold mb-1" style={{ color: ev.color }}>
-                {ev.name}快乐！
+              <div className="font-display text-base font-bold mb-1"
+                style={{ color: isLantern ? "#FFD700" : ev.color }}>
+                {isLantern ? "🏮 元宵节快乐！正月十五元宵夜" : `${ev.name}快乐！`}
               </div>
-              <div className="font-serif-poem text-sm leading-relaxed mb-1" style={{ color: ev.color + "cc" }}>
+              <div className="font-serif-poem text-sm leading-relaxed mb-1"
+                style={{ color: isLantern ? "rgba(255,180,80,0.9)" : ev.color + "cc" }}>
                 {ev.poem}
               </div>
-              <div className="text-xs text-muted-foreground">—— {ev.poemAuthor}</div>
+              <div className="text-xs mb-3" style={{ color: isLantern ? "rgba(255,200,100,0.6)" : "var(--muted-foreground)" }}>
+                —— {ev.poemAuthor}
+              </div>
+              {isLantern && (
+                <button
+                  onClick={() => navigate("/lantern-riddle")}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #E84545, #FF8C00)",
+                    color: "white",
+                    boxShadow: "0 3px 12px rgba(232,69,69,0.4)",
+                  }}
+                >
+                  🏮 去猜灯谜
+                </button>
+              )}
             </div>
           );
         })()}

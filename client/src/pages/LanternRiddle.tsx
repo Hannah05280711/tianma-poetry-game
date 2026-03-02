@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { getLanternFestivalRiddles, type LanternRiddle } from "@/lib/lanternRiddleData";
+import { getLanternFestivalRiddles, shouldShowLanternEgg, type LanternRiddle } from "@/lib/lanternRiddleData";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 import { playFireworkSound, playFirecrackerSound, initAudio } from "@/lib/soundEffects";
@@ -65,6 +65,7 @@ export default function LanternRiddle() {
   const [timeLeft, setTimeLeft] = useState(20);
   const [timerActive, setTimerActive] = useState(false);
   const { particles, burst } = useFireworks();
+  const isLanternDay = shouldShowLanternEgg();
 
   // 初始化灯谜
   const initGame = useCallback(() => {
@@ -221,15 +222,27 @@ export default function LanternRiddle() {
         {/* ===== 引导页 ===== */}
         {phase === "intro" && (
           <div className="w-full max-w-md mt-4">
-            <div className="rounded-2xl overflow-hidden"
-              style={{ background: "rgba(255,200,50,0.08)", border: "1px solid rgba(255,200,50,0.3)" }}>
+              <div className="rounded-2xl overflow-hidden"
+              style={{
+                background: isLanternDay ? "rgba(255,200,50,0.12)" : "rgba(255,200,50,0.08)",
+                border: isLanternDay ? "1px solid rgba(255,200,50,0.5)" : "1px solid rgba(255,200,50,0.3)",
+                boxShadow: isLanternDay ? "0 0 30px rgba(255,150,0,0.15)" : undefined,
+              }}>
               <div className="p-6 text-center">
-                <div className="text-6xl mb-3">🏮</div>
+                <div className="text-6xl mb-3">{isLanternDay ? "🏮" : "🏮"}</div>
+                {isLanternDay && (
+                  <div className="text-xs px-3 py-1 rounded-full inline-block mb-2 font-semibold animate-pulse"
+                    style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.5)" }}>
+                    正月十五 · 元宵节当天
+                  </div>
+                )}
                 <h1 className="text-2xl font-bold mb-1" style={{ color: "#FFD700", letterSpacing: "0.12em" }}>
                   诗词灯谜馆
                 </h1>
                 <p className="text-sm mb-4" style={{ color: "#FFA040", letterSpacing: "0.06em" }}>
-                  传统文化趣味问答 · 元宵节专属彩蛋
+                  {isLanternDay
+                    ? "🏮 元宵节快乐！灯谜大会正式开始"
+                    : "传统文化趣味问答 · 元宵节专属彩蛋"}
                 </p>
                 <div className="rounded-xl p-4 mb-5" style={{ background: "rgba(0,0,0,0.3)" }}>
                   <p className="text-sm leading-relaxed" style={{ color: "#FFD090" }}>

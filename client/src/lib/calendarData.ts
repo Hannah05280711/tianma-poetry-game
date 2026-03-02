@@ -399,17 +399,17 @@ const LUNAR_FESTIVALS_2026: Array<{ month: number; day: number; event: CalendarE
       bgGradient: "linear-gradient(135deg, #FFF1F0 0%, #FFF7E6 100%)",
     },
   },
-  // 2026年元宵：3月4日
+  // 2026年元宵：3月2日（农历正月十五）
   {
-    month: 3, day: 4,
+    month: 3, day: 2,
     event: {
       type: "festival", name: "元宵节", emoji: "🏮",
       poem: "去年元夜时，花市灯如昼。月上柳梢头，人约黄昏后。",
       poemAuthor: "欧阳修",
-      subtitle: "花灯如昼，月圆人团圆",
+      subtitle: "花灯如昼，月圆人团圆 · 正月十五元宵夜",
       themeTag: "元宵",
       color: "#FA8C16",
-      bgGradient: "linear-gradient(135deg, #FFF7E6 0%, #FFFBE6 100%)",
+      bgGradient: "linear-gradient(135deg, #3D1500 0%, #7A2D00 50%, #3D1500 100%)",
     },
   },
   // 2026年清明：4月5日（已在节气中）

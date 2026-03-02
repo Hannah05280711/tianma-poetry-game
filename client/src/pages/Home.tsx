@@ -6,7 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { loadLocalState, getRankByScore, type LocalGameState } from "@/lib/localGameState";
 import WelcomeModal from "@/components/WelcomeModal";
 import { getTodayDisplay, getUpcomingEvents, type CalendarEvent } from "@/lib/calendarData";
-import { isLanternFestivalSeason } from "@/lib/lanternRiddleData";
+import { isLanternFestivalSeason, shouldShowLanternEgg } from "@/lib/lanternRiddleData";
 
 const RANK_COLORS: Record<string, string> = {
   bronze: "#B87333", silver: "#8A8A8A", gold: "#C8960C",
@@ -60,6 +60,9 @@ export default function Home() {
   const handleThemeGame = (themeTag: string) => {
     navigate(`/game?theme=${encodeURIComponent(themeTag)}`);
   };
+
+  // 是否是元宵节当天（正月十五前后）
+  const isLanternDay = useMemo(() => shouldShowLanternEgg(), []);
 
   return (
     <div className="min-h-screen page-content bg-background">
@@ -121,88 +124,112 @@ export default function Home() {
         </div>
 
         {/* ===== 节日/节气 Hero Banner ===== */}
-        <div
-          className="relative rounded-2xl overflow-hidden mb-4 border"
-          style={{
-            background: todayDisplay.bgGradient,
-            borderColor: todayDisplay.color + "30",
-            boxShadow: `0 4px 20px ${todayDisplay.color}15`,
-          }}
-        >
-          {/* 装饰性大字 */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 select-none pointer-events-none"
-            style={{
-              fontSize: "72px",
-              fontFamily: "'Noto Serif SC', serif",
-              color: todayDisplay.color + "10",
-              fontWeight: 900,
-              lineHeight: 1,
-            }}>
-            {todayDisplay.emoji}
-          </div>
-
-          <div className="relative z-10 p-5">
-            {/* 节日/节气标签 */}
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+        {(() => {
+          // 元宵节使用深色灯笼风格，其他节日使用原有浅色风格
+          const isDarkBanner = isLanternDay && todayDisplay.name === "元宵节";
+          const bannerTextColor = isDarkBanner ? "#FFD700" : todayDisplay.color;
+          const bannerSubColor = isDarkBanner ? "#FFA040" : todayDisplay.color;
+          const bannerMutedColor = isDarkBanner ? "rgba(255,200,100,0.7)" : "var(--ink-pale)";
+          const bannerSubtitleColor = isDarkBanner ? "rgba(255,180,80,0.8)" : undefined;
+          return (
+            <div
+              className="relative rounded-2xl overflow-hidden mb-4 border"
+              style={{
+                background: todayDisplay.bgGradient,
+                borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : todayDisplay.color + "30",
+                boxShadow: isDarkBanner
+                  ? "0 4px 24px rgba(232,69,69,0.35), 0 0 40px rgba(255,150,0,0.1)"
+                  : `0 4px 20px ${todayDisplay.color}15`,
+              }}
+            >
+              {/* 装饰性大字 */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 select-none pointer-events-none"
                 style={{
-                  background: todayDisplay.color + "15",
-                  color: todayDisplay.color,
-                  border: `1px solid ${todayDisplay.color}30`,
-                  fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', serif",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {todayDisplay.emoji} {todayDisplay.name}
-              </span>
-              <span className="text-xs text-muted-foreground">{todayDisplay.dateDesc}</span>
-            </div>
+                  fontSize: isDarkBanner ? "90px" : "72px",
+                  fontFamily: "'Noto Serif SC', serif",
+                  color: isDarkBanner ? "rgba(255,200,50,0.12)" : todayDisplay.color + "10",
+                  fontWeight: 900,
+                  lineHeight: 1,
+                }}>
+                {todayDisplay.emoji}
+              </div>
+              {/* 元宵节额外装饰 */}
+              {isDarkBanner && (
+                <div className="absolute left-3 bottom-3 select-none pointer-events-none text-4xl" style={{ opacity: 0.15 }}>🏮</div>
+              )}
 
-            {/* 诗句引用 */}
-            <div className="mb-4">
-              <p className="font-serif-poem mb-1"
-                style={{ fontSize: "15px", color: todayDisplay.color, letterSpacing: "0.08em", lineHeight: 1.7 }}>
-                「{todayDisplay.poem.length > 28 ? todayDisplay.poem.slice(0, 28) + "…" : todayDisplay.poem}」
-              </p>
-              <p className="text-xs font-serif-poem" style={{ color: "var(--ink-pale)" }}>
-                — {todayDisplay.poemAuthor}
-              </p>
-            </div>
+              <div className="relative z-10 p-5">
+                {/* 节日/节气标签 */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                    style={{
+                      background: isDarkBanner ? "rgba(255,200,50,0.2)" : todayDisplay.color + "15",
+                      color: bannerTextColor,
+                      border: isDarkBanner ? "1px solid rgba(255,200,50,0.4)" : `1px solid ${todayDisplay.color}30`,
+                      fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', serif",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    {todayDisplay.emoji} {todayDisplay.name}
+                  </span>
+                  <span className="text-xs" style={{ color: isDarkBanner ? "rgba(255,200,100,0.6)" : "var(--muted-foreground)" }}>
+                    {todayDisplay.dateDesc}
+                  </span>
+                  {isDarkBanner && (
+                    <span className="text-xs px-2 py-0.5 rounded-full animate-pulse"
+                      style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.4)" }}>
+                      正月十五
+                    </span>
+                  )}
+                </div>
 
-            {/* 副标题 */}
-            <p className="text-xs text-muted-foreground mb-4" style={{ letterSpacing: "0.04em" }}>
-              {todayDisplay.subtitle}
-            </p>
+                {/* 诗句引用 */}
+                <div className="mb-4">
+                  <p className="font-serif-poem mb-1"
+                    style={{ fontSize: "15px", color: bannerSubColor, letterSpacing: "0.08em", lineHeight: 1.7 }}>
+                    「{todayDisplay.poem.length > 28 ? todayDisplay.poem.slice(0, 28) + "…" : todayDisplay.poem}」
+                  </p>
+                  <p className="text-xs font-serif-poem" style={{ color: bannerMutedColor }}>
+                    —— {todayDisplay.poemAuthor}
+                  </p>
+                </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => navigate("/game")}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
-                style={{
-                  background: todayDisplay.color,
-                  boxShadow: `0 4px 14px ${todayDisplay.color}40`,
-                  letterSpacing: "0.06em",
-                }}
-              >
-                开始答题
-              </button>
-              {/* 节日主题专题按钮 */}
-              <button
-                onClick={() => handleThemeGame(todayDisplay.themeTag)}
-                className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
-                style={{
-                  background: "transparent",
-                  borderColor: todayDisplay.color + "50",
-                  color: todayDisplay.color,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {todayDisplay.name}专题
-              </button>
+                {/* 副标题 */}
+                <p className="text-xs mb-4" style={{ letterSpacing: "0.04em", color: bannerSubtitleColor ?? "var(--muted-foreground)" }}>
+                  {todayDisplay.subtitle}
+                </p>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate("/game")}
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
+                    style={{
+                      background: isDarkBanner ? "linear-gradient(135deg, #E84545, #FF8C00)" : todayDisplay.color,
+                      boxShadow: isDarkBanner ? "0 4px 14px rgba(232,69,69,0.5)" : `0 4px 14px ${todayDisplay.color}40`,
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    开始答题
+                  </button>
+                  {/* 节日主题专题按鈕 */}
+                  <button
+                    onClick={() => isDarkBanner ? navigate("/lantern-riddle") : handleThemeGame(todayDisplay.themeTag)}
+                    className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
+                    style={{
+                      background: "transparent",
+                      borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : todayDisplay.color + "50",
+                      color: bannerTextColor,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {isDarkBanner ? "🏮 猜灯谜" : `${todayDisplay.name}专题`}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Stats Row */}
         {localState && (
@@ -338,26 +365,47 @@ export default function Home() {
             onClick={() => navigate("/lantern-riddle")}
             className="w-full rounded-2xl p-4 mb-4 text-left transition-all active:scale-[0.98] relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, #1A0A00 0%, #3D1500 50%, #1A0A00 100%)",
-              border: "1px solid rgba(255,200,50,0.4)",
-              boxShadow: "0 4px 20px rgba(232,69,69,0.25)",
+              background: isLanternDay
+                ? "linear-gradient(135deg, #2A0A00 0%, #5A1A00 40%, #8B2500 70%, #5A1A00 100%)"
+                : "linear-gradient(135deg, #1A0A00 0%, #3D1500 50%, #1A0A00 100%)",
+              border: isLanternDay ? "1px solid rgba(255,200,50,0.7)" : "1px solid rgba(255,200,50,0.4)",
+              boxShadow: isLanternDay
+                ? "0 4px 24px rgba(232,69,69,0.45), 0 0 40px rgba(255,150,0,0.15)"
+                : "0 4px 20px rgba(232,69,69,0.25)",
             }}
           >
             {/* 背景装饰灯笼 */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl opacity-20 select-none">🏮</div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 select-none"
+              style={{ fontSize: isLanternDay ? "80px" : "64px", opacity: isLanternDay ? 0.25 : 0.2 }}>🏮</div>
+            {/* 元宵节当天额外装饰灯笼 */}
+            {isLanternDay && (
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 select-none" style={{ fontSize: "40px", opacity: 0.2 }}>🏮</div>
+            )}
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-2xl">🏮</span>
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: "rgba(255,200,50,0.2)", color: "#FFD700", border: "1px solid rgba(255,200,50,0.3)" }}>
-                  元宵节彩蛋
+                  style={{
+                    background: isLanternDay ? "rgba(255,200,50,0.3)" : "rgba(255,200,50,0.2)",
+                    color: "#FFD700",
+                    border: isLanternDay ? "1px solid rgba(255,200,50,0.6)" : "1px solid rgba(255,200,50,0.3)",
+                  }}>
+                  {isLanternDay ? "🏮 元宵节当天" : "元宵节彩蛋"}
                 </span>
+                {isLanternDay && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold animate-pulse"
+                    style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.5)" }}>
+                    今日开放
+                  </span>
+                )}
               </div>
-              <div className="font-bold text-base mb-0.5" style={{ color: "#FFD700", letterSpacing: "0.08em" }}>
+              <div className="font-bold text-base mb-0.5" style={{ color: "#FFD700", letterSpacing: "0.08em", fontSize: isLanternDay ? "18px" : "16px" }}>
                 诗词灯谜馆
               </div>
-              <div className="text-xs" style={{ color: "#FFA04099" }}>
-                传统文化趣味问答 · 诗词文字典故
+              <div className="text-xs" style={{ color: isLanternDay ? "#FFA040CC" : "#FFA04099" }}>
+                {isLanternDay
+                  ? "正月十五元宵夜 · 灯谜大会正式开始！"
+                  : "传统文化趣味问答 · 诗词文字典故"}
               </div>
             </div>
           </button>

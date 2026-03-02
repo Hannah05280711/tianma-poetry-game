@@ -763,7 +763,7 @@ export function shouldShowLanternEgg(): boolean {
   const now = new Date();
   const month = now.getMonth() + 1;
   const day = now.getDate();
-  // 2026年元宵节：2月22日
-  if (month === 2 && day >= 20 && day <= 24) return true;
+  // 2026年元宵节：3月2日（农历正月十五）
+  if (month === 3 && day >= 1 && day <= 4) return true;
   return false;
 }
