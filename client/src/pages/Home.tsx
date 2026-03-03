@@ -184,8 +184,8 @@ export default function Home() {
                   </span>
                   {isDarkBanner && (
                     <span className="text-xs px-2 py-0.5 rounded-full animate-pulse"
-                      style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.4)" }}>
-                      正月十五
+                      style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.4)", fontFamily: "'Noto Serif SC', serif", letterSpacing: "0.08em" }}>
+                      东风夜放花千树
                     </span>
                   )}
                 </div>
