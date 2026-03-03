@@ -233,7 +233,7 @@ export default function LanternRiddle() {
                 {isLanternDay && (
                   <div className="text-xs px-3 py-1 rounded-full inline-block mb-2 font-semibold animate-pulse"
                     style={{ background: "rgba(232,69,69,0.3)", color: "#FF8C00", border: "1px solid rgba(232,69,69,0.5)" }}>
-                    正月十五 · 元宵节当天
+                    正月十五 · 元宵节
                   </div>
                 )}
                 <h1 className="text-2xl font-bold mb-1" style={{ color: "#FFD700", letterSpacing: "0.12em" }}>

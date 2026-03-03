@@ -187,13 +187,11 @@ function RingBadge({
   const effectiveUnlocked = unlocked || rank.minScore === 0;
   const cx = size / 2;
   const cy = size / 2;
-  const gradId = `solid-grad-${rank.tier}-${size}`;
-  const shadowId = `shadow-${rank.tier}-${size}`;
   const iconSize = size * 0.42;
 
   if (effectiveUnlocked) {
-    // 已解锁：实心彩色徽章（渐变圆形背景 + 兵器 Emoji）
-    const r = size * 0.46;
+    // 已解锁：只显示兵器 Emoji（无圆形背景），isCurrent 时额外显示进度圆弧
+    const r = size * 0.38;
     return (
       <svg
         width={size}
@@ -201,36 +199,10 @@ function RingBadge({
         viewBox={`0 0 ${size} ${size}`}
         style={{
           filter: isCurrent
-            ? `drop-shadow(0 0 ${size * 0.12}px ${rank.color}80)`
-            : `drop-shadow(0 0 ${size * 0.06}px ${rank.color}40)`,
+            ? `drop-shadow(0 0 ${size * 0.14}px ${rank.color}90)`
+            : `drop-shadow(0 0 ${size * 0.06}px ${rank.color}50)`,
         }}
       >
-        <defs>
-          <radialGradient id={gradId} cx="38%" cy="35%" r="65%">
-            <stop offset="0%" stopColor={rank.gradientFrom} stopOpacity="1" />
-            <stop offset="100%" stopColor={rank.gradientTo} stopOpacity="1" />
-          </radialGradient>
-        </defs>
-        {/* 实心圆形背景 */}
-        <circle cx={cx} cy={cy} r={r} fill={`url(#${gradId})`} />
-        {/* 内圈光泽效果 */}
-        <circle cx={cx} cy={cy} r={r} fill="none"
-          stroke="rgba(255,255,255,0.25)" strokeWidth={size * 0.025}
-        />
-        {/* 高光小圆 */}
-        <circle cx={cx * 0.72} cy={cy * 0.68} r={r * 0.22}
-          fill="rgba(255,255,255,0.18)"
-        />
-        {/* 兵器 Emoji */}
-        <text
-          x={cx} y={cy}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={iconSize}
-          style={{ userSelect: "none" }}
-        >
-          {rank.emoji}
-        </text>
         {/* 当前段位进度圆弧（仅 isCurrent 显示） */}
         {isCurrent && (
           <>
@@ -245,6 +217,16 @@ function RingBadge({
             />
           </>
         )}
+        {/* 兵器 Emoji 本体 */}
+        <text
+          x={cx} y={cy}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={iconSize}
+          style={{ userSelect: "none" }}
+        >
+          {rank.emoji}
+        </text>
       </svg>
     );
   }

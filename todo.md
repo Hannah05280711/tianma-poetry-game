@@ -273,3 +273,7 @@
 - [x] 更新数据库weaponRanks表，清空旧数据并按Rank.tsx重新填充
 - [x] 更新seed.mjs脚本中的weaponRanks数据，保持一致
 - [x] 检查Game.tsx/Profile.tsx等页面是否有硬编码的旧分数节点
+
+## 第四十一批：UI细节修复
+- [x] Rank.tsx：已获得兵器徽章去掉圆圈外框，只显示徽章本体
+- [x] LanternRiddle.tsx：「元宵节当天」标签文字改为「元宵节」
