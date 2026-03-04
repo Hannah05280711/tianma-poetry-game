@@ -21,6 +21,7 @@ function parseOptions(raw: unknown): string[] {
 import {
   getAllStages,
   getStageById,
+  getStageByNumber,
   getUserProgressForSession,
   getUserProgressForStage,
   upsertUserProgress,
@@ -215,19 +216,18 @@ options: parseOptions(q.options),
 
       // 解锁下一关
       let nextStageUnlocked = false;
+      let nextStageId: number | null = null;
       if (passed) {
         nextStageUnlocked = await unlockNextStage(input.sessionKey, stage.stageNumber);
+        // 获取下一关的ID，用于前端引导
+        const nextStage = await getStageByNumber(stage.stageNumber + 1);
+        if (nextStage) nextStageId = nextStage.id;
       }
 
-      // 卡牌掉落（通关后，仅正常答题阶段）
+      // 卡牌掉落（通关后，仅正常答题阶段，且必须满分10/10才能获得1张卡牌）
       let droppedCards: Array<{ id: number; poetName: string; imageUrl: string; rarity: string; signaturePoem: string | null }> = [];
-      if (passed && session.phase === "main") {
-        let dropCount = 0;
-        if (correctCount === 10) dropCount = 2;
-        else if (correctCount >= 8) dropCount = 1;
-        if (dropCount > 0) {
-          droppedCards = await dropCards(input.sessionKey, session.stageId, dropCount);
-        }
+      if (passed && session.phase === "main" && correctCount === 10) {
+        droppedCards = await dropCards(input.sessionKey, session.stageId, 1);
       }
 
       return {
@@ -237,6 +237,7 @@ options: parseOptions(q.options),
         wrongCount: wrongIds.length,
         hasDebt: !passed && wrongIds.length > 0,
         nextStageUnlocked,
+        nextStageId,
         droppedCards,
         storyAfter: passed ? stage.storyAfter : null,
       };

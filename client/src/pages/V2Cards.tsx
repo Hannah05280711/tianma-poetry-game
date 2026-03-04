@@ -1,6 +1,16 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+
+interface CardData {
+  id: number;
+  poetName: string;
+  imageUrl: string | null;
+  rarity: string | null;
+  dynasty: string | null;
+  signaturePoem: string | null;
+  owned: boolean;
+}
 
 function getSessionKey(): string {
   let key = localStorage.getItem("v2_session_key");
@@ -21,11 +31,15 @@ const RARITY_LABEL: Record<string, { label: string; color: string }> = {
 export default function V2Cards() {
   const [, navigate] = useLocation();
   const sessionKey = useMemo(() => getSessionKey(), []);
+  const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
 
   const { data, isLoading } = trpc.v2.getAllCards.useQuery({ sessionKey });
 
   const owned = data?.filter(c => c.owned) ?? [];
   const total = data?.length ?? 24;
+
+  const rarityColor = (rarity: string | null) =>
+    RARITY_LABEL[rarity ?? "common"]?.color ?? "#CD7F32";
 
   return (
     <div className="min-h-screen"
@@ -75,10 +89,12 @@ export default function V2Cards() {
                 className="rounded-xl overflow-hidden transition-all duration-200"
                 style={{
                   border: `1px solid ${card.owned
-                    ? (RARITY_LABEL[card.rarity ?? "common"]?.color ?? "#CD7F32") + "60"
+                    ? rarityColor(card.rarity) + "60"
                     : "rgba(255,255,255,0.08)"}`,
                   opacity: card.owned ? 1 : 0.4,
-                }}>
+                  cursor: card.owned ? "pointer" : "default",
+                }}
+                onClick={() => card.owned && setSelectedCard(card as CardData)}>
                 <div className="relative">
                   {card.owned ? (
                     <img
@@ -95,10 +111,10 @@ export default function V2Cards() {
                   )}
                   {/* 稀有度标签 */}
                   {card.owned && (
-                    <div className="absolute top-1 right-1 rounded px-1 py-0.5 text-xs"
+                    <div className="absolute top-1 right-1 rounded px-1 py-0.5"
                       style={{
                         background: "rgba(10,10,26,0.8)",
-                        color: RARITY_LABEL[card.rarity ?? "common"]?.color ?? "#CD7F32",
+                        color: rarityColor(card.rarity),
                         fontSize: "10px",
                       }}>
                       {RARITY_LABEL[card.rarity ?? "common"]?.label ?? "普通"}
@@ -126,13 +142,141 @@ export default function V2Cards() {
             <div className="text-4xl mb-3">🎴</div>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
               还没有卡牌，去闯关获得吧！<br />
-              答对10题获得2张，答对8题以上获得1张
+              满分通关（10/10）可获得1张诗人卡牌
             </p>
           </div>
         )}
 
         <div className="h-8" />
       </div>
+
+      {/* 卡牌放大弹窗 */}
+      {selectedCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+          onClick={() => setSelectedCard(null)}
+        >
+          <div
+            className="relative w-full"
+            style={{ maxWidth: "320px" }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 关闭按鈕 */}
+            <button
+              onClick={() => setSelectedCard(null)}
+              className="absolute -top-10 right-0 text-2xl leading-none"
+              style={{ color: "rgba(255,255,255,0.6)" }}
+            >
+              ✕
+            </button>
+
+            {/* 卡牌主体 */}
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                border: `2px solid ${rarityColor(selectedCard.rarity)}`,
+                boxShadow: `0 0 40px ${rarityColor(selectedCard.rarity)}60`,
+              }}
+            >
+              {/* 图片区域 */}
+              <div className="relative">
+                <img
+                  src={selectedCard.imageUrl ?? ""}
+                  alt={selectedCard.poetName}
+                  className="w-full object-cover"
+                  style={{ height: 280 }}
+                />
+                <div
+                  className="absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-bold"
+                  style={{
+                    background: "rgba(10,10,26,0.85)",
+                    color: rarityColor(selectedCard.rarity),
+                    border: `1px solid ${rarityColor(selectedCard.rarity)}60`,
+                  }}
+                >
+                  {RARITY_LABEL[selectedCard.rarity ?? "common"]?.label ?? "普通"}
+                </div>
+              </div>
+
+              {/* 信息区域 */}
+              <div
+                className="px-5 py-5"
+                style={{ background: "linear-gradient(135deg, #0d0d24, #0a1a0a)" }}
+              >
+                {/* 诗人名 */}
+                <div className="text-center mb-1">
+                  <span
+                    className="text-xl font-bold"
+                    style={{
+                      color: rarityColor(selectedCard.rarity),
+                      fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, serif",
+                      letterSpacing: "0.15em",
+                    }}
+                  >
+                    {selectedCard.poetName}
+                  </span>
+                </div>
+                {selectedCard.dynasty && (
+                  <div className="text-center mb-4" style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>
+                    {selectedCard.dynasty}
+                  </div>
+                )}
+
+                {/* 分隔线 */}
+                <div
+                  className="mb-4"
+                  style={{
+                    height: "1px",
+                    background: `linear-gradient(to right, transparent, ${rarityColor(selectedCard.rarity)}60, transparent)`,
+                  }}
+                />
+
+                {/* 诗句：每句独占一行，确保完整展示 */}
+                {selectedCard.signaturePoem ? (
+                  <div className="text-center overflow-x-auto">
+                    {selectedCard.signaturePoem
+                      .split(/(?<=[\uff0c。！？、；\n])/)
+                      .map(s => s.replace(/[\uff0c。！？、；]$/, "").trim())
+                      .filter(s => s.length > 0)
+                      .reduce<string[]>((acc, seg) => {
+                        // 按标点分割诗句
+                        const orig = selectedCard.signaturePoem!;
+                        const idx = orig.indexOf(seg);
+                        const punct = idx >= 0 ? (orig[idx + seg.length] ?? "") : "";
+                        acc.push(seg + punct);
+                        return acc;
+                      }, [])
+                      .map((line, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            color: "rgba(255,255,255,0.88)",
+                            fontSize: "15px",
+                            lineHeight: "2.2",
+                            fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, serif",
+                            letterSpacing: "0.1em",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {line}
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center" style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>
+                    暂无诗句
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <p className="text-center mt-4 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              点击空白处关闭
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

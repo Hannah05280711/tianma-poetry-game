@@ -83,6 +83,8 @@ export default function V2Stage() {
   const [storyAfter, setStoryAfter] = useState<string | null>(null);
   const [debtCount, setDebtCount] = useState(0);
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
+  const [nextStageId, setNextStageId] = useState<number | null>(null);
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
 
   const { data: stageInfo } = trpc.v2.getStageStory.useQuery({ stageId: stageIdNum });
 
@@ -157,6 +159,8 @@ export default function V2Stage() {
       setPassed(result.passed);
       setStoryAfter(result.storyAfter);
       setDroppedCards(result.droppedCards);
+      setNextStageId(result.nextStageId ?? null);
+      setFlippedCards(new Set());
 
       // 刷新关卡列表
       utils.v2.getStages.invalidate({ sessionKey });
@@ -211,7 +215,7 @@ export default function V2Stage() {
             <div className="text-xs space-y-1.5" style={{ color: "rgba(255,255,255,0.6)" }}>
               <div>📝 共10道诗词填空题，全部答对方能通关</div>
               <div>📜 答错的题目将成为「诗债」，通关前必须还清</div>
-              <div>🎴 全对可获得2张诗人卡牌，答对8题以上获得1张</div>
+              <div>🎴 满分通关（10/10）可获得1张诗人卡牌</div>
             </div>
           </div>
 
@@ -409,35 +413,91 @@ export default function V2Stage() {
     );
   }
 
-  // ── 卡牌掉落页 ──────────────────────────────────────────────
+  // ── 卡牌掉落页 ────────────────────────────────────────────────────────
   if (phase === "card_drop") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6"
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
         style={{ background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)" }}>
         <div className="text-4xl mb-4 animate-bounce">🎴</div>
         <h2 className="text-xl font-bold mb-2 text-center" style={{ color: "#D4AF37" }}>
-          获得诗人卡牌！
+          满分通关！获得诗人卡牌！
         </h2>
-        <p className="text-sm mb-6 text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
-          {correctCount === 10 ? "满分通关！获得2张卡牌" : "优秀！获得1张卡牌"}
+        <p className="text-sm mb-8 text-center" style={{ color: "rgba(255,255,255,0.5)" }}>
+          点击卡牌查看诗句
         </p>
 
-        <div className="flex gap-4 flex-wrap justify-center mb-8">
-          {droppedCards.map((card) => (
-            <div key={card.id} className="rounded-2xl overflow-hidden text-center"
-              style={{ width: 140, border: `2px solid ${card.rarity === "epic" ? "#D4AF37" : card.rarity === "rare" ? "#A8A9AD" : "#CD7F32"}` }}>
-              <img src={card.imageUrl} alt={card.poetName}
-                className="w-full object-cover" style={{ height: 180 }} />
-              <div className="p-2" style={{ background: "rgba(10,10,26,0.9)" }}>
-                <div className="font-bold text-sm" style={{ color: "#D4AF37" }}>{card.poetName}</div>
-                {card.signaturePoem && (
-                  <div className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    {card.signaturePoem}
+        {/* 卡牌展示：正面图片，点击翻转显示诗句 */}
+        <div className="flex gap-6 flex-wrap justify-center mb-10">
+          {droppedCards.map((card) => {
+            const isFlipped = flippedCards.has(card.id);
+            const rarityColor = card.rarity === "epic" ? "#D4AF37" : card.rarity === "rare" ? "#A8A9AD" : "#CD7F32";
+            return (
+              <div
+                key={card.id}
+                onClick={() => setFlippedCards(prev => {
+                  const next = new Set(prev);
+                  if (next.has(card.id)) next.delete(card.id);
+                  else next.add(card.id);
+                  return next;
+                })}
+                className="cursor-pointer select-none"
+                style={{ width: 160, height: 240, perspective: "800px" }}
+              >
+                <div style={{
+                  width: "100%", height: "100%",
+                  position: "relative",
+                  transformStyle: "preserve-3d",
+                  transition: "transform 0.6s ease",
+                  transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                }}>
+                  {/* 正面：卡牌图片 */}
+                  <div style={{
+                    position: "absolute", width: "100%", height: "100%",
+                    backfaceVisibility: "hidden",
+                    borderRadius: "12px", overflow: "hidden",
+                    border: `2px solid ${rarityColor}`,
+                    boxShadow: `0 0 20px ${rarityColor}40`,
+                  }}>
+                    <img src={card.imageUrl} alt={card.poetName}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      padding: "8px 10px",
+                      background: "linear-gradient(transparent, rgba(10,10,26,0.95))",
+                      textAlign: "center",
+                    }}>
+                      <div style={{ color: rarityColor, fontWeight: "bold", fontSize: "14px" }}>{card.poetName}</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", marginTop: "2px" }}>点击查看诗句</div>
+                    </div>
                   </div>
-                )}
+                  {/* 背面：诗句 */}
+                  <div style={{
+                    position: "absolute", width: "100%", height: "100%",
+                    backfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)",
+                    borderRadius: "12px",
+                    border: `2px solid ${rarityColor}`,
+                    background: "linear-gradient(135deg, #1a0a2e, #0a1a0a)",
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    padding: "16px",
+                    boxShadow: `0 0 20px ${rarityColor}40`,
+                  }}>
+                    <div style={{ color: rarityColor, fontSize: "22px", marginBottom: "12px" }}>📜</div>
+                    <div style={{
+                      color: "rgba(255,255,255,0.9)", fontSize: "13px",
+                      lineHeight: "1.9", textAlign: "center",
+                      fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, serif",
+                    }}>
+                      {card.signaturePoem ?? card.poetName}
+                    </div>
+                    <div style={{ color: rarityColor, fontSize: "12px", marginTop: "12px", fontWeight: "bold" }}>{card.poetName}</div>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px", marginTop: "4px" }}>点击翻回</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Button
@@ -447,9 +507,7 @@ export default function V2Stage() {
         </Button>
       </div>
     );
-  }
-
-  // ── 结算页（与主游戏一致的白色背景风格）────────────────────────
+  }  // ── 结算页（与主游戏一致的白色背景风格）────────────────────────
   if (phase === "result") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-safe bg-background">
@@ -509,6 +567,21 @@ export default function V2Stage() {
             </div>
           )}
 
+          {/* 通关后引导进入下一关 */}
+          {passed && nextStageId && (
+            <div className="rounded-2xl p-4 mb-4 text-center"
+              style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.08), rgba(255,107,53,0.08))", border: "1px solid rgba(212,175,55,0.3)" }}>
+              <div className="text-lg mb-1">✨</div>
+              <p className="text-sm font-medium mb-3" style={{ color: "#D4AF37" }}>下一关已解锁！</p>
+              <Button
+                className="w-full font-bold"
+                onClick={() => navigate(`/v2/stage/${nextStageId}`)}
+                style={{ background: "linear-gradient(135deg, #D4AF37, #B8860B)", color: "#0a0a1a", border: "none" }}>
+                进入下一关 →
+              </Button>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -529,7 +602,7 @@ export default function V2Stage() {
                 setAnswerResult(null);
               }}
               style={{ background: "linear-gradient(135deg, var(--vermilion), var(--gold))", color: "white", border: "none" }}>
-              {passed ? "继续" : "再次挑战"}
+              {passed ? "再次挑战" : "再次挑战"}
             </Button>
           </div>
         </div>
