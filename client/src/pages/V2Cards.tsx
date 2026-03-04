@@ -153,12 +153,12 @@ export default function V2Cards() {
       {/* 卡牌放大弹窗 */}
       {selectedCard && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          className="fixed inset-0 z-50 overflow-y-auto px-6 py-16"
           style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
           onClick={() => setSelectedCard(null)}
         >
           <div
-            className="relative w-full"
+            className="relative w-full mx-auto"
             style={{ maxWidth: "320px" }}
             onClick={e => e.stopPropagation()}
           >
@@ -179,13 +179,13 @@ export default function V2Cards() {
                 boxShadow: `0 0 40px ${rarityColor(selectedCard.rarity)}60`,
               }}
             >
-              {/* 图片区域 */}
-              <div className="relative">
+              {/* 图片区域：完整显示，不裁切任何部分 */}
+              <div className="relative" style={{ background: "#0a0a1a" }}>
                 <img
                   src={selectedCard.imageUrl ?? ""}
                   alt={selectedCard.poetName}
-                  className="w-full object-cover"
-                  style={{ height: 280 }}
+                  className="w-full"
+                  style={{ display: "block", height: "auto" }}
                 />
                 <div
                   className="absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-bold"

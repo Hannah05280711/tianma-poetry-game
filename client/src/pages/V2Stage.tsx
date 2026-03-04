@@ -459,7 +459,7 @@ export default function V2Stage() {
                     boxShadow: `0 0 20px ${rarityColor}40`,
                   }}>
                     <img src={card.imageUrl} alt={card.poetName}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0a0a1a" }} />
                     <div style={{
                       position: "absolute", bottom: 0, left: 0, right: 0,
                       padding: "8px 10px",
