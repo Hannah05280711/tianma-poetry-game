@@ -417,6 +417,35 @@ export default function Home() {
           </button>
         )}
 
+        {/* V2 解救樊登入口 */}
+        <button
+          onClick={() => navigate("/v2")}
+          className="w-full rounded-2xl p-4 mb-4 text-left transition-all active:scale-[0.98] relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)",
+            border: "1px solid rgba(212,175,55,0.4)",
+            boxShadow: "0 4px 20px rgba(212,175,55,0.15)",
+          }}
+        >
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 select-none"
+            style={{ fontSize: "64px", opacity: 0.15 }}>🐉</div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-2xl">⚔️</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: "rgba(212,175,55,0.2)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.4)" }}>
+                新版本体验
+              </span>
+            </div>
+            <div className="font-bold text-base mb-0.5" style={{ color: "#D4AF37", letterSpacing: "0.08em" }}>
+              解救樊登·诗词闯关
+            </div>
+            <div className="text-xs" style={{ color: "rgba(212,175,55,0.7)" }}>
+              21关闯关 · 诗债机制 · 收集诗人卡牌
+            </div>
+          </div>
+        </button>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[

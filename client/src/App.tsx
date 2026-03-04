@@ -12,6 +12,9 @@ import Daily from "./pages/Daily";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
 import LanternRiddle from "./pages/LanternRiddle";
+import V2Map from "./pages/V2Map";
+import V2Stage from "./pages/V2Stage";
+import V2Cards from "./pages/V2Cards";
 
 function Router() {
   return (
@@ -24,6 +27,9 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/lantern-riddle" component={LanternRiddle} />
+      <Route path="/v2" component={V2Map} />
+      <Route path="/v2/stage/:stageId" component={V2Stage} />
+      <Route path="/v2/cards" component={V2Cards} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

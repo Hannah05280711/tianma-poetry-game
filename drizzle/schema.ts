@@ -163,3 +163,90 @@ export const gameSessions = mysqlTable("gameSessions", {
   maxConsecutive: int("maxConsecutive").default(0),
   completed: boolean("completed").default(false),
 });
+
+// ============================================================
+// V2 Tables: 解救樊登·诗词闯关
+// ============================================================
+
+/** 诗人卡牌定义表（24张） */
+export const poetCards = mysqlTable("poetCards", {
+  id: int("id").autoincrement().primaryKey(),
+  poetName: varchar("poetName", { length: 64 }).notNull(),
+  dynasty: varchar("dynasty", { length: 32 }),
+  imageUrl: text("imageUrl").notNull(),
+  rarity: mysqlEnum("rarity", ["common", "rare", "epic"]).default("common").notNull(),
+  description: text("description"),
+  signaturePoem: text("signaturePoem"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PoetCard = typeof poetCards.$inferSelect;
+
+/** 用户已获得的卡牌 */
+export const userPoetCards = mysqlTable("userPoetCards", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(), // localStorage key for guest
+  cardId: int("cardId").notNull(),
+  obtainedAt: timestamp("obtainedAt").defaultNow().notNull(),
+  stageId: int("stageId"), // which stage dropped this card
+});
+
+export type UserPoetCard = typeof userPoetCards.$inferSelect;
+
+/** V2关卡配置表（7个兵器段位，每段位3小关，共21关） */
+export const v2Stages = mysqlTable("v2Stages", {
+  id: int("id").autoincrement().primaryKey(),
+  stageNumber: int("stageNumber").notNull().unique(), // 1-21
+  tierKey: mysqlEnum("tierKey", ["bronze", "silver", "gold", "platinum", "diamond", "star", "king"]).notNull(),
+  subLevel: int("subLevel").notNull(), // 1,2,3
+  stageName: varchar("stageName", { length: 64 }).notNull(),
+  storyBefore: text("storyBefore"), // 关卡开始前的剧情
+  storyAfter: text("storyAfter"),  // 通关后的剧情
+  difficulty: int("difficulty").default(1).notNull(), // 题目难度筛选
+  questionsPerRound: int("questionsPerRound").default(10).notNull(),
+  weaponEmoji: varchar("weaponEmoji", { length: 16 }).default("⚔️"),
+});
+
+export type V2Stage = typeof v2Stages.$inferSelect;
+
+/** 用户关卡进度 */
+export const userStageProgress = mysqlTable("userStageProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(),
+  stageId: int("stageId").notNull(),
+  status: mysqlEnum("status", ["locked", "available", "completed"]).default("locked").notNull(),
+  bestCorrect: int("bestCorrect").default(0), // best correct count in this stage
+  attemptCount: int("attemptCount").default(0),
+  completedAt: timestamp("completedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserStageProgress = typeof userStageProgress.$inferSelect;
+
+/** 诗债表：记录用户在某关卡答错的题目，通关前必须重答 */
+export const v2PoetDebts = mysqlTable("v2PoetDebts", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(),
+  stageId: int("stageId").notNull(),
+  questionId: int("questionId").notNull(),
+  wrongAnswer: varchar("wrongAnswer", { length: 512 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  repaidAt: timestamp("repaidAt"), // null = still owed, set when correctly answered
+});
+
+export type V2PoetDebt = typeof v2PoetDebts.$inferSelect;
+
+/** V2答题会话 */
+export const v2GameSessions = mysqlTable("v2GameSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(),
+  stageId: int("stageId").notNull(),
+  phase: mysqlEnum("phase", ["main", "debt"]).default("main").notNull(), // main=正常答题, debt=还诗债
+  questionIds: text("questionIds"), // JSON array of question IDs for this session
+  currentIndex: int("currentIndex").default(0),
+  correctCount: int("correctCount").default(0),
+  wrongQuestionIds: text("wrongQuestionIds"), // JSON array of wrong question IDs
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  passed: boolean("passed").default(false),
+});

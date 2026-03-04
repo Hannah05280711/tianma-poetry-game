@@ -15,6 +15,13 @@
       "when": 1772181341762,
       "tag": "0001_exotic_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772621669350,
+      "tag": "0002_known_puck",
+      "breakpoints": true
     }
   ]
 }
