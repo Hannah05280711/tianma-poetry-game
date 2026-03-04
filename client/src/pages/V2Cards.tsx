@@ -95,17 +95,17 @@ export default function V2Cards() {
                   cursor: card.owned ? "pointer" : "default",
                 }}
                 onClick={() => card.owned && setSelectedCard(card as CardData)}>
-                <div className="relative">
+                {/* 图片区域：固定宽高比确保所有卡牌尺寸一致 */}
+                <div className="relative" style={{ paddingTop: "133%" }}>
                   {card.owned ? (
                     <img
                       src={card.imageUrl ?? ""}
                       alt={card.poetName}
-                      className="w-full object-cover"
-                      style={{ height: 140 }}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
                     />
                   ) : (
-                    <div className="w-full flex items-center justify-center"
-                      style={{ height: 140, background: "rgba(255,255,255,0.03)" }}>
+                    <div className="absolute inset-0 flex items-center justify-center"
+                      style={{ background: "rgba(255,255,255,0.03)" }}>
                       <span className="text-4xl opacity-30">?</span>
                     </div>
                   )}
@@ -217,11 +217,6 @@ export default function V2Cards() {
                     {selectedCard.poetName}
                   </span>
                 </div>
-                {selectedCard.dynasty && (
-                  <div className="text-center mb-4" style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>
-                    {selectedCard.dynasty}
-                  </div>
-                )}
 
                 {/* 分隔线 */}
                 <div
@@ -232,21 +227,13 @@ export default function V2Cards() {
                   }}
                 />
 
-                {/* 诗句：每句独占一行，确保完整展示 */}
+                {/* 诗句：每句独占一行，去掉末尾标点，确保完整展示 */}
                 {selectedCard.signaturePoem ? (
                   <div className="text-center overflow-x-auto">
                     {selectedCard.signaturePoem
-                      .split(/(?<=[\uff0c。！？、；\n])/)
-                      .map(s => s.replace(/[\uff0c。！？、；]$/, "").trim())
+                      .split(/[，。！？、；\n]/)
+                      .map(s => s.trim())
                       .filter(s => s.length > 0)
-                      .reduce<string[]>((acc, seg) => {
-                        // 按标点分割诗句
-                        const orig = selectedCard.signaturePoem!;
-                        const idx = orig.indexOf(seg);
-                        const punct = idx >= 0 ? (orig[idx + seg.length] ?? "") : "";
-                        acc.push(seg + punct);
-                        return acc;
-                      }, [])
                       .map((line, i) => (
                         <div
                           key={i}
