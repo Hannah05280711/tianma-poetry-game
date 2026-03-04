@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM v2Stages LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT * FROM v2Stages LIMIT 3;",
+  "rows": [
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "tierKey": "bronze",
+      "subLevel": "1",
+      "stageName": "摩诘念珠",
+      "storyBefore": "深山之中，传来一阵低沉的诵经声。讲书人樊登被毒龙封印于此，你踏入竹林，感受到一股禅意扑面而来。「深林人不知，明月来相照。」——这是王维留下的线索，也是破除封印的第一把钥匙。",
+      "storyAfter": "念珠轻转，竹林中的迷雾渐渐消散。你成功破解了第一道封印，樊登的声音从远处传来：「继续前行，还有更深的禅境等待你。」",
+      "difficulty": "1",
+      "questionsPerRound": "10",
+      "weaponEmoji": "📿"
+    },
+    {
+      "id": "2",
+      "stageNumber": "2",
+      "tierKey": "bronze",
+      "subLevel": "2",
+      "stageName": "空山梵钟",
+      "storyBefore": "穿过竹林，你来到一座古寺废墟。钟声从虚空中响起，却不知源头。「古木无人径，深山何处钟。」——王维的诗句在风中回荡，指引着你寻找那口沉默千年的梵钟。",
+      "storyAfter": "梵钟一响，山谷回声震动，封印的锁链松动了一格。空山的禅意在你心中生根，你离樊登又近了一步。",
+      "difficulty": "1",
+      "questionsPerRound": "10",
+      "weaponEmoji": "🔔"
+    },
+    {
+      "id": "3",
+      "stageNumber": "3",
+      "tierKey": "bronze",
+      "subLevel": "3",
+      "stageName": "清泉石剑",
+      "storyBefore": "山居秋暝，明月高悬。你在石上发现一把被清泉浸润千年的古剑。「明月松间照，清泉石上流。」——剑身上刻着王维的诗句，只有真正领悟山居之静的人，才能拔出此剑。",
+      "storyAfter": "清泉石剑在手，第一章的封印彻底破除。空山禅音章节完成，你的心境如明月般澄澈。",
+      "difficulty": "2",
+      "questionsPerRound": "10",
+      "weaponEmoji": "💧"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstageNumber\ttierKey\tsubLevel\tstageName\tstoryBefore\tstoryAfter\tdifficulty\tquestionsPerRound\tweaponEmoji\n1\t1\tbronze\t1\t摩诘念珠\t深山之中，传来一阵低沉的诵经声。讲书人樊登被毒龙封印于此，你踏入竹林，感受到一股禅意扑面而来。「深林人不知，明月来相照。」——这是王维留下的线索，也是破除封印的第一把钥匙。\t念珠轻转，竹林中的迷雾渐渐消散。你成功破解了第一道封印，樊登的声音从远处传来：「继续前行，还有更深的禅境等待你。」\t1\t10\t📿\n2\t2\tbronze\t2\t空山梵钟\t穿过竹林，你来到一座古寺废墟。钟声从虚空中响起，却不知源头。「古木无人径，深山何处钟。」——王维的诗句在风中回荡，指引着你寻找那口沉默千年的梵钟。\t梵钟一响，山谷回声震动，封印的锁链松动了一格。空山的禅意在你心中生根，你离樊登又近了一步。\t1\t10\t🔔\n3\t3\tbronze\t3\t清泉石剑\t山居秋暝，明月高悬。你在石上发现一把被清泉浸润千年的古剑。「明月松间照，清泉石上流。」——剑身上刻着王维的诗句，只有真正领悟山居之静的人，才能拔出此剑。\t清泉石剑在手，第一章的封印彻底破除。空山禅音章节完成，你的心境如明月般澄澈。\t2\t10\t💧\n",
+  "stderr": "",
+  "execution_time_ms": 375
+}

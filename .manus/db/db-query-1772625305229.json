@@ -1,0 +1,90 @@
+{
+  "query": "DESCRIBE v2Stages;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute DESCRIBE v2Stages;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "stageNumber",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tierKey",
+      "Type": "enum('bronze','silver','gold','platinum','diamond','star','king')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "subLevel",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stageName",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "storyBefore",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "storyAfter",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "difficulty",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "questionsPerRound",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "weaponEmoji",
+      "Type": "varchar(16)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "⚔️",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nstageNumber\tint\tNO\tUNI\tNULL\t\ntierKey\tenum('bronze','silver','gold','platinum','diamond','star','king')\tNO\t\tNULL\t\nsubLevel\tint\tNO\t\tNULL\t\nstageName\tvarchar(64)\tNO\t\tNULL\t\nstoryBefore\ttext\tYES\t\tNULL\t\nstoryAfter\ttext\tYES\t\tNULL\t\ndifficulty\tint\tNO\t\t1\t\nquestionsPerRound\tint\tNO\t\t10\t\nweaponEmoji\tvarchar(16)\tYES\t\t⚔️\t\n",
+  "stderr": "",
+  "execution_time_ms": 348
+}

@@ -1,0 +1,50 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'v2Stages' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'v2Stages' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "stageNumber",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "tierKey",
+      "DATA_TYPE": "enum"
+    },
+    {
+      "COLUMN_NAME": "subLevel",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "stageName",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "storyBefore",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "storyAfter",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "difficulty",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "questionsPerRound",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "weaponEmoji",
+      "DATA_TYPE": "varchar"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\nid\tint\nstageNumber\tint\ntierKey\tenum\nsubLevel\tint\nstageName\tvarchar\nstoryBefore\ttext\nstoryAfter\ttext\ndifficulty\tint\nquestionsPerRound\tint\nweaponEmoji\tvarchar\n",
+  "stderr": "",
+  "execution_time_ms": 348
+}

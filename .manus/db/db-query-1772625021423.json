@@ -1,0 +1,28 @@
+{
+  "query": "SHOW TABLES LIKE 'v2%'; SHOW TABLES LIKE 'poet%'; SHOW TABLES LIKE 'user_poet%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SHOW TABLES LIKE 'v2%'; SHOW TABLES LIKE 'poet%'; SHOW TABLES LIKE 'user_poet%';",
+  "rows": [
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "v2GameSessions"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "v2PoetDebts"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "v2Stages"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (poet%)"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "poetCards"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)": "poets"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_4LhGieFmaH5SRJ3NvGaeQq (v2%)\nv2GameSessions\nv2PoetDebts\nv2Stages\nTables_in_4LhGieFmaH5SRJ3NvGaeQq (poet%)\npoetCards\npoets\n",
+  "stderr": "",
+  "execution_time_ms": 473
+}

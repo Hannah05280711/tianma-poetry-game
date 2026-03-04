@@ -3,6 +3,34 @@ import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 
+function renderQuestionContent(content: string): React.ReactNode {
+  const parts = content.split("__");
+  if (parts.length <= 1) return content;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span
+              style={{
+                display: "inline-block",
+                width: "2em",
+                borderBottom: "2px solid currentColor",
+                verticalAlign: "bottom",
+                marginBottom: "2px",
+                marginLeft: "1px",
+                marginRight: "1px",
+              }}
+            />
+          )}
+        </span>
+      ))}
+    </>
+  );
+}
+
+
 function getSessionKey(): string {
   let key = localStorage.getItem("v2_session_key");
   if (!key) {
@@ -203,118 +231,176 @@ export default function V2Stage() {
     );
   }
 
-  // ── 答题页 ──────────────────────────────────────────────────
+  // ── 答题页（与主游戏Game.tsx一致的白色背景+宋体字风格）────────
   if (phase === "playing" && currentQuestion) {
-    return (
-      <div className="min-h-screen flex flex-col"
-        style={{ background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)" }}>
+    const options = currentQuestion.options;
+    const isSingleChar = options.every(o => o.length === 1);
+    const isShortOpt = options.every(o => o.length <= 4);
 
-        {/* 顶部进度条 */}
-        <div className="sticky top-0 z-10"
-          style={{ background: "rgba(10,10,26,0.95)", borderBottom: "1px solid rgba(212,175,55,0.2)" }}>
-          <div className="px-4 py-3 flex items-center justify-between">
-            <button onClick={() => navigate("/v2")} style={{ color: "rgba(212,175,55,0.7)" }} className="text-sm">
-              ← 退出
-            </button>
-            <div className="text-sm font-medium" style={{ color: "#D4AF37" }}>
-              {gamePhaseType === "debt" ? "📜 还清诗债" : `第${currentIndex + 1}/${questions.length}题`}
+    return (
+      <div className="min-h-screen flex flex-col px-4 pt-safe bg-background">
+        {/* 顶部栏 */}
+        <div className="py-3">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => navigate("/v2")}
+              className="text-muted-foreground text-lg leading-none">✕</button>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground">{currentIndex + 1}/{questions.length}</span>
+              {gamePhaseType === "debt" && (
+                <span className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(239,68,68,0.08)", color: "#DC2626" }}>
+                  📜 还清诗债
+                </span>
+              )}
+              <span className="font-semibold text-sm" style={{ color: "var(--celadon)" }}>
+                ✅{correctCount} ❌{wrongCount}
+              </span>
             </div>
-            <div className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-              ✅{correctCount} ❌{wrongCount}
-            </div>
+            <div className="w-8" />
           </div>
           {/* 进度条 */}
-          <div className="h-1 w-full" style={{ background: "rgba(255,255,255,0.1)" }}>
-            <div className="h-full transition-all duration-300"
-              style={{ width: `${progress}%`, background: "linear-gradient(to right, #D4AF37, #FFD700)" }} />
+          <div className="h-1.5 rounded-full overflow-hidden bg-muted">
+            <div className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--vermilion), var(--gold))" }} />
           </div>
         </div>
 
         {/* 诗债提示 */}
         {gamePhaseType === "debt" && (
-          <div className="mx-4 mt-4 rounded-xl p-3 text-center"
-            style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
-            <p className="text-sm" style={{ color: "#EF4444" }}>
+          <div className="rounded-xl p-3 mb-3 text-center"
+            style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+            <p className="text-sm" style={{ color: "#DC2626" }}>
               📜 你有 {debtCount} 道诗债未还，答对所有题目方能通关！
             </p>
           </div>
         )}
 
-        <div className="flex-1 flex flex-col px-4 py-6 max-w-lg mx-auto w-full">
-          {/* 题目 */}
-          <div className="rounded-2xl p-5 mb-6"
-            style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.2)" }}>
-            {currentQuestion.sourcePoemTitle && (
-              <div className="text-xs mb-3" style={{ color: "rgba(212,175,55,0.6)" }}>
-                {currentQuestion.sourcePoemAuthor} · 《{currentQuestion.sourcePoemTitle}》
-              </div>
-            )}
-            <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.9)" }}>
-              {currentQuestion.content}
-            </p>
+        {/* 题目区域 */}
+        <div className="flex-1 flex flex-col">
+          {/* 题目卡片 */}
+          <div className="rounded-2xl mb-4 overflow-hidden"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 2px 12px oklch(0.14 0.025 55 / 0.06)",
+            }}>
+            <div className="flex items-center gap-2 px-4 pt-4 pb-3"
+              style={{ borderBottom: "1px solid var(--border)" }}>
+              <span className="tag-seal"
+                style={{ background: "var(--vermilion-pale)", color: "var(--vermilion)" }}>
+                填空题
+              </span>
+              {currentQuestion.sourcePoemTitle && (
+                <span className="text-xs font-serif-poem" style={{ color: "var(--ink-pale)" }}>
+                  {currentQuestion.sourcePoemAuthor && `${currentQuestion.sourcePoemAuthor} · `}《{currentQuestion.sourcePoemTitle}》
+                </span>
+              )}
+            </div>
+            <div className="px-5 py-5">
+              <p className="font-serif-poem text-foreground"
+                style={{ fontSize: "24px", lineHeight: "2.0", fontWeight: 500, letterSpacing: "0.08em" }}>
+                {renderQuestionContent(currentQuestion.content)}
+              </p>
+            </div>
           </div>
 
           {/* 选项 */}
-          <div className="space-y-3">
-            {currentQuestion.options.map((option, idx) => {
-              const isSelected = selectedAnswer === option;
-              const isCorrect = option === answerResult?.correctAnswer;
-              const isWrong = isSelected && !answerResult?.isCorrect;
+          <div
+            className="mb-4"
+            style={{
+              display: "grid",
+              gridTemplateColumns: isSingleChar
+                ? "repeat(4, 1fr)"
+                : isShortOpt
+                ? "repeat(2, 1fr)"
+                : "repeat(1, 1fr)",
+              gap: "10px",
+            }}
+          >
+            {options.map((opt, i) => {
+              const isSelected = selectedAnswer === opt;
+              const isCorrectOpt = opt === answerResult?.correctAnswer;
+              const isWrongSelected = isSelected && answerResult !== null && !answerResult.isCorrect;
 
-              let bgStyle = "rgba(255,255,255,0.05)";
-              let borderStyle = "rgba(255,255,255,0.1)";
-              let textColor = "rgba(255,255,255,0.85)";
-
-              if (answerResult) {
-                if (isCorrect) {
-                  bgStyle = "rgba(74,222,128,0.15)";
-                  borderStyle = "rgba(74,222,128,0.5)";
-                  textColor = "#4ADE80";
-                } else if (isWrong) {
-                  bgStyle = "rgba(239,68,68,0.15)";
-                  borderStyle = "rgba(239,68,68,0.5)";
-                  textColor = "#EF4444";
+              let containerStyle: React.CSSProperties = {
+                background: "var(--card)",
+                border: "1.5px solid var(--border)",
+                color: "var(--ink)",
+              };
+              if (answerResult !== null) {
+                if (isCorrectOpt) {
+                  containerStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
+                } else if (isWrongSelected) {
+                  containerStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
                 }
               } else if (isSelected) {
-                bgStyle = "rgba(212,175,55,0.15)";
-                borderStyle = "rgba(212,175,55,0.5)";
-                textColor = "#D4AF37";
+                containerStyle = {
+                  background: "var(--vermilion-pale)",
+                  border: "1.5px solid var(--vermilion)",
+                  color: "var(--vermilion)",
+                };
               }
 
               return (
                 <button
-                  key={idx}
-                  onClick={() => handleSelectAnswer(option)}
+                  key={i}
+                  onClick={() => handleSelectAnswer(opt)}
                   disabled={selectedAnswer !== null}
-                  className="w-full text-left rounded-xl p-4 transition-all duration-200"
-                  style={{ background: bgStyle, border: `1px solid ${borderStyle}`, color: textColor }}>
-                  <span className="text-xs mr-2 opacity-60">{String.fromCharCode(65 + idx)}.</span>
-                  {option}
+                  className="rounded-2xl transition-all duration-150 active:scale-[0.97] relative"
+                  style={{
+                    ...containerStyle,
+                    minHeight: isSingleChar ? "64px" : "52px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: isSingleChar ? "8px 4px" : "10px 16px",
+                    boxShadow: "0 1px 4px oklch(0.14 0.025 55 / 0.05)",
+                    fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, STSong, serif",
+                    fontSize: "20px",
+                    fontWeight: 500,
+                    letterSpacing: "0.06em",
+                    lineHeight: "1.5",
+                    textAlign: "center",
+                  }}
+                >
+                  <span>{opt}</span>
+                  {answerResult !== null && isCorrectOpt && (
+                    <span style={{ color: "#16A34A", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✓</span>
+                  )}
+                  {answerResult !== null && isWrongSelected && (
+                    <span style={{ color: "#DC2626", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✗</span>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* 答案解析 */}
-          {answerResult && (
-            <div className="mt-4 rounded-xl p-4"
+          {/* 答题反馈 */}
+          {answerResult !== null && (
+            <div className="rounded-2xl p-4 mb-4 animate-slide-up"
               style={{
-                background: answerResult.isCorrect ? "rgba(74,222,128,0.1)" : "rgba(239,68,68,0.1)",
-                border: `1px solid ${answerResult.isCorrect ? "rgba(74,222,128,0.3)" : "rgba(239,68,68,0.3)"}`,
+                background: answerResult.isCorrect
+                  ? "linear-gradient(135deg, #F0FDF4, #DCFCE7)"
+                  : "linear-gradient(135deg, #FEF2F2, #FEE2E2)",
+                border: `1.5px solid ${answerResult.isCorrect ? "#16A34A40" : "#DC262640"}`,
               }}>
-              <div className="font-medium text-sm mb-1"
-                style={{ color: answerResult.isCorrect ? "#4ADE80" : "#EF4444" }}>
-                {answerResult.isCorrect ? "✅ 答对了！" : `❌ 正确答案：${answerResult.correctAnswer}`}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: "22px" }}>{answerResult.isCorrect ? "✅" : "❌"}</span>
+                  <span className="font-bold font-display"
+                    style={{ color: answerResult.isCorrect ? "#15803D" : "#B91C1C", fontSize: "17px" }}>
+                    {answerResult.isCorrect ? "答对了！" : `正确答案：${answerResult.correctAnswer}`}
+                  </span>
+                </div>
+                {isAutoAdvancing && (
+                  <p className="text-xs" style={{ color: answerResult.isCorrect ? "#16A34A80" : "#DC262680" }}>
+                    {currentIndex + 1 >= questions.length ? "即将查看结果" : "即将下一题"}
+                  </p>
+                )}
               </div>
               {answerResult.explanation && (
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-                  {answerResult.explanation}
-                </p>
-              )}
-              {isAutoAdvancing && (
-                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  即将进入下一题...
-                </p>
+                <p className="text-xs mt-2 text-muted-foreground">{answerResult.explanation}</p>
               )}
             </div>
           )}
@@ -363,77 +449,94 @@ export default function V2Stage() {
     );
   }
 
-  // ── 结算页 ──────────────────────────────────────────────────
+  // ── 结算页（与主游戏一致的白色背景风格）────────────────────────
   if (phase === "result") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6"
-        style={{ background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)" }}>
-        <div className="text-5xl mb-4">{passed ? "🎉" : "📜"}</div>
-        <h2 className="text-2xl font-bold mb-2 text-center"
-          style={{ color: passed ? "#D4AF37" : "#EF4444" }}>
-          {passed ? "通关成功！" : "尚有诗债未还"}
-        </h2>
-
-        <div className="flex gap-6 mb-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold" style={{ color: "#4ADE80" }}>{correctCount}</div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>答对</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold" style={{ color: "#EF4444" }}>{wrongCount}</div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>答错</div>
-          </div>
-        </div>
-
-        {/* 通关后剧情 */}
-        {passed && storyAfter && (
-          <div className="rounded-2xl p-5 mb-6 max-w-sm w-full"
-            style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.2)" }}>
-            <p className="text-sm leading-relaxed whitespace-pre-line text-center"
-              style={{ color: "rgba(255,255,255,0.85)" }}>
-              {storyAfter}
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-safe bg-background">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-3 float-anim">
+              {passed ? (correctCount === 10 ? "🏆" : "⭐") : "📜"}
+            </div>
+            <h2 className="text-xl font-bold font-display mb-1 text-foreground">
+              {passed ? (correctCount === 10 ? "满分通关！" : "通关成功！") : "尚有诗债未还"}
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              {stageInfo?.stageName ?? "本关结束"}
             </p>
           </div>
-        )}
 
-        {/* 诗债提示 */}
-        {!passed && wrongCount > 0 && (
-          <div className="rounded-xl p-4 mb-6 max-w-sm w-full text-center"
-            style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
-            <p className="text-sm" style={{ color: "#EF4444" }}>
-              📜 你欠下了 {wrongCount} 道诗债<br />
-              <span style={{ color: "rgba(255,255,255,0.6)" }}>
-                下次挑战前，必须先还清诗债才能通关
-              </span>
-            </p>
+          {/* 成绩卡片 */}
+          <div className="rounded-2xl p-5 mb-5 bg-card border border-border">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold" style={{ color: "var(--celadon)" }}>{correctCount}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">答对</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: "#DC2626" }}>{wrongCount}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">答错</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: "var(--gold)" }}>
+                  {questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0}%
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">正确率</div>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/v2")}
-            style={{ borderColor: "rgba(212,175,55,0.3)", color: "#D4AF37", background: "transparent" }}>
-            关卡地图
-          </Button>
-          <Button
-            onClick={() => {
-              setPhase("story_before");
-              setSessionId(null);
-              setQuestions([]);
-              setCurrentIndex(0);
-              setCorrectCount(0);
-              setWrongCount(0);
-              setSelectedAnswer(null);
-              setAnswerResult(null);
-            }}
-            style={{ background: "linear-gradient(135deg, #D4AF37, #B8860B)", color: "#0a0a1a", border: "none" }}>
-            {passed ? "下一关" : "再次挑战"}
-          </Button>
+          {/* 通关后剧情 */}
+          {passed && storyAfter && (
+            <div className="rounded-2xl p-5 mb-5 bg-card border border-border">
+              <p className="text-sm leading-loose whitespace-pre-line font-serif-poem text-center text-foreground"
+                style={{ letterSpacing: "0.04em" }}>
+                {storyAfter}
+              </p>
+            </div>
+          )}
+
+          {/* 诗债提示 */}
+          {!passed && wrongCount > 0 && (
+            <div className="rounded-xl p-4 mb-5"
+              style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+              <p className="text-sm text-center" style={{ color: "#DC2626" }}>
+                📜 你欠下了 {wrongCount} 道诗债<br />
+                <span className="text-muted-foreground text-xs">
+                  下次挑战前，必须先还清诗债才能通关
+                </span>
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate("/v2")}>
+              关卡地图
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setPhase("story_before");
+                setSessionId(null);
+                setQuestions([]);
+                setCurrentIndex(0);
+                setCorrectCount(0);
+                setWrongCount(0);
+                setSelectedAnswer(null);
+                setAnswerResult(null);
+              }}
+              style={{ background: "linear-gradient(135deg, var(--vermilion), var(--gold))", color: "white", border: "none" }}>
+              {passed ? "继续" : "再次挑战"}
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
+
 
   return null;
 }
