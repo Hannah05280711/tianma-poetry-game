@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, content, options FROM questions LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, content, options FROM questions LIMIT 3;",
+  "rows": [
+    {
+      "id": "1",
+      "content": "床前明__，疑是地上霜。",
+      "options": "[\"月\", \"光\", \"辉\", \"华\"]"
+    },
+    {
+      "id": "2",
+      "content": "举头望明月，低__思故乡。",
+      "options": "[\"头\", \"首\", \"眉\", \"目\"]"
+    },
+    {
+      "id": "3",
+      "content": "飞流直下三千尺，__是银河落九天。",
+      "options": "[\"疑\", \"似\", \"如\", \"若\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcontent\toptions\n1\t床前明__，疑是地上霜。\t[\"月\", \"光\", \"辉\", \"华\"]\n2\t举头望明月，低__思故乡。\t[\"头\", \"首\", \"眉\", \"目\"]\n3\t飞流直下三千尺，__是银河落九天。\t[\"疑\", \"似\", \"如\", \"若\"]\n",
+  "stderr": "",
+  "execution_time_ms": 350
+}

@@ -4,6 +4,20 @@
  */
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
+
+/** 兼容三种options格式：数组、JSON字符串、逗号分隔字符串 */
+function parseOptions(raw: unknown): string[] {
+  if (!raw) return [];
+  // 已经是数组（mysql2驱动可能自动解析）
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw !== 'string') return [];
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('[')) {
+    try { return JSON.parse(trimmed); } catch { /* fallthrough */ }
+  }
+  // 逗号分隔格式（如 "云,明,处,下"）
+  return trimmed.split(',').map(s => s.trim()).filter(Boolean);
+}
 import {
   getAllStages,
   getStageById,
@@ -88,15 +102,14 @@ export const v2Router = router({
           questions: debtQuestions.map((q) => ({
             id: q.id,
             content: q.content,
-            options: q.options ? JSON.parse(q.options) : [],
+            options: parseOptions(q.options),
             correctAnswer: q.correctAnswer,
             sourcePoemTitle: q.sourcePoemTitle,
             sourcePoemAuthor: q.sourcePoemAuthor,
           })),
         };
       }
-
-      // 无诗债，正常答题
+      // 无诗债，正常答题题
       const [minDiff, maxDiff] = getDifficultyRange(stage.tierKey);
       const allQs = await getFillQuestionsByDifficulty(minDiff, maxDiff);
       if (allQs.length < 10) throw new Error("题库题目不足，请联系管理员");
@@ -114,13 +127,13 @@ export const v2Router = router({
         questions: selected.map((q) => ({
           id: q.id,
           content: q.content,
-          options: q.options ? JSON.parse(q.options) : [],
-          correctAnswer: q.correctAnswer,
-          sourcePoemTitle: q.sourcePoemTitle,
-          sourcePoemAuthor: q.sourcePoemAuthor,
-        })),
-      };
-    }),
+options: parseOptions(q.options),
+            correctAnswer: q.correctAnswer,
+            sourcePoemTitle: q.sourcePoemTitle,
+            sourcePoemAuthor: q.sourcePoemAuthor,
+          })),
+        };
+      }),
 
   /** 提交单题答案 */
   submitAnswer: publicProcedure
