@@ -23,7 +23,7 @@ const CHAPTERS = [
     color: "#7C9A7E",
     bgColor: "rgba(124,154,126,0.08)",
     borderColor: "rgba(124,154,126,0.3)",
-    desc: "随王维入空山，寻禅意，悟诗心",
+    desc: "入空山，寻禅意，悟诗心",
   },
   {
     key: "silver",
@@ -43,7 +43,7 @@ const CHAPTERS = [
     color: "#6B9EC4",
     bgColor: "rgba(107,158,196,0.08)",
     borderColor: "rgba(107,158,196,0.3)",
-    desc: "随李白登高望远，感天地之广阔",
+    desc: "登高望远，感天地之广阔",
   },
   {
     key: "platinum",
