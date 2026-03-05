@@ -224,9 +224,10 @@ options: parseOptions(q.options),
         if (nextStage) nextStageId = nextStage.id;
       }
 
-      // 卡牌掉落（通关后，仅正常答题阶段，且必须满分10/10才能获得1张卡牌）
+      // 卡牌掉落（通关后，仅正常答题阶段，每章通关后增加掉落1张卡牌机会）
       let droppedCards: Array<{ id: number; poetName: string; imageUrl: string; rarity: string; signaturePoem: string | null }> = [];
-      if (passed && session.phase === "main" && correctCount === 10) {
+      if (passed && session.phase === "main") {
+        // 只要通关就掉落一张卡牌
         droppedCards = await dropCards(input.sessionKey, session.stageId, 1);
       }
 
