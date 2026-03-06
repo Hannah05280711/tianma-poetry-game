@@ -8,35 +8,33 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 
 const DATABASE_URL = process.env.DATABASE_URL;
-
 if (!DATABASE_URL) {
-  console.warn("⚠️  DATABASE_URL not configured, skipping V2 data update");
+  console.warn("⚠️ DATABASE_URL not configured, skipping V2 data update");
   process.exit(0);
 }
 
 let connection;
-
 try {
   connection = await mysql.createConnection(DATABASE_URL);
   console.log("✅ Database connection established");
 
   // 1. New Cards
   const newCards = [
-    { 
-      poetName: "鱼玄机", 
-      dynasty: "唐", 
-      rarity: "rare", 
-      imageUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663405419107/lWZrYBsRNUBixfFu.png", 
-      description: "晚唐诗人，才华横溢，情感热烈而奔放。", 
-      signaturePoem: "易求无价宝，难得有心郎" 
+    {
+      poetName: "鱼玄机",
+      dynasty: "唐",
+      rarity: "epic",
+      imageUrl: "/images/poets/yuxuanji.png",
+      description: "晚唐杰出女诗人，才华横溢，性格叛逆，与李冶、薛涛并称唐代三大女诗人。",
+      signaturePoem: "易求无价宝，难得有情郎。"
     },
-    { 
-      poetName: "薛涛", 
-      dynasty: "唐", 
-      rarity: "rare", 
-      imageUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663405419107/GPypfHgmSDzXFBqm.png", 
-      description: "唐代女诗人，薛涛笺发明者，诗风清雅脱俗。", 
-      signaturePoem: "花开不同赏，花落不同悲" 
+    {
+      poetName: "薛涛",
+      dynasty: "唐",
+      rarity: "epic",
+      imageUrl: "/images/poets/xuetao.png",
+      description: "唐代著名女诗人、发明家，曾创制“薛涛笺”。她聪慧过人，是唐代女诗人的杰出代表。",
+      signaturePoem: "风花日将老，佳期犹渺渺。"
     }
   ];
 
@@ -46,7 +44,6 @@ try {
     console.error(`❌ Questions file not found: ${questionsPath}`);
     process.exit(1);
   }
-
   const questionsData = JSON.parse(fs.readFileSync(questionsPath, "utf8"));
   console.log(`📝 Loaded ${questionsData.length} questions from v2_new_questions.json`);
 
@@ -63,7 +60,12 @@ try {
         );
         console.log(`✅ Added card: ${c.poetName}`);
       } else {
-        console.log(`ℹ️  Card ${c.poetName} already exists, skipping.`);
+        // Update existing card to ensure correct imageUrl and rarity
+        await connection.execute(
+          `UPDATE poetCards SET imageUrl = ?, rarity = ?, description = ?, signaturePoem = ? WHERE poetName = ?`,
+          [c.imageUrl, c.rarity, c.description, c.signaturePoem, c.poetName]
+        );
+        console.log(`ℹ️ Updated card: ${c.poetName}`);
       }
     } catch (err) {
       console.error(`❌ Error processing card ${c.poetName}:`, err.message);
@@ -71,41 +73,26 @@ try {
   }
 
   // Insert New Questions
-  console.log(`📝 Inserting ${questionsData.length} new questions...`);
-  
-  let count = 0;
-  let errors = 0;
+  console.log("❓ Processing questions...");
+  // Clear old V2 questions first to avoid duplicates or outdated content
+  await connection.execute("DELETE FROM questions WHERE difficulty = 3");
   
   for (const q of questionsData) {
     try {
       await connection.execute(
-        `INSERT INTO questions (poetId, content, options, correctAnswer, questionType, difficulty, sourcePoemTitle, sourcePoemAuthor, themeTag)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [0, q.content, q.options, q.correctAnswer, 'fill', q.difficulty, q.sourcePoemTitle, q.sourcePoemAuthor, 'v2_tang300']
+        `INSERT INTO questions (content, options, correctAnswer, difficulty, sourcePoemTitle, sourcePoemAuthor)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [q.content, q.options, q.correctAnswer, q.difficulty, q.sourcePoemTitle, q.sourcePoemAuthor]
       );
-      count++;
-      if (count % 100 === 0) console.log(`  Progress: ${count}/${questionsData.length}`);
     } catch (err) {
-      errors++;
-      if (errors <= 5) {
-        console.error(`  ⚠️  Error inserting question: ${err.message}`);
-      }
+      console.error(`❌ Error inserting question: `, err.message);
     }
   }
+  console.log(`✅ Successfully imported ${questionsData.length} questions.`);
 
-  console.log(`✅ Successfully inserted ${count} questions (${errors} errors).`);
-  
-  await connection.end();
-  console.log("🎉 V2 Data Update Complete!");
-  process.exit(0);
-} catch (err) {
-  console.error("❌ Fatal error:", err.message);
-  if (connection) {
-    try {
-      await connection.end();
-    } catch (e) {
-      // ignore
-    }
-  }
-  process.exit(1);
+} catch (error) {
+  console.error("❌ Database error:", error);
+} finally {
+  if (connection) await connection.end();
+  console.log("👋 Database connection closed");
 }
