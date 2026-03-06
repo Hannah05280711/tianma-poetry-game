@@ -1,0 +1,70 @@
+{
+  "query": "SELECT v2s.id, v2s.stageNumber, v2s.stageName, usp.status \nFROM v2Stages v2s \nLEFT JOIN userStageProgress usp ON v2s.id = usp.stageId \nWHERE v2s.stageNumber BETWEEN 1 AND 3 \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT v2s.id, v2s.stageNumber, v2s.stageName, usp.status \nFROM v2Stages v2s \nLEFT JOIN userStageProgress usp ON v2s.id = usp.stageId \nWHERE v2s.stageNumber BETWEEN 1 AND 3 \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "stageNumber": "2",
+      "stageName": "空山梵钟",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "stageNumber": "3",
+      "stageName": "清泉石剑",
+      "status": "completed"
+    },
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "stageNumber": "2",
+      "stageName": "空山梵钟",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "stageNumber": "3",
+      "stageName": "清泉石剑",
+      "status": "completed"
+    },
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "stageNumber": "2",
+      "stageName": "空山梵钟",
+      "status": "completed"
+    },
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠",
+      "status": "available"
+    },
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠",
+      "status": "completed"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstageNumber\tstageName\tstatus\n1\t1\t摩诘念珠\tcompleted\n2\t2\t空山梵钟\tcompleted\n3\t3\t清泉石剑\tcompleted\n1\t1\t摩诘念珠\tcompleted\n2\t2\t空山梵钟\tcompleted\n3\t3\t清泉石剑\tcompleted\n1\t1\t摩诘念珠\tcompleted\n2\t2\t空山梵钟\tcompleted\n1\t1\t摩诘念珠\tavailable\n1\t1\t摩诘念珠\tcompleted\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

@@ -85,6 +85,7 @@ export default function V2Stage() {
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
   const [nextStageId, setNextStageId] = useState<number | null>(null);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [isChapterDrop, setIsChapterDrop] = useState(false);
 
   // 当 stageId 变化时（进入下一关），重置所有状态
   useEffect(() => {
@@ -98,12 +99,13 @@ export default function V2Stage() {
     setCorrectCount(0);
     setWrongCount(0);
     setPassed(false);
-    setDroppedCards([]);
-    setStoryAfter(null);
-    setDebtCount(0);
-    setIsAutoAdvancing(false);
-    setNextStageId(null);
-    setFlippedCards(new Set());
+        setDroppedCards([]);
+        setStoryAfter(null);
+        setDebtCount(0);
+        setIsAutoAdvancing(false);
+        setNextStageId(null);
+        setIsChapterDrop(false);
+        setFlippedCards(new Set());
   }, [stageIdNum]);
 
   const { data: stageInfo } = trpc.v2.getStageStory.useQuery({ stageId: stageIdNum });
@@ -180,6 +182,7 @@ export default function V2Stage() {
       setStoryAfter(result.storyAfter);
       setDroppedCards(result.droppedCards);
       setNextStageId(result.nextStageId ?? null);
+      setIsChapterDrop((result as unknown as { isChapterDrop?: boolean }).isChapterDrop ?? false);
       setFlippedCards(new Set());
 
       // 刷新关卡列表
@@ -438,10 +441,30 @@ export default function V2Stage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
         style={{ background: "linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)" }}>
-        <div className="text-4xl mb-4 animate-bounce">🎴</div>
-        <h2 className="text-xl font-bold mb-2 text-center" style={{ color: "#D4AF37" }}>
-          满分通关！获得诗人卡牌！
-        </h2>
+        <div className="text-4xl mb-4 animate-bounce">🂴</div>
+        {isChapterDrop && droppedCards.length > 1 ? (
+          <>
+            <h2 className="text-xl font-bold mb-1 text-center" style={{ color: "#D4AF37" }}>
+              章节全通！双重奖励！
+            </h2>
+            <p className="text-sm mb-1 text-center" style={{ color: "rgba(255,255,255,0.7)" }}>
+              满分通关 + 章节全章通关，共获得 {droppedCards.length} 张诗人卡牌！
+            </p>
+          </>
+        ) : isChapterDrop ? (
+          <>
+            <h2 className="text-xl font-bold mb-1 text-center" style={{ color: "#D4AF37" }}>
+              章节全通！获得章节奖励卡牌！
+            </h2>
+            <p className="text-sm mb-1 text-center" style={{ color: "rgba(255,255,255,0.7)" }}>
+              完成本章全部3关，额外获得诗人卡牌！
+            </p>
+          </>
+        ) : (
+          <h2 className="text-xl font-bold mb-1 text-center" style={{ color: "#D4AF37" }}>
+            满分通关！获得诗人卡牌！
+          </h2>
+        )}
         <p className="text-sm mb-8 text-center" style={{ color: "rgba(255,255,255,0.5)" }}>
           点击卡牌查看诗句
         </p>

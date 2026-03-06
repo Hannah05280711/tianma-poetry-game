@@ -225,15 +225,22 @@ options: parseOptions(q.options),
         if (nextStage) nextStageId = nextStage.id;
       }
 
-      // 卡牌掉落（通关后，仅正常答题阶段）
+      // 卡牌掉落
       let droppedCards: Array<{ id: number; poetName: string; imageUrl: string; rarity: string; signaturePoem: string | null }> = [];
-      if (passed && session.phase === "main") {
-        // 满分通关（10/10）掉落1张卡牌
-        let dropCount = correctCount === 10 ? 1 : 0;
-        // 章节最后一关（3、6、9、1215、18、21），全章通关额外再掉落1张
+      let isChapterDrop = false;
+      if (passed) {
+        let dropCount = 0;
+        // 满分通关（10/10正常答题阶段）掉落1张卡牌
+        if (session.phase === "main" && correctCount === 10) {
+          dropCount = 1;
+        }
+        // 章节最后一关（3、6、9、12、15、18、21），全章通关额外再掉落1张（无论是否满分）
         if (stage.stageNumber % 3 === 0) {
           const chapterDone = await isChapterComplete(input.sessionKey, stage.stageNumber);
-          if (chapterDone) dropCount += 1;
+          if (chapterDone) {
+            dropCount += 1;
+            isChapterDrop = true;
+          }
         }
         if (dropCount > 0) {
           droppedCards = await dropCards(input.sessionKey, session.stageId, dropCount);
@@ -249,6 +256,7 @@ options: parseOptions(q.options),
         nextStageUnlocked,
         nextStageId,
         droppedCards,
+        isChapterDrop,
         storyAfter: passed ? stage.storyAfter : null,
       };
     }),

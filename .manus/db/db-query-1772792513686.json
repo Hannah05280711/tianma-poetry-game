@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, stageNumber, stageName FROM v2Stages ORDER BY stageNumber LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, stageNumber, stageName FROM v2Stages ORDER BY stageNumber LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "stageNumber": "1",
+      "stageName": "摩诘念珠"
+    },
+    {
+      "id": "2",
+      "stageNumber": "2",
+      "stageName": "空山梵钟"
+    },
+    {
+      "id": "3",
+      "stageNumber": "3",
+      "stageName": "清泉石剑"
+    },
+    {
+      "id": "4",
+      "stageNumber": "4",
+      "stageName": "芙蓉冰心"
+    },
+    {
+      "id": "5",
+      "stageNumber": "5",
+      "stageName": "夜光玉杯"
+    },
+    {
+      "id": "6",
+      "stageNumber": "6",
+      "stageName": "哥舒夜刀"
+    },
+    {
+      "id": "7",
+      "stageNumber": "7",
+      "stageName": "飞泉灵剑"
+    },
+    {
+      "id": "8",
+      "stageNumber": "8",
+      "stageName": "暗草惊弓"
+    },
+    {
+      "id": "9",
+      "stageNumber": "9",
+      "stageName": "九霄雷符"
+    },
+    {
+      "id": "10",
+      "stageNumber": "10",
+      "stageName": "谪仙青莲"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstageNumber\tstageName\n1\t1\t摩诘念珠\n2\t2\t空山梵钟\n3\t3\t清泉石剑\n4\t4\t芙蓉冰心\n5\t5\t夜光玉杯\n6\t6\t哥舒夜刀\n7\t7\t飞泉灵剑\n8\t8\t暗草惊弓\n9\t9\t九霄雷符\n10\t10\t谪仙青莲\n",
+  "stderr": "",
+  "execution_time_ms": 400
+}
