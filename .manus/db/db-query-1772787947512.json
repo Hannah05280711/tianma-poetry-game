@@ -1,0 +1,9 @@
+{
+  "query": "\nINSERT INTO poetCards (poetName, dynasty, imageUrl, rarity, description, signaturePoem)\nVALUES \n  ('薛涛', '唐', 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/薛涛_566db4a0.png', 'rare', '唐代著名女诗人，与鱼玄机、李冶、刘采春并称\"唐代四大女诗人\"。', '枝迎南北鸟，叶送往来风'),\n  ('鱼玄机', '唐', 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/鱼玄机_c279a30b.png', 'rare', '唐代女诗人，才情横溢，诗风清丽，与薛涛齐名。', '易求无价宝，难得有心郎');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute \nINSERT INTO poetCards (poetName, dynasty, imageUrl, rarity, description, signaturePoem)\nVALUES \n  ('薛涛', '唐', 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/薛涛_566db4a0.png', 'rare', '唐代著名女诗人，与鱼玄机、李冶、刘采春并称\"唐代四大女诗人\"。', '枝迎南北鸟，叶送往来风'),\n  ('鱼玄机', '唐', 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/鱼玄机_c279a30b.png', 'rare', '唐代女诗人，才情横溢，诗风清丽，与薛涛齐名。', '易求无价宝，难得有心郎');\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 360
+}

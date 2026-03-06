@@ -86,6 +86,26 @@ export default function V2Stage() {
   const [nextStageId, setNextStageId] = useState<number | null>(null);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
 
+  // 当 stageId 变化时（进入下一关），重置所有状态
+  useEffect(() => {
+    setPhase("story_before");
+    setSessionId(null);
+    setGamePhaseType("main");
+    setQuestions([]);
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setAnswerResult(null);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setPassed(false);
+    setDroppedCards([]);
+    setStoryAfter(null);
+    setDebtCount(0);
+    setIsAutoAdvancing(false);
+    setNextStageId(null);
+    setFlippedCards(new Set());
+  }, [stageIdNum]);
+
   const { data: stageInfo } = trpc.v2.getStageStory.useQuery({ stageId: stageIdNum });
 
   const startStageMutation = trpc.v2.startStage.useMutation();
@@ -602,7 +622,7 @@ export default function V2Stage() {
                 setAnswerResult(null);
               }}
               style={{ background: "linear-gradient(135deg, var(--vermilion), var(--gold))", color: "white", border: "none" }}>
-              {passed ? "再次挑战" : "再次挑战"}
+              {passed ? "再次挑战" : "去还诗债"}
             </Button>
           </div>
         </div>

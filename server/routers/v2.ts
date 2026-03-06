@@ -41,6 +41,7 @@ import {
   dropCards,
   getDifficultyRange,
   shuffle,
+  isChapterComplete,
 } from "../v2-db";
 
 // ── 路由 ──────────────────────────────────────────────────────
@@ -224,11 +225,19 @@ options: parseOptions(q.options),
         if (nextStage) nextStageId = nextStage.id;
       }
 
-      // 卡牌掉落（通关后，仅正常答题阶段，每章通关后增加掉落1张卡牌机会）
+      // 卡牌掉落（通关后，仅正常答题阶段）
       let droppedCards: Array<{ id: number; poetName: string; imageUrl: string; rarity: string; signaturePoem: string | null }> = [];
       if (passed && session.phase === "main") {
-        // 只要通关就掉落一张卡牌
-        droppedCards = await dropCards(input.sessionKey, session.stageId, 1);
+        // 满分通关（10/10）掉落1张卡牌
+        let dropCount = correctCount === 10 ? 1 : 0;
+        // 章节最后一关（3、6、9、1215、18、21），全章通关额外再掉落1张
+        if (stage.stageNumber % 3 === 0) {
+          const chapterDone = await isChapterComplete(input.sessionKey, stage.stageNumber);
+          if (chapterDone) dropCount += 1;
+        }
+        if (dropCount > 0) {
+          droppedCards = await dropCards(input.sessionKey, session.stageId, dropCount);
+        }
       }
 
       return {
@@ -255,7 +264,7 @@ options: parseOptions(q.options),
         seen.add(c.cardId);
         return true;
       });
-      return { cards: unique, total: unique.length, totalAvailable: 24 };
+      return { cards: unique, total: unique.length, totalAvailable: 26 };
     }),
 
   /** 获取所有卡牌（含是否已获得） */

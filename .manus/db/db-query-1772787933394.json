@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM poetCards WHERE Field = 'rarity';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SHOW COLUMNS FROM poetCards WHERE Field = 'rarity';",
+  "rows": [
+    {
+      "Field": "rarity",
+      "Type": "enum('common','rare','epic')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nrarity\tenum('common','rare','epic')\tNO\t\tcommon\t\n",
+  "stderr": "",
+  "execution_time_ms": 359
+}

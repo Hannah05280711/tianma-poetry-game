@@ -1,0 +1,20 @@
+{
+  "query": "\nUPDATE poetCards \nSET imageUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/xuetao_4961fefd.png'\nWHERE poetName = '薛涛';\n\nUPDATE poetCards \nSET imageUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/yuxuanji_628704d5.png'\nWHERE poetName = '鱼玄机';\n\nSELECT id, poetName, imageUrl FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute \nUPDATE poetCards \nSET imageUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/xuetao_4961fefd.png'\nWHERE poetName = '薛涛';\n\nUPDATE poetCards \nSET imageUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/yuxuanji_628704d5.png'\nWHERE poetName = '鱼玄机';\n\nSELECT id, poetName, imageUrl FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');\n",
+  "rows": [
+    {
+      "id": "30001",
+      "poetName": "薛涛",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/xuetao_4961fefd.png"
+    },
+    {
+      "id": "30002",
+      "poetName": "鱼玄机",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/yuxuanji_628704d5.png"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpoetName\timageUrl\n30001\t薛涛\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/xuetao_4961fefd.png\n30002\t鱼玄机\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663387089743/4LhGieFmaH5SRJ3NvGaeQq/yuxuanji_628704d5.png\n",
+  "stderr": "",
+  "execution_time_ms": 462
+}
