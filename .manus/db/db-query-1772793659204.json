@@ -1,0 +1,23 @@
+{
+  "query": "SELECT id, poetName, signaturePoem FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, poetName, signaturePoem FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');",
+  "rows": [
+    {
+      "id": "30001",
+      "poetName": "薛涛",
+      "signaturePoem": "花开不同赏，花落不同悲。"
+    },
+    {
+      "id": "30002",
+      "poetName": "鱼玄机",
+      "signaturePoem": "易求无价宝，难得有心郎。"
+    }
+  ],
+  "messages": [
+    "欲问相思处，花开花落时。",
+    "枕上片时春梦中，行尽江南数千里。"
+  ],
+  "stdout": "id\tpoetName\tsignaturePoem\n30001\t薛涛\t花开不同赏，花落不同悲。\n欲问相思处，花开花落时。\n30002\t鱼玄机\t易求无价宝，难得有心郎。\n枕上片时春梦中，行尽江南数千里。\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

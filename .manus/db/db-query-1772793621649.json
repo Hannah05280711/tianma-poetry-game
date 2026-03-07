@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE poetCards \nSET signaturePoem = '花开不同赏，花落不同悲。\\n欲问相思处，花开花落时。'\nWHERE poetName = '薛涛';\n\nUPDATE poetCards \nSET signaturePoem = '易求无价宝，难得有心郎。\\n枕上片时春梦中，行尽江南数千里。'\nWHERE poetName = '鱼玄机';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute \nUPDATE poetCards \nSET signaturePoem = '花开不同赏，花落不同悲。\\n欲问相思处，花开花落时。'\nWHERE poetName = '薛涛';\n\nUPDATE poetCards \nSET signaturePoem = '易求无价宝，难得有心郎。\\n枕上片时春梦中，行尽江南数千里。'\nWHERE poetName = '鱼玄机';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 434
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, poet_name, signature_poem, rarity FROM v2_poet_cards WHERE poet_name IN ('薛涛', '鱼玄机');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, poet_name, signature_poem, rarity FROM v2_poet_cards WHERE poet_name IN ('薛涛', '鱼玄机');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '4lhgiefmah5srj3nvgaeqq.v2_poet_cards' doesn't exist"
+  ]
+}

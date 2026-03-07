@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, poetName, signaturePoem, rarity FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT id, poetName, signaturePoem, rarity FROM poetCards WHERE poetName IN ('薛涛', '鱼玄机');",
+  "rows": [
+    {
+      "id": "30001",
+      "poetName": "薛涛",
+      "signaturePoem": "枝迎南北鸟，叶送往来风",
+      "rarity": "rare"
+    },
+    {
+      "id": "30002",
+      "poetName": "鱼玄机",
+      "signaturePoem": "易求无价宝，难得有心郎",
+      "rarity": "rare"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpoetName\tsignaturePoem\trarity\n30001\t薛涛\t枝迎南北鸟，叶送往来风\trare\n30002\t鱼玄机\t易求无价宝，难得有心郎\trare\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

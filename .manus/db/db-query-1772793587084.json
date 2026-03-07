@@ -1,0 +1,61 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "dailyTaskConfigs"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "destinyPoets"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "gameSessions"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "poetCards"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "poets"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "questions"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "userDailyTasks"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "userPoetCards"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "userQuestionRecords"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "userStageProgress"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "users"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "v2GameSessions"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "v2PoetDebts"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "v2Stages"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "weaponRanks"
+    },
+    {
+      "Tables_in_4LhGieFmaH5SRJ3NvGaeQq": "weeklyLeaderboard"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_4LhGieFmaH5SRJ3NvGaeQq\n__drizzle_migrations\ndailyTaskConfigs\ndestinyPoets\ngameSessions\npoetCards\npoets\nquestions\nuserDailyTasks\nuserPoetCards\nuserQuestionRecords\nuserStageProgress\nusers\nv2GameSessions\nv2PoetDebts\nv2Stages\nweaponRanks\nweeklyLeaderboard\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

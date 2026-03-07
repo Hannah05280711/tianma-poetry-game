@@ -1,0 +1,61 @@
+{
+  "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "rows": [
+    {
+      "table_name": "weeklyLeaderboard"
+    },
+    {
+      "table_name": "weaponRanks"
+    },
+    {
+      "table_name": "v2Stages"
+    },
+    {
+      "table_name": "v2PoetDebts"
+    },
+    {
+      "table_name": "v2GameSessions"
+    },
+    {
+      "table_name": "userStageProgress"
+    },
+    {
+      "table_name": "users"
+    },
+    {
+      "table_name": "userQuestionRecords"
+    },
+    {
+      "table_name": "userPoetCards"
+    },
+    {
+      "table_name": "userDailyTasks"
+    },
+    {
+      "table_name": "questions"
+    },
+    {
+      "table_name": "poets"
+    },
+    {
+      "table_name": "poetCards"
+    },
+    {
+      "table_name": "gameSessions"
+    },
+    {
+      "table_name": "destinyPoets"
+    },
+    {
+      "table_name": "dailyTaskConfigs"
+    },
+    {
+      "table_name": "__drizzle_migrations"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\nweeklyLeaderboard\nweaponRanks\nv2Stages\nv2PoetDebts\nv2GameSessions\nuserStageProgress\nusers\nuserQuestionRecords\nuserPoetCards\nuserDailyTasks\nquestions\npoets\npoetCards\ngameSessions\ndestinyPoets\ndailyTaskConfigs\n__drizzle_migrations\n",
+  "stderr": "",
+  "execution_time_ms": 374
+}
