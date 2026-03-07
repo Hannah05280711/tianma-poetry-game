@@ -674,10 +674,43 @@ export function getTodayCalendarInfo(): TodayCalendarInfo {
     ...JIEQI_LIST,
   ];
 
+  // 首先查找今天的事件
   const match = allEvents.find(e => e.month === month && e.day === day);
 
   if (match) {
     return { event: match.event, hasEvent: true, dateDesc };
+  }
+
+  // 其次查找明天的节日（主要是重要节日如妇女节、重阳节等）
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowMonth = tomorrow.getMonth() + 1;
+  const tomorrowDay = tomorrow.getDate();
+  
+  // 优先查找节日
+  const tomorrowFestival = SOLAR_FESTIVALS.find(e => e.month === tomorrowMonth && e.day === tomorrowDay);
+  if (tomorrowFestival) {
+    return {
+      event: {
+        ...tomorrowFestival.event,
+        subtitle: `明天 · ${tomorrowFestival.event.subtitle}`,
+      },
+      hasEvent: true,
+      dateDesc,
+    };
+  }
+
+  // 然后查找明天的诗人纪念日
+  const tomorrowPoet = POET_DAYS.find(e => e.month === tomorrowMonth && e.day === tomorrowDay);
+  if (tomorrowPoet) {
+    return {
+      event: {
+        ...tomorrowPoet.event,
+        subtitle: `明天 · ${tomorrowPoet.event.subtitle}`,
+      },
+      hasEvent: true,
+      dateDesc,
+    };
   }
 
   // 查找最近的节气（前后3天内）
