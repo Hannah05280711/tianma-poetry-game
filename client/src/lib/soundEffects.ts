@@ -137,3 +137,335 @@ export function playFirecrackerSound(): void {
 export function initAudio(): void {
   getAudioContext();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V2「解救樊登」章节音效 - 8-bit Chiptune 风格
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * 播放简单的正弦波音调
+ */
+function playTone(
+  frequency: number,
+  duration: number,
+  volume: number = 0.3,
+  envelope?: { attack?: number; decay?: number; sustain?: number; release?: number }
+): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = frequency;
+
+  const att = envelope?.attack ?? 0.01;
+  const dec = envelope?.decay ?? 0.1;
+  const sus = envelope?.sustain ?? 0.5;
+  const rel = envelope?.release ?? 0.1;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + att);
+  gain.gain.linearRampToValueAtTime(volume * sus, now + att + dec);
+  gain.gain.setValueAtTime(volume * sus, now + att + dec + (duration - att - dec - rel));
+  gain.gain.linearRampToValueAtTime(0, now + duration);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+/**
+ * 播放带有延迟效果的音调 - 用于答对反馈
+ */
+function playToneWithDelay(
+  frequency: number,
+  duration: number,
+  volume: number = 0.3
+): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const delay = ctx.createDelay();
+  const delayGain = ctx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = frequency;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+  gain.gain.linearRampToValueAtTime(volume * 0.6, now + 0.1);
+  gain.gain.linearRampToValueAtTime(0, now + duration);
+
+  delay.delayTime.value = 0.15;
+  delayGain.gain.value = 0.4;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  gain.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+/**
+ * 播放带有频率下行效果的音调 - 用于答错反馈
+ */
+function playToneWithPitchDrop(
+  startFreq: number,
+  endFreq: number,
+  duration: number,
+  volume: number = 0.3
+): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(startFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+  gain.gain.linearRampToValueAtTime(0, now + duration);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+/**
+ * 播放方波 - 用于更"8-bit"的音效
+ */
+function playSquareTone(
+  frequency: number,
+  duration: number,
+  volume: number = 0.2
+): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.value = frequency;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+  gain.gain.linearRampToValueAtTime(0, now + duration);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第一章：【空山禅音】- 电子木鱼、清脆古磬
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter1Sounds = {
+  correct: () => playToneWithDelay(220, 0.4, 0.3),
+  incorrect: () => playToneWithPitchDrop(400, 150, 0.3, 0.3),
+  levelUp: () => playTone(660, 0.8, 0.4, { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.2 })
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第二章：【塞上风云】- 电子琵琶、急促鼓点
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter2Sounds = {
+  correct: () => {
+    playSquareTone(880, 0.15, 0.25);
+    setTimeout(() => playSquareTone(660, 0.1, 0.2), 80);
+  },
+  incorrect: () => playToneWithPitchDrop(1200, 300, 0.25, 0.35),
+  levelUp: () => {
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => playSquareTone(880 - i * 100, 0.1, 0.2), i * 80);
+    }
+    setTimeout(() => playTone(110, 0.3, 0.4), 400);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第三章：【九霄惊雷】- 电子古筝、白噪声雷声
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter3Sounds = {
+  correct: () => {
+    playSquareTone(1320, 0.08, 0.25);
+    setTimeout(() => playSquareTone(1100, 0.08, 0.2), 100);
+  },
+  incorrect: () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(2000, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  },
+  levelUp: () => {
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => playSquareTone(880 + i * 220, 0.1, 0.25), i * 120);
+    }
+    setTimeout(() => playTone(150, 0.4, 0.35, { attack: 0.05, decay: 0.2, sustain: 0.3, release: 0.1 }), 600);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第四章：【沧海幻梦】- 电子排箫、空灵水滴
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter4Sounds = {
+  correct: () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.linearRampToValueAtTime(550, now + 0.3);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  },
+  incorrect: () => playToneWithPitchDrop(300, 100, 0.25, 0.25),
+  levelUp: () => {
+    const frequencies = [440, 550, 660, 550, 440];
+    frequencies.forEach((freq, i) => {
+      setTimeout(() => {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === "suspended") ctx.resume();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+        gain.gain.linearRampToValueAtTime(0, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }, i * 150);
+    });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第五章：【须弥见方】- 电子编钟、厚重金属感
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter5Sounds = {
+  correct: () => playTone(660, 0.3, 0.35, { attack: 0.02, decay: 0.15, sustain: 0.3, release: 0.1 }),
+  incorrect: () => {
+    playSquareTone(800, 0.2, 0.3);
+    setTimeout(() => playSquareTone(500, 0.15, 0.25), 100);
+  },
+  levelUp: () => {
+    const frequencies = [330, 440, 550, 660];
+    frequencies.forEach((freq, i) => {
+      setTimeout(() => {
+        playTone(freq, 0.5, 0.3, { attack: 0.05, decay: 0.2, sustain: 0.4, release: 0.15 });
+      }, i * 100);
+    });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第六章：【浮世清响】- 电子笛子、喧闹背景音
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter6Sounds = {
+  correct: () => playSquareTone(1000, 0.12, 0.25),
+  incorrect: () => playToneWithPitchDrop(1500, 600, 0.25, 0.3),
+  levelUp: () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+    gain.gain.linearRampToValueAtTime(0, now + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 第七章：【万重归一】- 电子古琴、极简正弦波
+// ─────────────────────────────────────────────────────────────────────────
+
+export const chapter7Sounds = {
+  correct: () => playTone(330, 0.5, 0.25, { attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.2 }),
+  incorrect: () => playToneWithPitchDrop(400, 200, 0.3, 0.25),
+  levelUp: () => {
+    const frequencies = [220, 330, 440, 550, 660];
+    frequencies.forEach((freq) => {
+      playTone(freq, 0.4, 0.2, { attack: 0.05, decay: 0.15, sustain: 0.2, release: 0.1 });
+    });
+    setTimeout(() => {
+      playTone(440, 1.2, 0.3, { attack: 0.1, decay: 0.3, sustain: 0.5, release: 0.3 });
+    }, 500);
+  }
+};
+
+// 所有章节音效
+const chapterSounds = [chapter1Sounds, chapter2Sounds, chapter3Sounds, chapter4Sounds, chapter5Sounds, chapter6Sounds, chapter7Sounds];
+
+/**
+ * 根据章节ID获取对应的音效
+ */
+export function getChapterSounds(chapterId: number) {
+  const index = chapterId - 1;
+  if (index >= 0 && index < chapterSounds.length) {
+    return chapterSounds[index];
+  }
+  return chapter1Sounds;
+}

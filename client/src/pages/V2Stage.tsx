@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import { getChapterSounds } from "@/lib/soundEffects";
+
 
 function renderQuestionContent(content: string): React.ReactNode {
   const parts = content.split("__");
@@ -68,6 +70,10 @@ export default function V2Stage() {
   const [, navigate] = useLocation();
   const sessionKey = useMemo(() => getSessionKey(), []);
   const stageIdNum = parseInt(stageId ?? "0");
+  
+  // 根据关卡ID计算章节ID（1-3为第一章，4-6为第二章，以此类推）
+  const chapterId = Math.ceil(stageIdNum / 3);
+  const sounds = useMemo(() => getChapterSounds(chapterId), [chapterId]);
 
   const [phase, setPhase] = useState<GamePhase>("story_before");
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -147,8 +153,13 @@ export default function V2Stage() {
         answer,
       });
       setAnswerResult(result);
-      if (result.isCorrect) setCorrectCount(c => c + 1);
-      else setWrongCount(c => c + 1);
+      if (result.isCorrect) {
+        setCorrectCount(c => c + 1);
+        sounds.correct(); // 播放答对音效
+      } else {
+        setWrongCount(c => c + 1);
+        sounds.incorrect(); // 播放答错音效
+      }
 
       // 1.5秒后自动进入下一题
       setIsAutoAdvancing(true);
@@ -187,6 +198,11 @@ export default function V2Stage() {
 
       // 刷新关卡列表
       utils.v2.getStages.invalidate({ sessionKey });
+
+      // 播放晒级音效
+      if (result.passed) {
+        sounds.levelUp();
+      }
 
       if (result.passed && result.droppedCards.length > 0) {
         setPhase("card_drop");
