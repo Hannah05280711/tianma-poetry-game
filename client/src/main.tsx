@@ -48,7 +48,33 @@ export function clearWechatToken(): void {
 // 应用启动时立即读取 URL 中的 token
 initWechatToken();
 
-const queryClient = new QueryClient();
+// 优化缓存策略：减少不必要的重新获取
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // 缓存时间：5分钟（默认0）
+      staleTime: 5 * 60 * 1000,
+      // 垃圾回收时间：10分钟（默认5分钟）
+      gcTime: 10 * 60 * 1000,
+      // 禁用自动重新获取（用户离开后）
+      refetchOnWindowFocus: false,
+      // 禁用挂载时自动重新获取
+      refetchOnMount: false,
+      // 禁用连接恢复时自动重新获取
+      refetchOnReconnect: false,
+      // 重试次数：2次
+      retry: 2,
+      // 重试延迟：指数退避策略
+      retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
+    },
+    mutations: {
+      // 重试次数：1次
+      retry: 1,
+      // 重试延迟
+      retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
+    },
+  },
+});
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;

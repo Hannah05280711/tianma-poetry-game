@@ -167,6 +167,42 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // 启用代码分割：为每个lazy加载的页面生成单独的chunk
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 将vendor库分离到单独的chunk
+          vendor: [
+            "react",
+            "react-dom",
+            "wouter",
+            "@trpc/client",
+            "@trpc/react-query",
+            "@tanstack/react-query",
+          ],
+          // 将UI组件库分离
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-tooltip",
+          ],
+        },
+      },
+    },
+    // 优化构建
+    minify: "terser",
+    terserOptions: {
+      compress: true,
+      mangle: true,
+    } as any,
+    // 增加chunk大小限制警告阈值（默认500kb）
+    chunkSizeWarningLimit: 1000,
+    // 启用CSS代码分割
+    cssCodeSplit: true,
+    // 源映射配置（生产环境建议禁用以减小体积）
+    sourcemap: false,
   },
   server: {
     host: true,
