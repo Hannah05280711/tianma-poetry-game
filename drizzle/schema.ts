@@ -250,3 +250,172 @@ export const v2GameSessions = mysqlTable("v2GameSessions", {
   completedAt: timestamp("completedAt"),
   passed: boolean("passed").default(false),
 });
+
+
+// ============================================================
+// Analytics Tables: 数据与分析系统
+// ============================================================
+
+/** 用户行为事件表 - 记录所有关键事件 */
+export const userEvents = mysqlTable("userEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(), // guest or user openId
+  eventType: mysqlEnum("eventType", [
+    "game_start",        // 开始答题
+    "game_complete",     // 完成答题
+    "question_answer",   // 回答问题
+    "rank_up",          // 段位晋升
+    "card_drop",        // 卡牌掉落
+    "share",            // 分享
+    "destiny_unlock",   // 本命诗人解锁
+    "daily_task",       // 每日任务完成
+    "page_view",        // 页面浏览
+    "button_click",     // 按钮点击
+    "error",            // 错误事件
+  ]).notNull(),
+  eventData: text("eventData"), // JSON: { gameId, difficulty, score, cardCount, etc. }
+  metadata: text("metadata"), // JSON: { userAgent, referer, timestamp, etc. }
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // Indexes for fast querying
+});
+
+export type UserEvent = typeof userEvents.$inferSelect;
+
+/** 性能指标表 - Web Vitals & API Performance */
+export const performanceMetrics = mysqlTable("performanceMetrics", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(),
+  metricType: mysqlEnum("metricType", [
+    "LCP",              // Largest Contentful Paint
+    "FID",              // First Input Delay
+    "CLS",              // Cumulative Layout Shift
+    "TTFB",             // Time to First Byte
+    "FCP",              // First Contentful Paint
+    "api_response_time", // API响应时间
+    "page_load_time",   // 页面加载时间
+    "error_rate",       // 错误率
+  ]).notNull(),
+  value: float("value").notNull(), // 指标值（毫秒或百分比）
+  page: varchar("page", { length: 128 }), // 页面路径
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
+
+/** A/B测试表 - 实验配置与分组 */
+export const abTests = mysqlTable("abTests", {
+  id: int("id").autoincrement().primaryKey(),
+  testName: varchar("testName", { length: 128 }).notNull().unique(),
+  description: text("description"),
+  status: mysqlEnum("status", ["draft", "running", "paused", "completed"]).default("draft").notNull(),
+  controlVariant: varchar("controlVariant", { length: 64 }).notNull(), // 对照组
+  treatmentVariant: varchar("treatmentVariant", { length: 64 }).notNull(), // 实验组
+  targetMetric: varchar("targetMetric", { length: 64 }).notNull(), // 目标指标（如转化率、留存率）
+  sampleSize: int("sampleSize").default(1000), // 样本大小
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ABTest = typeof abTests.$inferSelect;
+
+/** A/B测试用户分组表 */
+export const abTestAssignments = mysqlTable("abTestAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  testId: int("testId").notNull(),
+  sessionKey: varchar("sessionKey", { length: 128 }).notNull(),
+  variant: varchar("variant", { length: 64 }).notNull(), // "control" 或 "treatment"
+  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+});
+
+export type ABTestAssignment = typeof abTestAssignments.$inferSelect;
+
+/** A/B测试结果表 - 预计算的统计数据 */
+export const abTestResults = mysqlTable("abTestResults", {
+  id: int("id").autoincrement().primaryKey(),
+  testId: int("testId").notNull(),
+  variant: varchar("variant", { length: 64 }).notNull(),
+  sampleCount: int("sampleCount").default(0),
+  conversionCount: int("conversionCount").default(0),
+  conversionRate: float("conversionRate").default(0),
+  avgMetricValue: float("avgMetricValue").default(0),
+  stdDeviation: float("stdDeviation").default(0),
+  confidence: float("confidence").default(0), // 置信度 (0-1)
+  pValue: float("pValue").default(1), // p值
+  winner: boolean("winner").default(false), // 是否为赢家
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ABTestResult = typeof abTestResults.$inferSelect;
+
+/** 日分析报告表 - 预计算的每日统计 */
+export const dailyAnalytics = mysqlTable("dailyAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull().unique(), // YYYY-MM-DD
+  dau: int("dau").default(0), // Daily Active Users
+  newUsers: int("newUsers").default(0), // 新用户数
+  totalSessions: int("totalSessions").default(0), // 总会话数
+  totalGamePlays: int("totalGamePlays").default(0), // 总游戏次数
+  avgGameDuration: float("avgGameDuration").default(0), // 平均游戏时长（秒）
+  totalScore: int("totalScore").default(0), // 总积分
+  avgScore: float("avgScore").default(0), // 平均积分
+  conversionRate: float("conversionRate").default(0), // 转化率（新用户→完成游戏）
+  rankUpCount: int("rankUpCount").default(0), // 段位晋升数
+  cardDropCount: int("cardDropCount").default(0), // 卡牌掉落数
+  shareCount: int("shareCount").default(0), // 分享数
+  errorCount: int("errorCount").default(0), // 错误数
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DailyAnalytics = typeof dailyAnalytics.$inferSelect;
+
+/** 留存率表 - 按日期计算的用户留存 */
+export const retentionAnalytics = mysqlTable("retentionAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  cohortDate: varchar("cohortDate", { length: 10 }).notNull(), // 用户首次活跃日期 YYYY-MM-DD
+  daysSinceStart: int("daysSinceStart").notNull(), // 距离首次活跃的天数 (0, 1, 3, 7, 14, 30)
+  retainedUsers: int("retainedUsers").default(0), // 保留的用户数
+  retentionRate: float("retentionRate").default(0), // 留存率 (0-1)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RetentionAnalytics = typeof retentionAnalytics.$inferSelect;
+
+/** 转化漏斗表 - 追踪用户从进入到完成的各个步骤 */
+export const conversionFunnel = mysqlTable("conversionFunnel", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  step: mysqlEnum("step", [
+    "page_view",        // 页面浏览
+    "game_start",       // 开始游戏
+    "first_question",   // 回答第一题
+    "game_complete",    // 完成游戏
+    "rank_up",          // 段位晋升
+    "share",            // 分享
+  ]).notNull(),
+  userCount: int("userCount").default(0), // 该步骤的用户数
+  conversionRate: float("conversionRate").default(0), // 该步骤的转化率
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConversionFunnel = typeof conversionFunnel.$inferSelect;
+
+/** 用户分布表 - 按维度统计用户分布 */
+export const userDistribution = mysqlTable("userDistribution", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  dimension: mysqlEnum("dimension", [
+    "rank",             // 按段位分布
+    "difficulty",       // 按难度分布
+    "game_mode",        // 按游戏模式分布
+    "device",           // 按设备分布
+    "region",           // 按地区分布
+  ]).notNull(),
+  dimensionValue: varchar("dimensionValue", { length: 64 }).notNull(), // 维度值（如"bronze_1"、"mobile"）
+  userCount: int("userCount").default(0), // 用户数
+  percentage: float("percentage").default(0), // 百分比
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserDistribution = typeof userDistribution.$inferSelect;
