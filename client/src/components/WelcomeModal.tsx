@@ -35,6 +35,11 @@ const STEPS: Step[] = [
     title: "每日任务",
     desc: "每天完成答题任务可获得提示卡和护身符道具，助你在高难度关卡中披荆斩棘。",
   },
+  {
+    emoji: "🎴",
+    title: "解救樊登·抽卡",
+    desc: "进入「解救樊登」专题，通关 21 关闯关副本，每关获得诗人卡牌。集齐 26 位诗人卡牌，成为诗词守护者！",
+  },
 ];
 
 export default function WelcomeModal() {
