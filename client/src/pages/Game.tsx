@@ -11,6 +11,16 @@ import {
   getRankByScore,
 } from "@/lib/localGameState";
 import { getTodayCalendarInfo } from "@/lib/calendarData";
+import { OPTION_COLORS, FEEDBACK_CONFIG, ANIMATION_KEYFRAMES, generateParticles, getStreakMilestone } from "@/lib/gameVisualEffects";
+import GameStreakCounter from "@/components/GameStreakCounter";
+import ParticleEffect from "@/components/ParticleEffect";
+
+// 注入CSS动画
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = ANIMATION_KEYFRAMES;
+  document.head.appendChild(style);
+}
 
 // 将题目内容中的 __ 替换为2字符宽度的横线
 function renderQuestionContent(content: string): React.ReactNode {
@@ -81,6 +91,8 @@ export default function Game() {
   const [localTotalScore, setLocalTotalScore] = useState(0);
   const [localRankName, setLocalRankName] = useState("青铜剑·Ⅲ");
   const [localRankEmoji, setLocalRankEmoji] = useState("🗡️");
+  const [showParticles, setShowParticles] = useState(false);
+  const [particlePosition, setParticlePosition] = useState({ x: 0, y: 0 });
   const startTimeRef = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -550,6 +562,8 @@ export default function Game() {
                     const isEliminated = eliminatedOptions.includes(opt);
                     const isSelected = selectedAnswer === opt;
                     const isCorrectOpt = opt === currentQ.correctAnswer;
+                    const optionKey = String.fromCharCode(65 + i) as keyof typeof OPTION_COLORS; // A, B, C, D
+                    const optionColor = OPTION_COLORS[optionKey]?.hex || "var(--card)";
 
                     let containerStyle: React.CSSProperties = {
                       background: "var(--card)",
@@ -561,22 +575,49 @@ export default function Game() {
                       containerStyle = { ...containerStyle, opacity: 0.3, textDecoration: "line-through" };
                     } else if (answerState !== "idle") {
                       if (isCorrectOpt) {
-                        containerStyle = { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#15803D" };
+                        // 答对：绿色闪耀效果
+                        containerStyle = {
+                          background: "#F0FDF4",
+                          border: `2px solid ${optionColor}`,
+                          color: "#15803D",
+                          boxShadow: `0 0 20px ${optionColor}80, inset 0 0 10px ${optionColor}40`,
+                          animation: "pulse-glow 600ms ease-out",
+                        };
                       } else if (isSelected && !isCorrectOpt) {
-                        containerStyle = { background: "#FEF2F2", border: "1.5px solid #DC2626", color: "#B91C1C" };
+                        // 答错：红色抖动效果
+                        containerStyle = {
+                          background: "#FEF2F2",
+                          border: `2px solid ${OPTION_COLORS.A.hex}`,
+                          color: "#B91C1C",
+                          boxShadow: `0 0 20px ${OPTION_COLORS.A.hex}80`,
+                          animation: "shake 400ms ease-out",
+                        };
                       }
                     } else if (isSelected) {
+                      // 选中时：显示选项颜色
                       containerStyle = {
-                        background: "var(--vermilion-pale)",
-                        border: "1.5px solid var(--vermilion)",
-                        color: "var(--vermilion)",
+                        background: `${optionColor}15`,
+                        border: `2px solid ${optionColor}`,
+                        color: optionColor,
+                        boxShadow: `0 0 12px ${optionColor}40`,
+                      };
+                    } else {
+                      // 未选中时：显示选项颜色的淡色边框
+                      containerStyle = {
+                        background: "var(--card)",
+                        border: `1.5px solid ${optionColor}40`,
+                        color: "var(--ink)",
                       };
                     }
 
                     return (
                       <button
                         key={i}
-                        onClick={() => handleOptionClick(opt)}
+                        onClick={(e) => {
+                          const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                          setParticlePosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+                          handleOptionClick(opt);
+                        }}
                         disabled={answerState !== "idle" || isEliminated}
                         className="rounded-2xl transition-all duration-150 active:scale-[0.97] relative"
                         style={{
@@ -586,7 +627,6 @@ export default function Game() {
                           alignItems: "center",
                           justifyContent: "center",
                           padding: isSingleChar ? "8px 4px" : "10px 16px",
-                          boxShadow: "0 1px 4px oklch(0.14 0.025 55 / 0.05)",
                           fontFamily: "Huiwen-MinchoGBK, Noto Serif SC, STSong, serif",
                           fontSize: "20px",
                           fontWeight: 500,
@@ -595,12 +635,15 @@ export default function Game() {
                           textAlign: "center",
                         }}
                       >
-                        <span>{opt}</span>
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm font-bold" style={{ color: optionColor, opacity: 0.6 }}>{String.fromCharCode(65 + i)}</span>
+                          <span>{opt}</span>
+                        </span>
                         {answerState !== "idle" && isCorrectOpt && (
-                          <span style={{ color: "#16A34A", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✓</span>
+                          <span style={{ color: "#16A34A", fontSize: "18px", position: "absolute", top: "4px", right: "8px" }}>✓</span>
                         )}
                         {answerState !== "idle" && isSelected && !isCorrectOpt && (
-                          <span style={{ color: "#DC2626", fontSize: "14px", position: "absolute", top: "4px", right: "8px" }}>✗</span>
+                          <span style={{ color: "#DC2626", fontSize: "18px", position: "absolute", top: "4px", right: "8px" }}>✗</span>
                         )}
                       </button>
                     );
@@ -609,7 +652,19 @@ export default function Game() {
               );
             })()}
 
-            {/* 得分反馈 */}
+            {/* 连胜计数器 */}
+            <GameStreakCounter streak={consecutiveWins} visible={consecutiveWins >= 2} />
+            
+            {/* 粒子爆裂效果 */}
+            <ParticleEffect
+              trigger={answerState === "correct" && consecutiveWins >= 3}
+              count={30}
+              colors={[OPTION_COLORS.A.hex, OPTION_COLORS.B.hex, OPTION_COLORS.C.hex, OPTION_COLORS.D.hex]}
+              position={particlePosition}
+              onComplete={() => setShowParticles(false)}
+            />
+
+                        {/* 得分反馈 */}
             {answerState !== "idle" && (
               <div className="rounded-2xl p-4 mb-4 animate-slide-up"
                 style={{

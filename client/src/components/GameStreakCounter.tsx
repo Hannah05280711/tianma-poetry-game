@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getStreakMilestone, STREAK_MILESTONES } from "@/lib/gameVisualEffects";
-import { playSound } from "@/lib/soundEffects";
+import { fbCombo } from "@/lib/feedback";
 
 interface GameStreakCounterProps {
   streak: number;
@@ -21,7 +21,7 @@ export default function GameStreakCounter({ streak, visible = true }: GameStreak
         setMilestoneData(milestone);
         setShowMilestone(true);
         // 播放里程碑音效
-        playSound(milestone.sound);
+        fbCombo();
         // 3秒后隐藏里程碑提示
         const timer = setTimeout(() => setShowMilestone(false), 3000);
         return () => clearTimeout(timer);
