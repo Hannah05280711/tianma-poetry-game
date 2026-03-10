@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE v2Stages ADD COLUMN IF NOT EXISTS targetAccuracy FLOAT DEFAULT 70 NOT NULL COMMENT '目标答对率（%）';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3CY2ATatyDNVhxZ.root --database 4LhGieFmaH5SRJ3NvGaeQq --execute ALTER TABLE v2Stages ADD COLUMN IF NOT EXISTS targetAccuracy FLOAT DEFAULT 70 NOT NULL COMMENT '目标答对率（%）';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 762
+}

@@ -202,7 +202,8 @@ export const v2Stages = mysqlTable("v2Stages", {
   stageName: varchar("stageName", { length: 64 }).notNull(),
   storyBefore: text("storyBefore"), // 关卡开始前的剧情
   storyAfter: text("storyAfter"),  // 通关后的剧情
-  difficulty: int("difficulty").default(1).notNull(), // 题目难度筛选
+  difficulty: int("difficulty").default(1).notNull(), // 题目难度筛选（1-5）
+  targetAccuracy: float("targetAccuracy").default(70).notNull(), // 目标答对率（%）
   questionsPerRound: int("questionsPerRound").default(10).notNull(),
   weaponEmoji: varchar("weaponEmoji", { length: 16 }).default("⚔️"),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `v2Stages` ADD `targetAccuracy` float DEFAULT 70 NOT NULL;
