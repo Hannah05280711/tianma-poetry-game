@@ -7,6 +7,7 @@ import { loadLocalState, getRankByScore, type LocalGameState } from "@/lib/local
 import WelcomeModal from "@/components/WelcomeModal";
 import { getTodayDisplay, getUpcomingEvents, type CalendarEvent } from "@/lib/calendarData";
 import { isLanternFestivalSeason, shouldShowLanternEgg } from "@/lib/lanternRiddleData";
+import { getTodayRotation } from "@/lib/dailyRotationData";
 
 // 段位颜色：与兵器谱（Rank.tsx的 RANK_TIERS）完全一致
 const RANK_COLORS: Record<string, string> = {
@@ -32,6 +33,9 @@ export default function Home() {
   // 今日日历信息（节气/节日/诗人纪念日）
   const todayDisplay = useMemo(() => getTodayDisplay(), []);
   const upcomingEvents = useMemo(() => getUpcomingEvents(5), []);
+  
+  // 每日轮换数据（春日诗歌、Emoji、颜色）
+  const dailyRotation = useMemo(() => getTodayRotation(), []);
 
   // 加载本地状态
   useEffect(() => {
@@ -131,21 +135,24 @@ export default function Home() {
 
         {/* ===== 节日/节气 Hero Banner ===== */}
         {(() => {
-          // 元宵节使用深色灯笼风格，其他节日使用原有浅色风格
+          // 春日期间（3月-5月）使用每日轮换数据，其他时间使用日历数据
+          const currentMonth = new Date().getMonth();
+          const isSpringMonth = currentMonth >= 2 && currentMonth <= 4;
+          const displayData = isSpringMonth ? dailyRotation : todayDisplay;
           const isDarkBanner = isLanternDay && todayDisplay.name === "元宵节";
-          const bannerTextColor = isDarkBanner ? "#FFD700" : todayDisplay.color;
-          const bannerSubColor = isDarkBanner ? "#FFA040" : todayDisplay.color;
+          const bannerColor = isDarkBanner ? "#FFD700" : ((displayData as any).colorHex || (displayData as any).color);
+          const bannerSubColor = isDarkBanner ? "#FFA040" : ((displayData as any).colorHex || (displayData as any).color);
           const bannerMutedColor = isDarkBanner ? "rgba(255,200,100,0.7)" : "var(--ink-pale)";
           const bannerSubtitleColor = isDarkBanner ? "rgba(255,180,80,0.8)" : undefined;
           return (
             <div
               className="relative rounded-2xl overflow-hidden mb-4 border"
               style={{
-                background: todayDisplay.bgGradient,
-                borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : todayDisplay.color + "30",
+                background: isDarkBanner ? todayDisplay.bgGradient : `linear-gradient(135deg, ${bannerColor}08, ${bannerColor}04)`,
+                borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : bannerColor + "30",
                 boxShadow: isDarkBanner
                   ? "0 4px 24px rgba(232,69,69,0.35), 0 0 40px rgba(255,150,0,0.1)"
-                  : `0 4px 20px ${todayDisplay.color}15`,
+                  : `0 4px 20px ${bannerColor}15`,
               }}
             >
               {/* 装饰性大字 */}
@@ -153,11 +160,11 @@ export default function Home() {
                 style={{
                   fontSize: isDarkBanner ? "90px" : "72px",
                   fontFamily: "'Noto Serif SC', serif",
-                  color: isDarkBanner ? "rgba(255,200,50,0.12)" : todayDisplay.color + "10",
+                  color: isDarkBanner ? "rgba(255,200,50,0.12)" : bannerColor + "10",
                   fontWeight: 900,
                   lineHeight: 1,
                 }}>
-                {todayDisplay.emoji}
+{(displayData as any).iconEmoji || (displayData as any).emoji}
               </div>
               {/* 元宵节额外装饰 */}
               {isDarkBanner && (
@@ -170,14 +177,14 @@ export default function Home() {
                   <span
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
                     style={{
-                      background: isDarkBanner ? "rgba(255,200,50,0.2)" : todayDisplay.color + "15",
-                      color: bannerTextColor,
-                      border: isDarkBanner ? "1px solid rgba(255,200,50,0.4)" : `1px solid ${todayDisplay.color}30`,
+                      background: isDarkBanner ? "rgba(255,200,50,0.2)" : bannerColor + "15",
+                      color: isDarkBanner ? "#FFD700" : bannerColor,
+                      border: isDarkBanner ? "1px solid rgba(255,200,50,0.4)" : `1px solid ${bannerColor}30`,
                       fontFamily: "Huiwen-MinchoGBK, 'Noto Serif SC', serif",
                       letterSpacing: "0.06em",
                     }}
                   >
-                    {todayDisplay.emoji} {todayDisplay.name}
+    {(displayData as any).iconEmoji || (displayData as any).emoji} {isSpringMonth ? "春日诗歌" : todayDisplay.name}
                   </span>
                   <span className="text-xs" style={{ color: isDarkBanner ? "rgba(255,200,100,0.6)" : "var(--muted-foreground)" }}>
                     {todayDisplay.dateDesc}
@@ -194,16 +201,16 @@ export default function Home() {
                 <div className="mb-4">
                   <p className="font-serif-poem mb-1"
                     style={{ fontSize: "15px", color: bannerSubColor, letterSpacing: "0.08em", lineHeight: 1.7 }}>
-                    「{todayDisplay.poem.length > 28 ? todayDisplay.poem.slice(0, 28) + "…" : todayDisplay.poem}」
+                    「{displayData.poem.length > 28 ? displayData.poem.slice(0, 28) + "…" : displayData.poem}」
                   </p>
                   <p className="text-xs font-serif-poem" style={{ color: bannerMutedColor }}>
-                    —— {todayDisplay.poemAuthor}
+                    —— {(displayData as any).author || (displayData as any).poemAuthor || ""}
                   </p>
                 </div>
 
                 {/* 副标题 */}
                 <p className="text-xs mb-4" style={{ letterSpacing: "0.04em", color: bannerSubtitleColor ?? "var(--muted-foreground)" }}>
-                  {todayDisplay.subtitle}
+                  {isSpringMonth ? (displayData as any).description : todayDisplay.subtitle}
                 </p>
 
                 <div className="flex gap-2">
@@ -211,8 +218,8 @@ export default function Home() {
                     onClick={() => navigate("/game")}
                     className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 text-white"
                     style={{
-                      background: isDarkBanner ? "linear-gradient(135deg, #E84545, #FF8C00)" : todayDisplay.color,
-                      boxShadow: isDarkBanner ? "0 4px 14px rgba(232,69,69,0.5)" : `0 4px 14px ${todayDisplay.color}40`,
+                      background: isDarkBanner ? "linear-gradient(135deg, #E84545, #FF8C00)" : bannerColor,
+                      boxShadow: isDarkBanner ? "0 4px 14px rgba(232,69,69,0.5)" : `0 4px 14px ${bannerColor}40`,
                       letterSpacing: "0.06em",
                     }}
                   >
@@ -220,16 +227,16 @@ export default function Home() {
                   </button>
                   {/* 节日主题专题按鈕 */}
                   <button
-                    onClick={() => isDarkBanner ? navigate("/lantern-riddle") : handleThemeGame(todayDisplay.themeTag)}
+                    onClick={() => isDarkBanner ? navigate("/lantern-riddle") : handleThemeGame(isSpringMonth ? "春日诗歌" : todayDisplay.themeTag)}
                     className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 border"
                     style={{
                       background: "transparent",
-                      borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : todayDisplay.color + "50",
-                      color: bannerTextColor,
+                      borderColor: isDarkBanner ? "rgba(255,200,50,0.5)" : bannerColor + "50",
+                      color: isDarkBanner ? "#FFD700" : bannerColor,
                       letterSpacing: "0.04em",
                     }}
                   >
-                    {isDarkBanner ? "🏮 猜灯谜" : `${todayDisplay.name}专题`}
+                    {isDarkBanner ? "🏮 猜灯谜" : `${isSpringMonth ? "春日诗歌" : todayDisplay.name}专题`}
                   </button>
                 </div>
               </div>
