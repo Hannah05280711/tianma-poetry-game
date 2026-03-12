@@ -655,9 +655,9 @@ export default function Game() {
             {/* 连胜计数器 */}
             <GameStreakCounter streak={consecutiveWins} visible={consecutiveWins >= 2} />
             
-            {/* 粒子爆裂效果 */}
+            {/* 粒子爆裂效果 - 答对时立即显示 */}
             <ParticleEffect
-              trigger={answerState === "correct" && consecutiveWins >= 3}
+              trigger={answerState === "correct"}
               count={30}
               colors={[OPTION_COLORS.A.hex, OPTION_COLORS.B.hex, OPTION_COLORS.C.hex, OPTION_COLORS.D.hex]}
               position={particlePosition}
