@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { gameRouter } from "./routers/game";
 import { v2Router } from "./routers/v2";
 import { analyticsRouter } from "./routers/analytics";
+import { wechatRouter } from "./routers/wechat";
 
 export const appRouter = router({
   system: systemRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
   game: gameRouter,
   v2: v2Router,
   analytics: router(analyticsRouter),
+  wechat: wechatRouter,
 });
 
 export type AppRouter = typeof appRouter;
