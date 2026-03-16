@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/share/share"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "天马行空·你的本命诗人是谁",
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取您的位置信息"
+    },
+    "scope.userPhoneNumber": {
+      "desc": "用于快速登录"
+    }
+  },
+  "requiredBackgroundModes": [
+    "audio"
+  ]
+}

@@ -1,0 +1,36 @@
+<view class="container">
+  <!-- 导航栏 -->
+  <view class="navbar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="navbar-title">天马行空</view>
+    <view class="navbar-actions">
+      <button class="navbar-btn" bindtap="onShare">分享</button>
+      <button class="navbar-btn" bindtap="onMenu">菜单</button>
+    </view>
+  </view>
+
+  <!-- Web-view容器 -->
+  <web-view 
+    src="https://tianmapoet.click?from=wechat&openid={{wxOpenId}}"
+    bindmessage="onWebViewMessage"
+    bindload="onWebViewLoad"
+    binderror="onWebViewError"
+  />
+
+  <!-- 分享菜单 -->
+  <view class="share-menu" wx:if="{{showShareMenu}}" bindtap="closeShareMenu">
+    <view class="share-content" catchtap>
+      <view class="share-item" bindtap="shareToFriend">
+        <text>分享给好友</text>
+      </view>
+      <view class="share-item" bindtap="shareToMoment">
+        <text>分享到朋友圈</text>
+      </view>
+      <view class="share-item" bindtap="shareToGroup">
+        <text>分享到群聊</text>
+      </view>
+      <view class="share-item cancel" bindtap="closeShareMenu">
+        <text>取消</text>
+      </view>
+    </view>
+  </view>
+</view>
